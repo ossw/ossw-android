@@ -1,7 +1,6 @@
 package com.althink.android.ossw;
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -11,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,13 +22,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.althink.android.ossw.R;
+import com.althink.android.ossw.appcompat.AppCompatListActivity;
 import com.althink.android.ossw.ble.ScanRecord;
+import com.althink.android.ossw.drawer.NavigationDrawerCallbacks;
+import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class DeviceScanActivity extends ListActivity {
+public class DeviceScanActivity extends AppCompatListActivity implements NavigationDrawerCallbacks  {
     private final static String TAG = DeviceScanActivity.class.getSimpleName();
 
     private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -43,7 +44,13 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setTitle(R.string.title_devices);
+
+        setContentView(R.layout.activity_find_watch);
+
+        Toolbar toolbar= (Toolbar) findViewById(R.id.toolbar_actionbar);
+        setSupportActionBar(toolbar);
+
+//        getActionBar().setTitle(R.string.title_devices);
         mHandler = new Handler();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -172,6 +179,11 @@ public class DeviceScanActivity extends ListActivity {
         invalidateOptionsMenu();
     }
 
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+
+    }
+
     // Adapter for holding devices found through scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
@@ -184,7 +196,7 @@ public class DeviceScanActivity extends ListActivity {
         }
 
         public void addDevice(BluetoothDevice device, ScanRecord scanRecord) {
-            if (scanRecord == null || scanRecord.getServiceUuids() == null || !scanRecord.getServiceUuids().contains(new ParcelUuid(OsswBleService.OSSW_SERVICE_UUID))) {
+            if (scanRecord == null || scanRecord.getServiceUuids() == null || !scanRecord.getServiceUuids().contains(new ParcelUuid(OsswService.OSSW_SERVICE_UUID))) {
                 return;
             }
             if (!mLeDevices.contains(device)) {

@@ -18,11 +18,34 @@
 
     <!-- Activity themes -->
 
-    <style name="Theme.Base" parent="android:Theme.Light" />
+    <!-- Activity themes -->
 
-    <style name="Theme.Sample" parent="Theme.Base" />
+    <style name="Theme.Base" parent="Theme.AppCompat.Light.NoActionBar" />
+   <!-- Theme.Holo.Light.DarkActionBar" /> -->
 
-    <style name="AppTheme" parent="Theme.Sample" />
+    <style name="AppTheme" parent="Theme.Base" >
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/myPrimaryColor</item>
+        <item name="colorPrimaryDark">@color/myPrimaryDarkColor</item>
+        <item name="colorAccent">@color/myAccentColor</item>
+        <item name="android:textColorPrimary">@color/myTextPrimaryColor</item>
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+
+
+        <item name="android:windowBackground">@color/myWindowBackground</item>
+     </style>
+
+    <!-- ActionBar styles -->
+    <color name="actionbar_bg">#FFc0392b</color>
+
+   <!-- <style name="ActionBar.Base" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse" />
+
+    <style name="MyActionBar"
+        parent="ActionBar.Base">
+        <item name="and roid:background">@color/actionbar_bg</item>
+        <item name="android:logo">@android:color/transparent</item>
+    </style>-->
+
     <!-- Widget styling -->
 
     <style name="Widget" />
@@ -32,11 +55,23 @@
         <item name="android:lineSpacingMultiplier">1.1</item>
     </style>
 
-    <style name="Widget.SampleMessageTile">
+  <!--  <style name="Widget.SampleMessageTile">
         <item name="android:background">@drawable/tile</item>
         <item name="android:shadowColor">#7F000000</item>
         <item name="android:shadowDy">-3.5</item>
         <item name="android:shadowRadius">2</item>
+    </style>-->
+
+
+    <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@android:color/white</item>
     </style>
+
+    <style name="ToolBarStyle" parent="">
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+    </style>
+
 
 </resources>

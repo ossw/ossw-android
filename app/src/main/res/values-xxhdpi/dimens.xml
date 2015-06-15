@@ -1,0 +1,6 @@
+<resources>
+
+    <dimen name="watch_emulator_view_width">576px</dimen>
+    <dimen name="watch_emulator_view_height">672px</dimen>
+
+</resources>

@@ -15,9 +15,9 @@
  limitations under the License.
 -->
 <resources>
-
     <!-- Activity themes -->
-    <style name="Theme.Base" parent="android:Theme.Material.Light">
-    </style>
+ <!--   <style name="Theme.Base" parent="@android:style/Theme.Material.Light.DarkActionBar" />
 
+    <style name="ActionBar.Base" parent="android:Widget.Material.ActionBar.TabBar" />
+-->
 </resources>

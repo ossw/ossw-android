@@ -1,32 +1,44 @@
 package com.althink.android.ossw;
 
-import android.app.Activity;
-import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.IBinder;
+import android.os.*;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.althink.android.ossw.R;
-import com.iforpowell.android.ipantmanapi.IpAntManApi;
+import com.althink.android.ossw.drawer.NavigationDrawerCallbacks;
+import com.althink.android.ossw.drawer.NavigationDrawerFragment;
+import com.althink.android.ossw.home.HomeFragment;
+import com.althink.android.ossw.plugins.PluginsFragment;
+import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.watchsets.WatchSetsFragment;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
     private final static String TAG = MainActivity.class.getSimpleName();
 
-    private String mDeviceAddress;
-    private OsswBleService mOsswBleService;
+    private OsswService mOsswBleService;
+
+    /**
+     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+     */
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+    private Toolbar mToolbar;
+
+    private HomeFragment mHomeFragment;
+    private WatchSetsFragment mWatchsetsFragment;
+    private PluginsFragment mPluginsFragment;
 
     static final int SELECT_WATCH_REQUEST = 1;
 
@@ -35,11 +47,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
-            mOsswBleService = ((OsswBleService.LocalBinder) service).getService();
-            if (!mOsswBleService.initialize()) {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-            }
+            mOsswBleService = ((OsswService.LocalBinder) service).getService();
+            refreshConnectionAlert();
         }
 
         @Override
@@ -48,24 +57,24 @@ public class MainActivity extends Activity {
         }
     };
 
-    // Handles various events fired by the Service.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
-    //                        or notification operations.
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
             Log.i(TAG, "Intent received: " + intent);
             final String action = intent.getAction();
-            if (OsswBleService.ACTION_WATCH_CONNECTED.equals(action)) {
-                updateConnectionState(R.string.connected);
+            if (OsswService.ACTION_WATCH_CONNECTING.equals(action)) {
+                showConnectionAlertBar(R.string.connecting);
+                invalidateOptionsMenu();
+                Log.i(TAG, "Connecting to the watch");
+            } else if (OsswService.ACTION_WATCH_CONNECTED.equals(action)) {
+                //updateConnectionState(R.string.connected);
+                Toast.makeText(MainActivity.this, getString(R.string.toast_watch_is_connected), Toast.LENGTH_SHORT).show();
+                hideConnectionAlertBar();
                 invalidateOptionsMenu();
                 Log.i(TAG, "Watch is connected");
-            } else if (OsswBleService.ACTION_WATCH_DISCONNECTED.equals(action)) {
-                updateConnectionState(R.string.disconnected);
+            } else if (OsswService.ACTION_WATCH_DISCONNECTED.equals(action)) {
+                showConnectionAlertBar(R.string.disconnected);
                 invalidateOptionsMenu();
                 ///clearUI();
                 Log.i(TAG, "Watch is disconnected");
@@ -74,23 +83,75 @@ public class MainActivity extends Activity {
         }
     };
 
-    BroadcastReceiver receiver;
+    private void hideConnectionAlertBar() {
+        View view = findViewById(R.id.watch_connection_alert);
+        view.setVisibility(View.GONE);
+    }
 
-    protected void updateConnectionState(int messageId) {
-        TextView tv1 = (TextView)findViewById(R.id.connectionStatus);
+    private void showConnectionAlertBar(int messageId) {
+        TextView tv1 = (TextView) findViewById(R.id.connectionStatus);
         tv1.setText(messageId);
+        View view = findViewById(R.id.watch_connection_alert);
+        view.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "CREATE");
+
+        mHomeFragment = new HomeFragment();
+        mPluginsFragment = new PluginsFragment();
+        mWatchsetsFragment = new WatchSetsFragment();
+
         setContentView(R.layout.activity_main);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
+        setSupportActionBar(mToolbar);
 
-        Intent gattServiceIntent = new Intent(this, OsswBleService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        registerWithIpSensorMan();
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_drawer);
+
+        // Set up the drawer.
+        mNavigationDrawerFragment.setup(R.id.fragment_drawer, (DrawerLayout) findViewById(R.id.drawer), mToolbar);
+        // populate the navigation drawer
+        // mNavigationDrawerFragment.setUserData("John Doe", "johndoe@doe.com", BitmapFactory.decodeResource(getResources(), R.drawable.avatar));
+
+        final Context ctx = this;
+
+        ImageButton findWatchButton = (ImageButton) findViewById(R.id.find_watch);
+        findWatchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Intent intent = new Intent(ctx, DeviceScanActivity.class);
+                startActivityForResult(intent, SELECT_WATCH_REQUEST);
+            }
+        });
+
+        Intent osswServiceIntent = new Intent(this, OsswService.class);
+        startService(osswServiceIntent);
+        bindService(osswServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        //Intent intent = new Intent();
+        // intent.setAction("com.althink.android.ossw.plugins.musicplayer.PluginService");
+        // bindService(intent, pluginServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onNavigationDrawerItemSelected(int itemId) {
+        switch (itemId) {
+            case NavigationDrawerFragment.OPTION_HOME_SCREEN:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mHomeFragment)
+                        .commit();
+                break;
+            case NavigationDrawerFragment.OPTION_WATCHSETS:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mWatchsetsFragment).commit();
+                break;
+            case NavigationDrawerFragment.OPTION_EXTENSIONS:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mPluginsFragment).commit();
+        }
     }
 
     @Override
@@ -98,23 +159,40 @@ public class MainActivity extends Activity {
         super.onResume();
         Log.i(TAG, "RESUME");
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-    /*    if (mOsswBleService != null) {
-            final boolean result = mOsswBleService.connect(mDeviceAddress);
-            Log.d(TAG, "Connect request result=" + result);
-        }*/
-        if(mOsswBleService != null) {
-            int status = mOsswBleService.getStatus();
-            updateConnectionState(status == OsswBleService.STATE_CONNECTED ? R.string.connected : R.string.disconnected);
-        } else {
-            updateConnectionState(R.string.disconnected);
-        }
 
+        refreshConnectionAlert();
+    }
+
+    private void refreshConnectionAlert() {
+        if (mOsswBleService != null) {
+            int status = mOsswBleService.getStatus();
+            setConnectionAlertBar(status);
+        }
+    }
+
+    private void setConnectionAlertBar(int status) {
+        if (status == OsswService.STATE_CONNECTED) {
+            hideConnectionAlertBar();
+        } else if (status == OsswService.STATE_CONNECTING || status == OsswService.STATE_SERVICE_DISCOVERING) {
+            showConnectionAlertBar(R.string.connecting_to_watch);
+        } else {
+            showConnectionAlertBar(R.string.disconnected);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mNavigationDrawerFragment.isDrawerOpen())
+            mNavigationDrawerFragment.closeDrawer();
+        else
+            super.onBackPressed();
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(OsswBleService.ACTION_WATCH_CONNECTED);
-        intentFilter.addAction(OsswBleService.ACTION_WATCH_DISCONNECTED);
+        intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTING);
+        intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTED);
+        intentFilter.addAction(OsswService.ACTION_WATCH_DISCONNECTED);
         return intentFilter;
     }
 
@@ -131,9 +209,7 @@ public class MainActivity extends Activity {
         Log.i(TAG, "DESTROY");
         unbindService(mServiceConnection);
 
-        if(receiver != null) {
-             unregisterReceiver(receiver);
-        }
+//        unbindService(pluginServiceConnection);
     }
 
     private void connectToWatch(String address) {
@@ -148,7 +224,7 @@ public class MainActivity extends Activity {
             case SELECT_WATCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String address = data.getStringExtra("watch_ble_address");
-                    if(address != null) {
+                    if (address != null) {
 
                         Log.i(TAG, "Connect to: " + address);
                         connectToWatch(address);
@@ -160,9 +236,14 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+            // Only show items in the action bar relevant to this screen
+            // if the drawer is not showing. Otherwise, let the drawer
+            // decide what to show in the action bar.
+            getMenuInflater().inflate(R.menu.main, menu);
+            return true;
+        }
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -181,80 +262,57 @@ public class MainActivity extends Activity {
             final Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
+        } /*else if (id == R.id.action_play) {
+            try {
+                pluginMessanger.send(Message.obtain(null, PLAY, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } else if (id == R.id.action_pause) {
+            try {
+                pluginMessanger.send(Message.obtain(null, PAUSE, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } else if (id == R.id.action_play_pause) {
+            try {
+                pluginMessanger.send(Message.obtain(null, PLAY_PAUSE, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } else if (id == R.id.action_next_song) {
+            try {
+                pluginMessanger.send(Message.obtain(null, NEXT_SONG, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } else if (id == R.id.action_prev_song) {
+            try {
+                pluginMessanger.send(Message.obtain(null, PREV_SONG, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } else if (id == R.id.action_stop) {
+            try {
+                pluginMessanger.send(Message.obtain(null, STOP, 0, 0));
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return true;
+        } */else if (id == R.id.action_plugin_settings) {
+            Intent settings = new Intent("com.althink.android.ossw.plugins.musicplayer.Settings");
+            startActivity(settings);
+            return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
-    private float speed;
-
-
-    private float cadence;
-
-    public void registerWithIpSensorMan() {
-        Intent intent;
-        intent = new Intent(IpAntManApi.REGISTER_ANT_ACTION);
-        intent.setClassName("com.iforpowell.android.ipantman", "com.iforpowell.android.ipantman.MainService");
-        intent.putExtra(IpAntManApi.NAME, getString(R.string.app_name));
-        ComponentName comp = startService(intent);
-
-        Intent hr_intent = new Intent(IpAntManApi.START_SENSOR_TYPE_ACTION);
-        hr_intent.setClassName("com.iforpowell.android.ipantman", "com.iforpowell.android.ipantman.MainService");
-        hr_intent.putExtra(IpAntManApi.DEVICE_TYPE, IpAntManApi.DEVICE_TYPE_HR);
-        hr_intent.putExtra(IpAntManApi.DEVICE_ID, IpAntManApi.KNOWN_SENSORS);
-        startService(hr_intent);
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(IpAntManApi.NEW_SENSOR_EVENT);
-        filter.addAction(IpAntManApi.HR_EVENT);
-        filter.addAction(IpAntManApi.BIKE_SPEED_EVENT);
-        filter.addAction(IpAntManApi.BIKE_CADENCE_EVENT);
-
-        if(receiver == null) {
-
-            receiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-
-/*
-                    * int COUNT with the number of beats for this update
-                            * int TIME with the time in 1/1024 seconds for this event.
-                            * int AMOUNT with the last heart rate as transmitted by the sensor.
-                    * int RR integer array of RR data. optional. Normally just one from good ANT reception can be bigger with bad reception and BT and BTLE may also have multiple.  Oldest to newest order
-                    * int DB_ID database ID for this unique sensor
-                    */
-                    Log.i("BroadcastReceiver", "Action: " + intent.getAction());
-
-                    if (IpAntManApi.HR_EVENT.equals(intent.getAction())) {
-                        int value = intent.getIntExtra(IpAntManApi.AMOUNT, 0);
-                       // Log.i("BroadcastReceiver", "HR: " + value);
-                        if (mOsswBleService != null) {
-                            mOsswBleService.sendTestParam(1, value);
-                        }
-                    } else if (IpAntManApi.BIKE_SPEED_EVENT.equals(intent.getAction())) {
-                        int count = intent.getIntExtra(IpAntManApi.COUNT, 0);
-                        int time = intent.getIntExtra(IpAntManApi.TIME, 0);
-                        Log.i(TAG, "Speed event, count: " + count + ", time: " + time);
-
-                                speed = (count) * 2.149f / (time / 1024.f) * 3.6f;
-                                Log.i(TAG, "Speed: " + speed);
-
-                        mOsswBleService.sendTestParam(2, (int)speed);
-
-
-                    } else if (IpAntManApi.BIKE_CADENCE_EVENT.equals(intent.getAction())) {
-                        int count = intent.getIntExtra(IpAntManApi.COUNT, 0);
-                        int time = intent.getIntExtra(IpAntManApi.TIME, 0);
-                        Log.i(TAG, "Cadence event, count: " + count + ", time: " + time);
-
-                                cadence = (count) / (time/1024.f) * 60 ;
-                                Log.i(TAG, "Cadence: " + cadence);
-
-                        mOsswBleService.sendTestParam(3, (int)cadence);
-                    }
-                }
-            };
-        }
-        registerReceiver(receiver, filter);
+    public OsswService getOsswBleService() {
+        return mOsswBleService;
     }
 }

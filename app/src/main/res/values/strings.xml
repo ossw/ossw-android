@@ -4,8 +4,9 @@
     <string name="label_device_address">Device address:</string>
     <string name="label_state">State:</string>
     <string name="no_data">No data</string>
+    <string name="connecting">Connecting...</string>
     <string name="connected">Connected</string>
-    <string name="disconnected">Disconnected</string>
+    <string name="disconnected">Watch is disconnected</string>
     <string name="title_devices">BLE Device Scan</string>
     <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
 
@@ -20,9 +21,20 @@
     <string name="menu_stop">Stop</string>
     <string name="title_main">OSSW</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="watch_is_disconnected">Watch is not connected</string>
+    <string name="connecting_to_watch">Connecting</string>
     <string name="action_find_watch">Connect to watch</string>
 
     <string name="action_run_ipantman">Run ipSensorMan</string>
     <string name="action_settings">Settings</string>
+
+
+    <string name="drawer_open">Menu opened</string>
+    <string name="drawer_close">Menu closed</string>
+    <string name="drawer_home_screen">Home screen</string>
+    <string name="drawer_watchsets">Watchsets</string>
+    <string name="drawer_plugins">Extensions</string>
+    <string name="toast_watch_is_connected">Watch is connected</string>
+
+    <string name="no_extension_found">No extensions found, you can install them from Play Store.</string>
 </resources>

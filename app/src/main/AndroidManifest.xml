@@ -8,17 +8,45 @@
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+   <!-- <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"/>-->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+
+
+
+  <!--  <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" />-->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="com.google.android.gm.permission.READ_CONTENT_PROVIDER"/>
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+ <!--   <uses-permission
+        android:name="com.google.android.providers.gmail.permission.READ_GMAIL" />
+    <uses-permission android:name="com.google.android.gm.permission.READ_GMAIL" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />-->
+
+
+
+    <receiver android:name=".CallReceiver" >
+        <intent-filter>
+            <action android:name="android.intent.action.PHONE_STATE" />
+        </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+        </intent-filter>
+    </receiver>
 
     <application
         android:icon="@drawable/launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.Holo.Light" >
+        android:theme="@style/AppTheme"
+        android:process="com.althink.android.ossw">
+
         <activity android:name=".DeviceScanActivity" />
 
         <service
-            android:name=".OsswBleService"
+            android:name=".service.OsswService"
             android:enabled="true" />
 
         <activity
@@ -34,6 +62,36 @@
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+
+        <service android:name=".NotificationListener"
+            android:label="NotificationListener"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+   <!--     <receiver android:name=".gmail.GmailReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PROVIDER_CHANGED"
+                    android:priority="-10">
+                </action>
+                <data android:scheme="content" android:host="gmail-ls"
+                    android:pathPattern="/unread/.*">
+                </data>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PROVIDER_CHANGED"
+                    android:priority="-10">
+                </action>
+                <data android:mimeType="*/*" android:scheme="content"
+                    android:host="gmail-ls" android:path="/unread/^i">
+                </data>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>-->
     </application>
 
 </manifest>
