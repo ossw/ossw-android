@@ -2,32 +2,47 @@ package com.althink.android.ossw.plugins;
 
 import android.provider.BaseColumns;
 
+import java.util.List;
+
 /**
  * Created by krzysiek on 12/06/15.
  */
 public class PluginDefinition {
 
-    public PluginDefinition() {
-
-    }
-
     private String pluginId;
     private String label;
 
-    public String getPluginId() {
-        return pluginId;
+    private List<PluginFunctionDefinition> functions;
+    private List<PluginPropertyDefinition> properties;
+
+    public PluginDefinition(String pluginId, String label) {
+        this.pluginId = pluginId;
+        this.label = label;
+        this.functions = functions;
+        this.properties = properties;
     }
 
-    public void setPluginId(String pluginId) {
-        this.pluginId = pluginId;
+    public String getPluginId() {
+        return pluginId;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
+    public List<PluginFunctionDefinition> getFunctions() {
+        return functions;
     }
 
+    public List<PluginPropertyDefinition> getProperties() {
+        return properties;
+    }
+
+    public void setFunctions(List<PluginFunctionDefinition> functions) {
+        this.functions = functions;
+    }
+
+    public void setProperties(List<PluginPropertyDefinition> properties) {
+        this.properties = properties;
+    }
 }

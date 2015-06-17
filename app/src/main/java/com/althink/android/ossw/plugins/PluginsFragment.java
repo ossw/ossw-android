@@ -34,7 +34,7 @@ public class PluginsFragment extends ListFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PluginManager scanner = new PluginManager(getActivity().getPackageManager());
+        PluginManager scanner = new PluginManager(getActivity());
 
         PluginListAdapter listAdaptor = new PluginListAdapter();
 

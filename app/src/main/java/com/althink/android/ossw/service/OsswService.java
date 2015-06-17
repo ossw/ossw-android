@@ -14,18 +14,28 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
 import com.althink.android.ossw.gmail.GmailProvider;
 import com.althink.android.ossw.plugins.PluginDefinition;
+import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
+import com.althink.android.ossw.plugins.PluginPropertyDefinition;
 import com.althink.android.ossw.watchsets.CompiledWatchSet;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -53,6 +63,12 @@ public class OsswService extends Service {
     private boolean autoreconnect = true;
 
     private WatchOperationContext watchContext;
+
+    private Handler handler = new Handler();
+
+    private List<PluginDefinition> plugins;
+
+    private Map<String, ContentObserver> contentObservers = new HashMap<>();
 
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
 
@@ -99,7 +115,7 @@ public class OsswService extends Service {
                         broadcastUpdate(ACTION_WATCH_CONNECTED);
                         mConnectionState = STATE_CONNECTED;
                     }
-                }, 2000);
+                }, 1000);
             }
         }
     };
@@ -143,30 +159,56 @@ public class OsswService extends Service {
         }
     }
 
+    private class PluginPropertyObserver extends ContentObserver {
+        private final String TAG = "PluginPropertyObserver";
+        private Handler mHandler;
+        private String pluginId;
+
+        int tmp = 0;
+
+        public PluginPropertyObserver(Handler handler, String pluginId) {
+            super(handler);
+            mHandler = handler;
+            this.pluginId = pluginId;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
+
+            if(pluginId.equals("com.althink.android.ossw.plugins.ipsensorman")) {
+                Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{"heartRate"}, null, null, null);
+                query.moveToNext();
+                sendExternalParamToWatchAsync((byte) 1, (byte) query.getInt(query.getColumnIndex("heartRate")), ExternalParamType.BYTE);
+            }
+
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Start service");
 
-        List<PluginDefinition> plugins = new PluginManager(getPackageManager()).findPlugins();
+        plugins = new PluginManager(getApplicationContext()).findPlugins();
         for (PluginDefinition plugin : plugins) {
             ExternalServiceConnection connection = new ExternalServiceConnection();
 
+            // bind plugin service
             Intent serviceIntent = new Intent();
             serviceIntent.setAction(plugin.getPluginId());
             bindService(serviceIntent, connection.getConnection(), BIND_AUTO_CREATE);
             externalServiceConnections.put(plugin.getPluginId(), connection);
+
+            // listen on plugin property change
+            PluginPropertyObserver observer = new PluginPropertyObserver(handler, plugin.getPluginId());
+            Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
+            Log.i(TAG, "Register handler for uri: " + contentUri);
+            getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
+            contentObservers.put(plugin.getPluginId(), observer);
         }
 
         return super.onStartCommand(intent, flags, startId);
     }
-
-
-    private static final int PLAY_PAUSE = 0;
-    private static final int PLAY = 1;
-    private static final int PAUSE = 2;
-    private static final int STOP = 3;
-    private static final int NEXT_SONG = 4;
-    private static final int PREV_SONG = 5;
 
     public void invokeExtensionFunction(String extensionId, String functionName) {
         ExternalServiceConnection connection = externalServiceConnections.get(extensionId);
@@ -175,7 +217,7 @@ public class OsswService extends Service {
             return;
         }
         try {
-            connection.getMessanger().send(Message.obtain(null, NEXT_SONG, 0, 0));
+            connection.getMessanger().send(Message.obtain(null, /*TODO*/5, 0, 0));
         } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
         }
@@ -204,6 +246,10 @@ public class OsswService extends Service {
             unbindService(connection.getConnection());
         }
         externalServiceConnections.clear();
+        for(ContentObserver observer : contentObservers.values()) {
+            getContentResolver().unregisterContentObserver(observer);
+        }
+        contentObservers.clear();
         close();
     }
 
@@ -296,7 +342,7 @@ public class OsswService extends Service {
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
-            Log.w(TAG, "Device not found.  Unable to connect.");
+            Log.w(TAG, "Device not found. Unable to connect.");
             return false;
         }
 
@@ -382,27 +428,58 @@ public class OsswService extends Service {
         return mConnectionState;
     }
 
-    public void sendTestParam(int param, int value) {
+    public void sendExternalParamToWatchAsync(byte paramId, Object value, ExternalParamType paramType) {
+        Log.i(TAG, "sendExternalParamToWatch");
+        new UpdatePropertyInWatchTask().execute(paramId, value, paramType);
+    }
+
+    private void sendExternalParamToWatchInternal(byte paramId, Object value, ExternalParamType paramType) {
+
+        Log.i(TAG, "sendExternalParamToWatchInternal");
+
+        if (watchContext == null || watchContext.getExternalParameters() == null || watchContext.getExternalParameters().size() <= paramId) {
+     //       return;
+        }
 
         if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
-            Log.i(TAG, "Not connected, state: " + mConnectionState);
             return;
         }
 
         BluetoothGattService service = mBluetoothGatt.getService(OSSW_SERVICE_UUID);
-        // Log.i(TAG, "OSSW service: " + service);
+
         if (service == null) {
             return;
         }
 
+        Log.i(TAG, "OK");
+
+
         BluetoothGattCharacteristic txCharact = service
                 .getCharacteristic(UUID.fromString("58C60002-20B7-4904-96FA-CBA8E1B95702"));
 
+        byte commandId = 0x11;
         if (txCharact != null) {
-            txCharact.setValue(new byte[]{(byte) param, (byte) value});
+            switch (paramType) {
+                case BYTE:
+                    txCharact.setValue(new byte[]{commandId, (byte) paramId, (byte) value});
+                    break;
+                case SHORT:
+                    txCharact.setValue(new byte[]{commandId, (byte) paramId, (byte)(((Short) value).shortValue() >> 8), (byte)(((Short) value).shortValue() & 0xFF)});
+                    break;
+            }
 
             boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
             Log.i(TAG, "Write: " + value + ", result: " + status);
+        }
+    }
+
+    private class UpdatePropertyInWatchTask extends AsyncTask<Object, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Object... params) {
+
+            sendExternalParamToWatchInternal((byte) params[0], params[1], (ExternalParamType) params[2]);
+            return null;
         }
     }
 }

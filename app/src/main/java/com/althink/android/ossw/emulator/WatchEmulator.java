@@ -27,7 +27,7 @@ public class WatchEmulator {
 
     public void render(LowLevelRenderer llr) {
         llr.clearScreen();
-        if(screenRenderer != null) {
+        if (screenRenderer != null) {
             screenRenderer.render(llr);
         }
     }
@@ -35,7 +35,9 @@ public class WatchEmulator {
     public void handleEvent(EmulatorEvent event) {
         Log.i(TAG, "Event: " + event.getClass());
 
-        osswBleService.invokeExtensionFunction("com.althink.android.ossw.plugins.musicplayer", "next");
+        if (osswBleService != null) {
+            osswBleService.invokeExtensionFunction("com.althink.android.ossw.plugins.musicplayer", "nextTrack");
+        }
     }
 
     public WatchSetEmulatorModel parseWatchSet(byte[] watchSet) {
