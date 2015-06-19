@@ -1,5 +1,6 @@
 package com.althink.android.ossw.emulator.source;
 
+import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.source.internal.HourInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
@@ -22,7 +23,7 @@ public class EmulatorDataSourceFactory {
         }
     }
 
-    public static EmulatorDataSource externalDataSource(int property) {
-        return null;
+    public static EmulatorDataSource externalDataSource(int property, WatchEmulator emulator) {
+        return new ExternalEmulatorDataSource(emulator, property);
     }
 }

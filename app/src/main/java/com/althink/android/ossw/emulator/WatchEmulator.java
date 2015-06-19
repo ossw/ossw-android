@@ -2,6 +2,7 @@ package com.althink.android.ossw.emulator;
 
 import android.util.Log;
 
+import com.althink.android.ossw.emulator.actions.EmulatorActionHandler;
 import com.althink.android.ossw.emulator.event.EmulatorEvent;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.renderer.ScreenRender;
@@ -21,11 +22,16 @@ public class WatchEmulator {
 
     private OsswService osswBleService;
 
+    private boolean colorsInverted = false;
+
+    private boolean backlight = false;
+
     public WatchEmulator(OsswService osswBleService) {
         this.osswBleService = osswBleService;
     }
 
     public void render(LowLevelRenderer llr) {
+        llr.setMode(colorsInverted, backlight);
         llr.clearScreen();
         if (screenRenderer != null) {
             screenRenderer.render(llr);
@@ -33,18 +39,29 @@ public class WatchEmulator {
     }
 
     public void handleEvent(EmulatorEvent event) {
-        Log.i(TAG, "Event: " + event.getClass());
-
-        if (osswBleService != null) {
+        screenRenderer.handleEvent(event);
+    /*    if (osswBleService != null) {
             osswBleService.invokeExtensionFunction("com.althink.android.ossw.plugins.musicplayer", "nextTrack");
-        }
+        }*/
     }
 
     public WatchSetEmulatorModel parseWatchSet(byte[] watchSet) {
-        return new WatchSetEmulatorParser().parse(watchSet);
+        return new WatchSetEmulatorParser(this).parse(watchSet);
     }
 
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
-        screenRenderer = new WatchsetRenderer(watchSet);
+        screenRenderer = new WatchsetRenderer(watchSet, osswBleService, this);
+    }
+
+    public void toggleBacklight() {
+        backlight = !backlight;
+    }
+
+    public void toggleColors() {
+        colorsInverted = !colorsInverted;
+    }
+
+    public Object getExternalProperty(int property) {
+        return osswBleService.getExternalProperty(property);
     }
 }

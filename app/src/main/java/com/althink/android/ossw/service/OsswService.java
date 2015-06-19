@@ -26,16 +26,11 @@ import android.util.Log;
 
 import com.althink.android.ossw.gmail.GmailProvider;
 import com.althink.android.ossw.plugins.PluginDefinition;
-import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
-import com.althink.android.ossw.plugins.PluginPropertyDefinition;
-import com.althink.android.ossw.watchsets.CompiledWatchSet;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -159,6 +154,12 @@ public class OsswService extends Service {
         }
     }
 
+    private Integer getIntPropertyFromExtension(String pluginId, String property) {
+        Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
+        query.moveToNext();
+        return query.getInt(query.getColumnIndex(property));
+    }
+
     private class PluginPropertyObserver extends ContentObserver {
         private final String TAG = "PluginPropertyObserver";
         private Handler mHandler;
@@ -176,10 +177,11 @@ public class OsswService extends Service {
         public void onChange(boolean selfChange) {
             Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
 
-            if(pluginId.equals("com.althink.android.ossw.plugins.ipsensorman")) {
-                Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{"heartRate"}, null, null, null);
-                query.moveToNext();
-                sendExternalParamToWatchAsync((byte) 1, (byte) query.getInt(query.getColumnIndex("heartRate")), ExternalParamType.BYTE);
+            if (pluginId.equals("com.althink.android.ossw.plugins.ipsensorman")) {
+                Integer heartRate = getIntPropertyFromExtension(pluginId, "heartRate");
+                if (heartRate != null) {
+                    sendExternalParamToWatchAsync((byte) 1, heartRate.byteValue(), ExternalParamType.BYTE);
+                }
             }
 
         }
@@ -431,6 +433,18 @@ public class OsswService extends Service {
     public void sendExternalParamToWatchAsync(byte paramId, Object value, ExternalParamType paramType) {
         Log.i(TAG, "sendExternalParamToWatch");
         new UpdatePropertyInWatchTask().execute(paramId, value, paramType);
+    }
+
+    public Object getExternalProperty(int propertyId) {
+        if (watchContext == null || watchContext.getExternalParameters() == null) {
+            return null;
+        }
+        if (propertyId < 0 || propertyId >= watchContext.getExternalParameters().size()) {
+            return null;
+        }
+        WatchExtensionProperty parameter = watchContext.getExternalParameters().get(propertyId);
+
+        return getIntPropertyFromExtension(parameter.getPluginId(), parameter.getPropertyId());
     }
 
     private void sendExternalParamToWatchInternal(byte paramId, Object value, ExternalParamType paramType) {

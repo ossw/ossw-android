@@ -13,4 +13,18 @@ public class AbstractButtonEmulatorEvent implements EmulatorEvent {
     public EmulatorButton getButton() {
         return button;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractButtonEmulatorEvent that = (AbstractButtonEmulatorEvent) o;
+        if (button != that.button) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return button != null ? button.hashCode() : 0;
+    }
 }

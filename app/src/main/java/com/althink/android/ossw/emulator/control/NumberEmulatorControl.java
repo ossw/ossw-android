@@ -25,7 +25,10 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-        int value = (int) getData();
+        Integer value = (Integer) getData();
+        if (value == null) {
+            return;
+        }
         switch (format) {
             case NUMBER_FORMAT_0_99: {
                 if (value > 99) {

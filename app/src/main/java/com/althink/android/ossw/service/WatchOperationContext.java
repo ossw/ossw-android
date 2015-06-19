@@ -7,19 +7,19 @@ import java.util.List;
  */
 public class WatchOperationContext {
 
-    private List<WatchExtensionParameter> externalParameters;
-    private List<WatchExtensionParameter> externalFunctions;
+    private List<WatchExtensionProperty> externalParameters;
+    private List<WatchExtensionFunction> externalFunctions;
 
-    public WatchOperationContext(List<WatchExtensionParameter> externalParameters, List<WatchExtensionParameter> externalFunctions) {
+    public WatchOperationContext(List<WatchExtensionProperty> externalParameters, List<WatchExtensionFunction> externalFunctions) {
         this.externalParameters = externalParameters;
         this.externalFunctions = externalFunctions;
     }
 
-    public List<WatchExtensionParameter> getExternalParameters() {
+    public List<WatchExtensionProperty> getExternalParameters() {
         return externalParameters;
     }
 
-    public List<WatchExtensionParameter> getExternalFunctions() {
+    public List<WatchExtensionFunction> getExternalFunctions() {
         return externalFunctions;
     }
 

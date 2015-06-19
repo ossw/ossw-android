@@ -42,4 +42,21 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_SENSOR_HR = 0x10;
     public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
     public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_CADENCE = 0x12;
+
+    public static final int WATCHSET_FUNCTION_TOGGLE_BACKLIGHT = 0;
+    public static final int WATCHSET_FUNCTION_TOGGLE_COLORS = 1;
+
+    public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
+    public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
+
+    public static final int WATCHSET_FUNCTION_EXTENSION = 0xFF;
+
+    public static final int EVENT_BUTTON_UP_SHORT = 0;
+    public static final int EVENT_BUTTON_SELECT_SHORT = 1;
+    public static final int EVENT_BUTTON_DOWN_SHORT = 2;
+    public static final int EVENT_BUTTON_BACK_SHORT = 3;
+    public static final int EVENT_BUTTON_UP_LONG = 4;
+    public static final int EVENT_BUTTON_SELECT_LONG = 5;
+    public static final int EVENT_BUTTON_DOWN_LONG = 6;
+    public static final int EVENT_BUTTON_BACK_LONG = 7;
 }

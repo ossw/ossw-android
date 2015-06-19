@@ -1,9 +1,6 @@
 package com.althink.android.ossw.watchsets;
 
-import com.althink.android.ossw.service.WatchExtensionParameter;
 import com.althink.android.ossw.service.WatchOperationContext;
-
-import java.util.List;
 
 /**
  * Created by krzysiek on 13/06/15.

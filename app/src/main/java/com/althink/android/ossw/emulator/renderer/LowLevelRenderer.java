@@ -10,13 +10,23 @@ import com.althink.android.ossw.watch.WatchConstants;
  * Created by krzysiek on 14/06/15.
  */
 public class LowLevelRenderer {
+
+    private final static int BACKLIGHT_COLOR = 0xFF00308f;
+
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Canvas canvas;
     private int scale;
+    private boolean inverted;
+    private boolean backlight;
 
     public LowLevelRenderer(Canvas canvas) {
         this.canvas = canvas;
-        scale = canvas.getWidth()/WatchConstants.SCREEN_WIDTH;
+        scale = canvas.getWidth() / WatchConstants.SCREEN_WIDTH;
+    }
+
+    public void setMode(boolean inverted, boolean backlight) {
+        this.inverted = inverted;
+        this.backlight = backlight;
     }
 
     public void drawRect(int x, int y, int width, int height) {
@@ -31,7 +41,7 @@ public class LowLevelRenderer {
 
     public void drawDigit(int digit, int x, int y, int width, int height, int thickness) {
         if (digit != 1 && digit != 4) {
-            drawRect( x, y, width, thickness);
+            drawRect(x, y, width, thickness);
         }
 
         if (digit != 5 && digit != 6) {
@@ -64,10 +74,19 @@ public class LowLevelRenderer {
     }
 
     private int getBackgroundColor() {
-        return Color.BLACK;
+        if (backlight) {
+            return inverted ? Color.WHITE : BACKLIGHT_COLOR;
+        } else {
+            return inverted ? Color.WHITE : Color.BLACK;
+        }
     }
 
     private int getForegroundColor() {
-        return Color.WHITE;
+
+        if (backlight) {
+            return inverted ? BACKLIGHT_COLOR : Color.WHITE;
+        } else {
+            return inverted ? Color.BLACK : Color.WHITE;
+        }
     }
 }
