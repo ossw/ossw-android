@@ -1,5 +1,6 @@
 package com.althink.android.ossw.watchsets;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -11,12 +12,14 @@ import android.view.ViewGroup;
 
 import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
+import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.WatchView;
 import com.althink.android.ossw.emulator.event.ButtonLongPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.ButtonPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.EmulatorButton;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
+import com.althink.android.ossw.service.OsswService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,6 +35,7 @@ public class WatchSetsFragment extends Fragment {
     private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private LayoutInflater mInflator;
     private WatchEmulator emulator;
+    private byte[] data;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -42,6 +46,15 @@ public class WatchSetsFragment extends Fragment {
         WatchView watchView = (WatchView) view.findViewById(R.id.watch_emulator_screen_view);
         emulator = watchView.getWatchEmulator();
 
+        view.findViewById(R.id.upload_watchset).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
+                if(data != null) {
+                    osswBleService.uploadData(UploadDataType.WATCHSET, data);
+                }
+            }
+        });
 
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_up), EmulatorButton.UP);
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_down), EmulatorButton.DOWN);
@@ -61,6 +74,8 @@ public class WatchSetsFragment extends Fragment {
                 Log.i(TAG, "File " + file.getPath() + " successfully loaded");
 
                 ((MainActivity)getActivity()).getOsswBleService().setWatchOperationContext(watchSet.getWatchContext());
+
+                data = watchSet.getWatchData();
 
                 WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet.getWatchData());
                 emulator.showWatchSet(model);

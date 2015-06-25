@@ -1,12 +1,9 @@
 package com.althink.android.ossw.emulator;
 
-import android.util.Log;
-
-import com.althink.android.ossw.emulator.actions.EmulatorActionHandler;
 import com.althink.android.ossw.emulator.event.EmulatorEvent;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.renderer.ScreenRender;
-import com.althink.android.ossw.emulator.renderer.WatchsetRenderer;
+import com.althink.android.ossw.emulator.renderer.WatchSetRenderer;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorParser;
 import com.althink.android.ossw.service.OsswService;
@@ -50,7 +47,7 @@ public class WatchEmulator {
     }
 
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
-        screenRenderer = new WatchsetRenderer(watchSet, osswBleService, this);
+        screenRenderer = new WatchSetRenderer(watchSet, osswBleService, this);
     }
 
     public void toggleBacklight() {

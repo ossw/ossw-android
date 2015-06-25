@@ -33,10 +33,16 @@ public class WatchSetEmulatorParser {
 
             int key;
             while ((key = is.read()) != WatchConstants.WATCH_SET_END_OF_DATA) {
+                // read section size
+                int size = is.read() << 8;
+                size |= is.read();
                 switch (key) {
                     case WatchConstants.WATCH_SET_SECTION_SCREENS:
                         //screens
                         model.setScreens(parseScreens(is));
+                        break;
+                    case WatchConstants.WATCH_SET_SECTION_EXTERNAL_PROPERTIES:
+                        is.skip(size);
                         break;
                     case WatchConstants.WATCH_SET_SECTION_STATIC_CONTENT:
                         //TODO
@@ -54,6 +60,13 @@ public class WatchSetEmulatorParser {
 
     private List<WatchSetScreenEmulatorModel> parseScreens(InputStream is) throws Exception {
         int screensNo = is.read();
+
+        //skip screens table
+        for (int i=0; i<screensNo; i++) {
+            is.read();
+            is.read();
+        }
+
         List<WatchSetScreenEmulatorModel> screens = new ArrayList<>(screensNo);
         for (int i = 0; i < screensNo; i++) {
             screens.add(parseScreen(is));
@@ -62,10 +75,6 @@ public class WatchSetEmulatorParser {
     }
 
     private WatchSetScreenEmulatorModel parseScreen(InputStream is) throws Exception {
-        //skip screen size
-        is.read();
-        is.read();
-
         WatchSetScreenEmulatorModel screen = new WatchSetScreenEmulatorModel();
         int key;
         while ((key = is.read()) != WatchConstants.WATCH_SET_END_OF_DATA) {

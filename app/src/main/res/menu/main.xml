@@ -6,22 +6,4 @@
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="102" app:showAsAction="never" />
-
-
-    <item android:id="@+id/action_play" android:title="Play"
-        android:orderInCategory="103" app:showAsAction="never" />
-    <item android:id="@+id/action_pause" android:title="Pause"
-        android:orderInCategory="104" app:showAsAction="never" />
-    <item android:id="@+id/action_next_song" android:title="Next song"
-        android:orderInCategory="105" app:showAsAction="never" />
-    <item android:id="@+id/action_prev_song" android:title="Prev song"
-        android:orderInCategory="106" app:showAsAction="never" />
-    <item android:id="@+id/action_play_pause" android:title="Play/pause"
-        android:orderInCategory="107" app:showAsAction="never" />
-    <item android:id="@+id/action_stop" android:title="Stop"
-        android:orderInCategory="107" app:showAsAction="never" />
-    <item android:id="@+id/action_plugin_settings" android:title="Plugin settings"
-        android:orderInCategory="107" app:showAsAction="never" />
-
-
 </menu>

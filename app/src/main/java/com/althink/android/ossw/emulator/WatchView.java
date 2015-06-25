@@ -32,9 +32,9 @@ public class WatchView extends View {
     private WatchEmulator watchEmulator;
 
     Handler viewHandler = new Handler();
-    Runnable updateView = new Runnable(){
+    Runnable updateView = new Runnable() {
         @Override
-        public void run(){
+        public void run() {
             WatchView.this.invalidate();
         }
     };
@@ -46,13 +46,16 @@ public class WatchView extends View {
     public WatchView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        OsswService osswBleService = ((MainActivity) context).getOsswBleService();
+        OsswService osswBleService = null;
+        if (context instanceof MainActivity) {
+            osswBleService = ((MainActivity) context).getOsswBleService();
+        }
 
         watchEmulator = new WatchEmulator(osswBleService);
 
         List<EmulatorControl> controls = new LinkedList<>();
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0_99, 5, 4, 135, 76, 8, new HourInternalEmulatorDataSource()));
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0_99, 5, 85, 135, 76, 6, new MinutesInternalEmulatorDataSource()));
+        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0__99, 5, 4, 135, 76, 8, new HourInternalEmulatorDataSource()));
+        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0__99, 5, 85, 135, 76, 6, new MinutesInternalEmulatorDataSource()));
         List<WatchSetScreenEmulatorModel> screens = new LinkedList<>();
         screens.add(new WatchSetScreenEmulatorModel(controls, new LinkedList<EmulatorAction>()));
         WatchSetEmulatorModel watchset = new WatchSetEmulatorModel(screens);
@@ -65,7 +68,7 @@ public class WatchView extends View {
         watchEmulator.render(renderer);
 
         viewHandler.postDelayed(updateView, 200);
-   }
+    }
 
     public WatchEmulator getWatchEmulator() {
         return watchEmulator;

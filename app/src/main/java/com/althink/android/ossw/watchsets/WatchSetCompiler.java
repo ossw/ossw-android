@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,7 +26,7 @@ public class WatchSetCompiler {
 
     private Map<String, Integer> screenIdToNumber = new HashMap<>();
 
-    private final static String TAG = WatchSetsFragment.class.getSimpleName();
+    private final static String TAG = WatchSetCompiler.class.getSimpleName();
 
     private List<WatchExtensionProperty> extensionParameters = new LinkedList<>();
 
@@ -58,35 +59,20 @@ public class WatchSetCompiler {
                 throw new RuntimeException("Invalid number of screens");
             }
 
-
             os.write(WatchConstants.WATCH_SET_SECTION_SCREENS);
-            // write number of screens
-            os.write(screens.length());
+            byte[] screensData = compileScreensSection(screens);
 
-            screenIdToNumber.clear();
-            extensionParameters.clear();
-            extensionFunctions.clear();
+            os.write(screensData.length >> 8);
+            os.write(screensData.length & 0xFF);
+            os.write(screensData);
 
-            // in first round parse only screen ids
-            for (int scrNo = 0; scrNo < screens.length(); scrNo++) {
-                JSONObject screen = screens.getJSONObject(scrNo);
-                String screenId = screen.getString("id");
-
-                if (screenIdToNumber.containsKey("screenId")) {
-                    throw new RuntimeException("Screen " + screenId + " already defined");
-                }
-                screenIdToNumber.put(screenId, scrNo);
-            }
-
-            // parse screen controls and actions
-            for (int scrNo = 0; scrNo < screens.length(); scrNo++) {
-                JSONObject screen = screens.getJSONObject(scrNo);
-
-                byte[] screenData = parseScreen(screen);
-                os.write((screenData.length >> 8) & 0xFF);
-                os.write(screenData.length & 0xFF);
-                os.write(screenData);
-            }
+            // write external properties info
+            os.write(WatchConstants.WATCH_SET_SECTION_EXTERNAL_PROPERTIES);
+            //write number of properties
+            byte[] extensionPropertiesData = compileExternalProperties();
+            os.write(extensionPropertiesData.length >> 8);
+            os.write(extensionPropertiesData.length & 0xFF);
+            os.write(extensionPropertiesData);
 
             os.write(WatchConstants.WATCH_SET_END_OF_DATA);
 
@@ -94,12 +80,72 @@ public class WatchSetCompiler {
             watchset.setWatchContext(new WatchOperationContext(extensionParameters, extensionFunctions));
             watchset.setWatchData(os.toByteArray());
 
+            for(WatchExtensionProperty prop : extensionParameters) {
+                Log.i(TAG, "PARAM: " + prop.getPropertyId() +", " + prop.getType() + ", " + prop.getRange());
+            }
+
+            Log.i(TAG, "size: " + watchset.getWatchData().length + ", data: " + Arrays.toString(watchset.getWatchData()));
+
             return watchset;
         } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
             throw new RuntimeException(e);
         }
 
+    }
+
+    private byte[] compileExternalProperties() {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(extensionParameters.size());
+        for (WatchExtensionProperty property : extensionParameters) {
+            //write parameter info
+            os.write(property.getType().getKey());
+            os.write(property.getRange());
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileScreensSection(JSONArray screens) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        // write number of screens
+        os.write(screens.length());
+
+        screenIdToNumber.clear();
+        extensionParameters.clear();
+        extensionFunctions.clear();
+
+        // in first round parse only screen ids
+        for (int scrNo = 0; scrNo < screens.length(); scrNo++) {
+            JSONObject screen = screens.getJSONObject(scrNo);
+            String screenId = screen.getString("id");
+
+            if (screenIdToNumber.containsKey("screenId")) {
+                throw new RuntimeException("Screen " + screenId + " already defined");
+            }
+            screenIdToNumber.put(screenId, scrNo);
+        }
+
+        LinkedList<byte[]> screensData = new LinkedList<>();
+        // parse screen controls and actions / write screen table
+        int screenOffset = 1 + (screens.length() * 2);
+        for (int scrNo = 0; scrNo < screens.length(); scrNo++) {
+            JSONObject screen = screens.getJSONObject(scrNo);
+
+            byte[] screenData = parseScreen(screen);
+            screensData.add(screenData);
+
+            // write screen start address
+            os.write((screenOffset >> 8) & 0xFF);
+            os.write(screenOffset & 0xFF);
+            screenOffset += screenData.length;
+        }
+
+        // write screens data
+        for (byte[] screenData : screensData) {
+            os.write(screenData);
+        }
+        return os.toByteArray();
     }
 
     private byte[] parseScreen(JSONObject screen) throws Exception {
@@ -241,7 +287,8 @@ public class WatchSetCompiler {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_NUMBER);
-        os.write(getIntegerNumberFormat(control.getString("numberRange")));
+        int numberRange = getIntegerNumberFormat(control.getString("numberRange"));
+        os.write(numberRange);
         JSONObject position = control.getJSONObject("position");
         os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
         os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
@@ -257,33 +304,37 @@ public class WatchSetCompiler {
         }
         os.write(control.optBoolean("leftPadded", false) ? 0x80 : 0);
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source));
+        os.write(compileSource(source, DataSourceType.NUMBER, numberRange));
         return os.toByteArray();
     }
 
     private int getIntegerNumberFormat(String numberRange) {
         switch (numberRange) {
-            case "0_99":
-                return WatchConstants.NUMBER_FORMAT_0_99;
+            case "0-9":
+                return WatchConstants.NUMBER_RANGE_0__9;
+            case "0-19":
+                return WatchConstants.NUMBER_RANGE_0__19;
+            case "0-99":
+                return WatchConstants.NUMBER_RANGE_0__99;
             default:
                 throw new RuntimeException("Unknown number format: " + numberRange);
         }
     }
 
-    private byte[] compileSource(JSONObject source) throws Exception {
+    private byte[] compileSource(JSONObject source, DataSourceType dataSourceType, int dataSourceRange) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         int type;
         int value;
         switch (source.getString("type")) {
             case "internal":
                 type = WatchConstants.DATA_SOURCE_TYPE_INTERNAL;
-                value = getInternalSourceKey(source.getString("property"));
+                value = getInternalSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
                 break;
             case "extension":
                 type = WatchConstants.DATA_SOURCE_TYPE_EXTERNAL;
                 String extensionId = source.getString("extensionId");
                 String property = source.getString("property");
-                value = addExtensionProperty(new WatchExtensionProperty(extensionId, property));
+                value = addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, dataSourceRange));
                 break;
             default:
                 throw new RuntimeException("Unknown type: " + source.getString("type"));
@@ -294,17 +345,32 @@ public class WatchSetCompiler {
         return os.toByteArray();
     }
 
-    private int addExtensionProperty(WatchExtensionProperty parameter) {
-        int paramIdx = extensionParameters.indexOf(parameter);
+    private int addExtensionProperty(WatchExtensionProperty property) {
+        int paramIdx = extensionParameters.indexOf(property);
         if (paramIdx < 0) {
-            extensionParameters.add(parameter);
+            extensionParameters.add(property);
             return extensionParameters.size() - 1;
         } else {
+            WatchExtensionProperty oldProperty = extensionParameters.get(paramIdx);
+            if (!oldProperty.getType().equals(property.getType())) {
+                throw new IllegalArgumentException("Property type does not match");
+            }
+            property.setRange(mergePropertyRange(property.getType(), property.getRange(), oldProperty.getRange()));
             return paramIdx;
         }
     }
 
-    private int getInternalSourceKey(String property) {
+    private int mergePropertyRange(DataSourceType type, int range1, int range2) {
+        if (DataSourceType.NUMBER == type) {
+            return (Math.max(range1 >> 4, range2 >> 4) << 4) | Math.max(range1 & 0xF, range2 & 0xF);
+        }
+        return Math.max(range1, range2);
+    }
+
+    private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
+        if(!dataSourceType.equals(DataSourceType.NUMBER)) {
+            throw new IllegalArgumentException("Unknown data source type");
+        }
         switch (property) {
             case "hour":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR;

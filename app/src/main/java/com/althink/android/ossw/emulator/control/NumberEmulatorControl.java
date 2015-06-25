@@ -30,7 +30,7 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
             return;
         }
         switch (format) {
-            case NUMBER_FORMAT_0_99: {
+            case NUMBER_FORMAT_0__99: {
                 if (value > 99) {
                     value = 99;
                 }
@@ -46,7 +46,15 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
     }
 
     public static enum NumberFormat {
-        NUMBER_FORMAT_0_99(0);
+        NUMBER_FORMAT_0__9(0x10),
+        NUMBER_FORMAT_0__19(0x20),
+        NUMBER_FORMAT_0__99(0x30),
+        NUMBER_FORMAT_0__199(0x40),
+        NUMBER_FORMAT_0__999(0x50),
+        NUMBER_FORMAT_0__1999(0x60),
+        NUMBER_FORMAT_0__9999(0x70),
+        NUMBER_FORMAT_0__19999(0x80),
+        NUMBER_FORMAT_0__99999(0x90);
 
         private int key;
 

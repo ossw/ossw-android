@@ -262,52 +262,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             final Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        } /*else if (id == R.id.action_play) {
-            try {
-                pluginMessanger.send(Message.obtain(null, PLAY, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } else if (id == R.id.action_pause) {
-            try {
-                pluginMessanger.send(Message.obtain(null, PAUSE, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } else if (id == R.id.action_play_pause) {
-            try {
-                pluginMessanger.send(Message.obtain(null, PLAY_PAUSE, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } else if (id == R.id.action_next_song) {
-            try {
-                pluginMessanger.send(Message.obtain(null, NEXT_SONG, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } else if (id == R.id.action_prev_song) {
-            try {
-                pluginMessanger.send(Message.obtain(null, PREV_SONG, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } else if (id == R.id.action_stop) {
-            try {
-                pluginMessanger.send(Message.obtain(null, STOP, 0, 0));
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return true;
-        } */else if (id == R.id.action_plugin_settings) {
-            Intent settings = new Intent("com.althink.android.ossw.plugins.musicplayer.Settings");
-            startActivity(settings);
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }

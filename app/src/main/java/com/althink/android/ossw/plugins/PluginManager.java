@@ -62,6 +62,7 @@ public class PluginManager {
                     properties.add(new PluginPropertyDefinition(cursor.getInt(0), cursor.getString(1), cursor.getString(2)));
                 }
             }
+            cursor.close();
         } catch (Exception e) {
             Log.e(TAG, "Failed to load plugin properties: " + plugin.getPluginId());
         }
@@ -75,6 +76,7 @@ public class PluginManager {
                     functions.add(new PluginFunctionDefinition(cursor.getInt(0), cursor.getString(1), cursor.getString(2)));
                 }
             }
+            cursor.close();
         } catch (Exception e) {
             Log.e(TAG, "Failed to load plugin functions: " + plugin.getPluginId());
         }

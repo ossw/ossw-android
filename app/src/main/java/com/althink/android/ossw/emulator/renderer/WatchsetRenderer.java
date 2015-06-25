@@ -2,7 +2,6 @@ package com.althink.android.ossw.emulator.renderer;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
-import com.althink.android.ossw.emulator.actions.EmulatorActionHandler;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.event.EmulatorEvent;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
@@ -12,13 +11,13 @@ import com.althink.android.ossw.watch.WatchConstants;
 /**
  * Created by krzysiek on 14/06/15.
  */
-public class WatchsetRenderer implements ScreenRender {
+public class WatchSetRenderer implements ScreenRender {
 
     private WatchSetEmulatorModel watchset;
     private OsswService service;
     private WatchEmulator emulator;
 
-    public WatchsetRenderer(WatchSetEmulatorModel watchset, OsswService service, WatchEmulator emulator) {
+    public WatchSetRenderer(WatchSetEmulatorModel watchset, OsswService service, WatchEmulator emulator) {
         this.watchset = watchset;
         this.service = service;
         this.emulator = emulator;
@@ -45,6 +44,9 @@ public class WatchsetRenderer implements ScreenRender {
                     break;
                 case WatchConstants.WATCHSET_FUNCTION_CHANGE_SCREEN:
                     watchset.setCurrentScreen(param);
+                    break;
+                case WatchConstants.WATCHSET_FUNCTION_EXTENSION:
+                    service.invokeExtensionFunction(param);
                     break;
             }
         }
