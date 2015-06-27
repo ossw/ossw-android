@@ -219,6 +219,10 @@ public class WatchSetCompiler {
                 String screenId = config.getString("screenId");
                 fParam = resolveScreenId(screenId);
                 break;
+            case "close":
+                fId = WatchConstants.WATCHSET_FUNCTION_CLOSE;
+                fParam = 0;
+                break;
             case "settings":
                 fId = WatchConstants.WATCHSET_FUNCTION_SHOW_SETTINGS;
                 fParam = 0;
@@ -276,7 +280,7 @@ public class WatchSetCompiler {
         String controlType = control.getString("type");
 
         switch (controlType) {
-            case "integer":
+            case "number":
                 return compileIntegerControl(control);
 
         }

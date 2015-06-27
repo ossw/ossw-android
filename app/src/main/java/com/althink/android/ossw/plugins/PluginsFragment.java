@@ -1,5 +1,6 @@
 package com.althink.android.ossw.plugins;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -8,7 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.althink.android.ossw.R;
 
@@ -44,6 +47,22 @@ public class PluginsFragment extends ListFragment {
         setListAdapter(listAdaptor);
 
         Log.i(TAG, "On create");
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        Log.i(TAG, "Click: " + position);
+        PluginDefinition plugin = (PluginDefinition) getListAdapter().getItem(position);
+        Intent configIntent = new Intent();
+        configIntent.setAction(plugin.getPluginId() + ".config");
+
+        Log.i(TAG, configIntent.getAction());
+        try {
+            startActivity(configIntent);
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), getString(R.string.toast_nothing_to_configure), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

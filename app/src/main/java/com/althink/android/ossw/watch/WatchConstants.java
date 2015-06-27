@@ -74,6 +74,7 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
     public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
 
+    public static final int WATCHSET_FUNCTION_CLOSE = 0xFE;
     public static final int WATCHSET_FUNCTION_EXTENSION = 0xFF;
 
     public static final int EVENT_BUTTON_UP_SHORT = 0;

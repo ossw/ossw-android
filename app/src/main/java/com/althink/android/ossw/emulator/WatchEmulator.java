@@ -37,9 +37,6 @@ public class WatchEmulator {
 
     public void handleEvent(EmulatorEvent event) {
         screenRenderer.handleEvent(event);
-    /*    if (osswBleService != null) {
-            osswBleService.invokeExtensionFunction("com.althink.android.ossw.plugins.musicplayer", "nextTrack");
-        }*/
     }
 
     public WatchSetEmulatorModel parseWatchSet(byte[] watchSet) {
@@ -59,6 +56,9 @@ public class WatchEmulator {
     }
 
     public Object getExternalProperty(int property) {
+        if (osswBleService == null) {
+            return null;
+        }
         return osswBleService.getExternalProperty(property);
     }
 }

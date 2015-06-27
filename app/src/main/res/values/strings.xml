@@ -37,4 +37,6 @@
     <string name="toast_watch_is_connected">Watch is connected</string>
 
     <string name="no_extension_found">No extensions found, you can install them from Play Store.</string>
+    <string name="toast_nothing_to_configure">Nothing to configure</string>
+    <string name="toast_invalid_file">File is invalid</string>
 </resources>

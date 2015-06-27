@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
@@ -50,7 +51,7 @@ public class WatchSetsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
-                if(data != null) {
+                if (data != null) {
                     osswBleService.uploadData(UploadDataType.WATCHSET, data);
                 }
             }
@@ -65,20 +66,23 @@ public class WatchSetsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 StringBuilder text = new StringBuilder();
-                // try {
-                File sdcard = Environment.getExternalStorageDirectory();
-                File file = new File(sdcard, "watchmatch1.json");
+                try {
+                    File sdcard = Environment.getExternalStorageDirectory();
+                    File file = new File(sdcard, "watchmatch1.json");
 
-                CompiledWatchSet watchSet = parseWatchset(file);
+                    CompiledWatchSet watchSet = parseWatchSet(file);
 
-                Log.i(TAG, "File " + file.getPath() + " successfully loaded");
+                    Log.i(TAG, "File " + file.getPath() + " successfully loaded");
 
-                ((MainActivity)getActivity()).getOsswBleService().setWatchOperationContext(watchSet.getWatchContext());
+                    ((MainActivity) getActivity()).getOsswBleService().setWatchOperationContext(watchSet.getWatchContext());
 
-                data = watchSet.getWatchData();
+                    data = watchSet.getWatchData();
 
-                WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet.getWatchData());
-                emulator.showWatchSet(model);
+                    WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet.getWatchData());
+                    emulator.showWatchSet(model);
+                } catch (Exception e) {
+                    Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -102,7 +106,7 @@ public class WatchSetsFragment extends Fragment {
 
     }
 
-    public CompiledWatchSet parseWatchset(File file) {
+    public CompiledWatchSet parseWatchSet(File file) {
         String fileData = loadFileData(file);
         return new WatchSetCompiler().compile(fileData);
     }

@@ -32,10 +32,14 @@ import com.althink.android.ossw.plugins.PluginManager;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -108,7 +112,7 @@ public class OsswService extends Service {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
 
-            Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid());
+           // Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid());
         }
 
         @Override
@@ -116,7 +120,7 @@ public class OsswService extends Service {
             super.onCharacteristicChanged(gatt, characteristic);
 
             byte[] value = characteristic.getValue();
-            Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
+           // Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION:
@@ -139,7 +143,12 @@ public class OsswService extends Service {
                         mConnectionState = STATE_CONNECTED;
                         broadcastUpdate(ACTION_WATCH_CONNECTED);
 
-
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                sendCurrentTime();
+                            }
+                        }, 3000);
                     }
                 }, 1000);
             }
@@ -187,6 +196,9 @@ public class OsswService extends Service {
 
     private Integer getIntPropertyFromExtension(String pluginId, String property) {
         Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
+        if (query == null) {
+            return null;
+        }
         query.moveToNext();
         int value = query.getInt(query.getColumnIndex(property));
         query.close();
@@ -206,28 +218,28 @@ public class OsswService extends Service {
 
         @Override
         public void onChange(boolean selfChange) {
-            Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
+           // Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
 
             if (watchContext == null || watchContext.getExternalParameters() == null) {
                 return;
             }
 
             int propertyId = 0;
-            for(WatchExtensionProperty property : watchContext.getExternalParameters()) {
-                if(property.getPluginId().equals(pluginId)) {
-                    Integer heartRate = getIntPropertyFromExtension(pluginId, "heartRate");
-
-                    if (heartRate != null) {
-                        sendExternalParamToWatchAsync((byte) propertyId, property, heartRate);
+            for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
+                if (property.getPluginId().equals(pluginId)) {
+                    switch (property.getType()) {
+                        case NUMBER:
+                            Integer value = getIntPropertyFromExtension(pluginId, property.getPropertyId());
+                            if (value != null) {
+                                sendExternalParamToWatchAsync((byte) propertyId, property, value);
+                            }
+                            break;
                     }
+
+
                 }
                 propertyId++;
             }
-
-            if (pluginId.equals("com.althink.android.ossw.plugins.ipsensorman")) {
-
-            }
-
         }
     }
 
@@ -522,8 +534,6 @@ public class OsswService extends Service {
 
     private void sendExternalParamToWatchInternal(byte paramId, WatchExtensionProperty property, Object value) {
 
-        Log.i(TAG, "sendExternalParamToWatchInternal");
-
         if (watchContext == null || watchContext.getExternalParameters() == null || watchContext.getExternalParameters().size() <= paramId) {
             //       return;
         }
@@ -540,12 +550,12 @@ public class OsswService extends Service {
         byte commandId = 0x30;
         switch (property.getType()) {
             case NUMBER:
-                txCharact.setValue(new byte[]{commandId, (byte) paramId, (byte) value});
+                txCharact.setValue(new byte[]{commandId, (byte) paramId, ((Integer) value).byteValue()});
                 break;
         }
 
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
-        Log.i(TAG, "Write: " + value + ", result: " + status);
+      //  Log.i(TAG, "Write: " + value + ", result: " + status);
     }
 
     private class UpdatePropertyInWatchTask extends AsyncTask<Object, Void, Void> {
@@ -553,7 +563,7 @@ public class OsswService extends Service {
         @Override
         protected Void doInBackground(Object... params) {
 
-            sendExternalParamToWatchInternal((byte) params[0], (WatchExtensionProperty)params[1], params[2]);
+            sendExternalParamToWatchInternal((byte) params[0], (WatchExtensionProperty) params[1], params[2]);
             return null;
         }
     }
@@ -589,12 +599,6 @@ public class OsswService extends Service {
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
         Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
 
-    /*    try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Log.e(TAG, e.getMessage(), e);
-        }*/
-
         int sizeLeft = data.length;
 
         int dataPtr = 0;
@@ -612,11 +616,6 @@ public class OsswService extends Service {
             status = mBluetoothGatt.writeCharacteristic(txCharact);
 
             Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
-         /*   try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }*/
 
             sizeLeft -= 16;
         }
@@ -624,6 +623,34 @@ public class OsswService extends Service {
         status = mBluetoothGatt.writeCharacteristic(txCharact);
         Log.i(TAG, "Upload data done: " + status);
     }
+
+    private void sendCurrentTime() {
+
+        if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
+            return;
+        }
+
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return;
+        }
+
+        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
+        dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
+
+        try {
+            Date date = dateFormatGmt.parse(dateFormatLocal.format(new Date()));
+            int currentTime = (int)(date.getTime()/1000);
+            txCharact.setValue(new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
+            Log.i(TAG, "Set current time");
+            boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        } catch (Exception e) {
+            // do nothing
+        }
+
+    }
+
 
     private BluetoothGattCharacteristic getOsswTxCharacteristic() {
         BluetoothGattService service = mBluetoothGatt.getService(OSSW_SERVICE_UUID);
