@@ -7,6 +7,7 @@ import com.althink.android.ossw.emulator.renderer.WatchSetRenderer;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorParser;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.service.OsswServiceProvider;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -17,14 +18,14 @@ public class WatchEmulator {
 
     private ScreenRender screenRenderer;
 
-    private OsswService osswBleService;
+    private OsswServiceProvider osswBleServiceProvider;
 
     private boolean colorsInverted = false;
 
     private boolean backlight = false;
 
-    public WatchEmulator(OsswService osswBleService) {
-        this.osswBleService = osswBleService;
+    public WatchEmulator(OsswServiceProvider osswBleServiceProvider) {
+        this.osswBleServiceProvider = osswBleServiceProvider;
     }
 
     public void render(LowLevelRenderer llr) {
@@ -44,7 +45,7 @@ public class WatchEmulator {
     }
 
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
-        screenRenderer = new WatchSetRenderer(watchSet, osswBleService, this);
+        screenRenderer = new WatchSetRenderer(watchSet, osswBleServiceProvider.getService(), this);
     }
 
     public void toggleBacklight() {
@@ -56,9 +57,10 @@ public class WatchEmulator {
     }
 
     public Object getExternalProperty(int property) {
-        if (osswBleService == null) {
+        OsswService service = osswBleServiceProvider.getService();
+        if (service == null) {
             return null;
         }
-        return osswBleService.getExternalProperty(property);
+        return service.getExternalProperty(property);
     }
 }

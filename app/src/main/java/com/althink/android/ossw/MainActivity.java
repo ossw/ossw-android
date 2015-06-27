@@ -23,9 +23,10 @@ import com.althink.android.ossw.drawer.NavigationDrawerFragment;
 import com.althink.android.ossw.home.HomeFragment;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.service.OsswServiceProvider;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks, OsswServiceProvider {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private OsswService mOsswBleService;
@@ -132,6 +133,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         startService(osswServiceIntent);
         bindService(osswServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
+        if (savedInstanceState == null) {
+            onNavigationDrawerItemSelected(NavigationDrawerFragment.OPTION_WATCHSETS);
+        }
         //Intent intent = new Intent();
         // intent.setAction("com.althink.android.ossw.plugins.musicplayer.PluginService");
         // bindService(intent, pluginServiceConnection, BIND_AUTO_CREATE);
@@ -268,5 +272,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
 
     public OsswService getOsswBleService() {
         return mOsswBleService;
+    }
+
+    @Override
+    public OsswService getService() {
+        return getOsswBleService();
     }
 }
