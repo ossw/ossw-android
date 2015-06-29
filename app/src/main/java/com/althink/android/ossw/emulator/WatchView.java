@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.NumberEmulatorControl;
@@ -15,7 +14,6 @@ import com.althink.android.ossw.emulator.source.internal.HourInternalEmulatorDat
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetScreenEmulatorModel;
-import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.OsswServiceProvider;
 
 import java.util.LinkedList;
@@ -55,8 +53,8 @@ public class WatchView extends View {
         watchEmulator = new WatchEmulator(osswProvider);
 
         List<EmulatorControl> controls = new LinkedList<>();
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0__99, 5, 4, 135, 76, 8, new HourInternalEmulatorDataSource()));
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberFormat.NUMBER_FORMAT_0__99, 5, 85, 135, 76, 6, new MinutesInternalEmulatorDataSource()));
+        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 4, 8, new HourInternalEmulatorDataSource()));
+        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 85, 6, new MinutesInternalEmulatorDataSource()));
         List<WatchSetScreenEmulatorModel> screens = new LinkedList<>();
         screens.add(new WatchSetScreenEmulatorModel(controls, new LinkedList<EmulatorAction>()));
         WatchSetEmulatorModel watchset = new WatchSetEmulatorModel(screens);

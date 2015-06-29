@@ -11,8 +11,8 @@ public class WatchConstants {
     public static final int SCR_CONTROL_STATIC_RECT = 0;
     public static final int SCR_CONTROL_NUMBER = 1;
     public static final int SCR_CONTROL_HORIZONTAL_PROGRESS_BAR = 2;
-//#define SCR_CONTROL_VERTICAL_PROGRESS_BAR    3
-//#define SCR_CONTROL_BATTERY_LEVEL	           4
+    public static final int SCR_CONTROL_VERTICAL_PROGRESS_BAR = 3;
+    public static final int SCR_CONTROL_TEXT = 4;
 
 
     public static final int NUMBER_RANGE_0__9 = 0x10;
@@ -53,8 +53,8 @@ public class WatchConstants {
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
-    public static final int DATA_SOURCE_TYPE_INTERNAL = 0;
-    public static final int DATA_SOURCE_TYPE_EXTERNAL = 1;
+    public static final int DATA_SOURCE_INTERNAL = 0;
+    public static final int DATA_SOURCE_EXTERNAL = 1;
 
     public static final int INTERNAL_DATA_SOURCE_TIME_HOUR = 0;
     public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 1;

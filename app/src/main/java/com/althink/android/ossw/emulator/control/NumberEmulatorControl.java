@@ -7,21 +7,51 @@ import com.althink.android.ossw.emulator.source.EmulatorDataSource;
  * Created by krzysiek on 14/06/15.
  */
 public class NumberEmulatorControl extends AbstractEmulatorControl {
-    private NumberFormat format;
+    private NumberRange range;
     private int x;
     private int y;
-    private int width;
-    private int height;
-    private int thickness;
+    private int style;
 
-    public NumberEmulatorControl(NumberFormat format, int x, int y, int width, int height, int thickness, EmulatorDataSource dataSource) {
+    public NumberEmulatorControl(NumberRange range, int x, int y, int style, EmulatorDataSource dataSource) {
         super(dataSource);
-        this.format = format;
+        this.range = range;
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
-        this.thickness = thickness;
+        this.style = style;
+    }
+
+    public int trimToRange(int value, int min, int max) {
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
+    }
+
+    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
+        int currentX = x;
+        int div = 1;
+        for (int i = 1; i < digitsNo; i++) {
+            div *= 10;
+        }
+        for (int i = 0; i < digitsNo; i++) {
+            renderer.drawDigit((value / div)%10, currentX, y, digitWidth, digitHeight, digitThickness);
+            div = div/10;
+            currentX += digitWidth + digitSpace;
+        }
+    }
+
+    private void drawOneStartingIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
+        int div = 1;
+        for (int i = 1; i < digitsNo; i++) {
+            div *= 10;
+        }
+        if(value >= div) {
+            renderer.drawRect(x, y, digitThickness, digitHeight);
+        }
+        drawIntDigits(renderer, value, digitsNo - 1, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness);
     }
 
     public void draw(LowLevelRenderer renderer) {
@@ -29,41 +59,61 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         if (value == null) {
             return;
         }
-        switch (format) {
-            case NUMBER_FORMAT_0__99: {
-                if (value > 99) {
-                    value = 99;
-                }
+        int digitWidth = style >> 8 & 0xFF;
+        int digitHeight = style & 0xFF;
+        int thickness = (style >> 16) & 0x3F;
+        int digitSpace = (style >> 22) & 0x1F;
 
-                int digit_dist = (width / 32) + 1;
-                int digit_width = (width - digit_dist) / 2;
-
-                renderer.drawDigit(value / 10, x, y, digit_width, height, thickness);
-                renderer.drawDigit(value % 10, x + digit_dist + digit_width, y, digit_width, height, thickness);
-            }
-            break;
+        switch (range) {
+            case NUMBER_RANGE_0__9:
+                drawIntDigits(renderer, trimToRange(value, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__19:
+                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__99:
+                drawIntDigits(renderer, trimToRange(value, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__199:
+                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 199), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__999:
+                drawIntDigits(renderer, trimToRange(value, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__1999:
+                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 1999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__9999:
+                drawIntDigits(renderer, trimToRange(value, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__19999:
+                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
+            case NUMBER_RANGE_0__99999:
+                drawIntDigits(renderer, trimToRange(value, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                break;
         }
     }
 
-    public static enum NumberFormat {
-        NUMBER_FORMAT_0__9(0x10),
-        NUMBER_FORMAT_0__19(0x20),
-        NUMBER_FORMAT_0__99(0x30),
-        NUMBER_FORMAT_0__199(0x40),
-        NUMBER_FORMAT_0__999(0x50),
-        NUMBER_FORMAT_0__1999(0x60),
-        NUMBER_FORMAT_0__9999(0x70),
-        NUMBER_FORMAT_0__19999(0x80),
-        NUMBER_FORMAT_0__99999(0x90);
+    public static enum NumberRange {
+        NUMBER_RANGE_0__9(0x10),
+        NUMBER_RANGE_0__19(0x20),
+        NUMBER_RANGE_0__99(0x30),
+        NUMBER_RANGE_0__199(0x40),
+        NUMBER_RANGE_0__999(0x50),
+        NUMBER_RANGE_0__1999(0x60),
+        NUMBER_RANGE_0__9999(0x70),
+        NUMBER_RANGE_0__19999(0x80),
+        NUMBER_RANGE_0__99999(0x90);
 
         private int key;
 
-        private NumberFormat(int key) {
+        private NumberRange(int key) {
             this.key = key;
         }
 
-        public static NumberFormat resolveByKey(int key) {
-            for (NumberFormat format : NumberFormat.values()) {
+        public static NumberRange resolveByKey(int key) {
+            for (NumberRange format : NumberRange.values()) {
                 if (format.key == key) {
                     return format;
                 }

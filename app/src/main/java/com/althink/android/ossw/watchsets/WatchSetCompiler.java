@@ -281,13 +281,15 @@ public class WatchSetCompiler {
 
         switch (controlType) {
             case "number":
-                return compileIntegerControl(control);
+                return compileNumberControl(control);
+            case "text":
+                return compileTextControl(control);
 
         }
         throw new RuntimeException("Not supported control type: " + controlType);
     }
 
-    private byte[] compileIntegerControl(JSONObject control) throws Exception {
+    private byte[] compileNumberControl(JSONObject control) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_NUMBER);
@@ -296,19 +298,37 @@ public class WatchSetCompiler {
         JSONObject position = control.getJSONObject("position");
         os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
         os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
+
+        JSONObject style = control.getJSONObject("style");
+        int digitSpace = getIntegerInRange(style, "space", 0, 31);
+        os.write((control.optBoolean("leftPadded", false) ? 0x80 : 0) | (digitSpace >> 2));
+        switch (style.getString("type")) {
+            case "generated":
+                os.write((digitSpace & 0x3)<<6 | getIntegerInRange(style, "thickness", 0, 63));
+                os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
+                os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+                break;
+        }
+        JSONObject source = control.getJSONObject("source");
+        os.write(compileSource(source, DataSourceType.NUMBER, numberRange));
+        return os.toByteArray();
+    }
+
+    private byte[] compileTextControl(JSONObject control) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        os.write(WatchConstants.SCR_CONTROL_TEXT);
+        // format
+        os.write(0);
+        JSONObject position = control.getJSONObject("position");
+        os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
+        os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
         JSONObject size = control.getJSONObject("size");
         os.write(getIntegerInRange(size, "width", 0, WatchConstants.SCREEN_WIDTH));
         os.write(getIntegerInRange(size, "height", 0, WatchConstants.SCREEN_HEIGHT));
 
-        JSONObject style = control.getJSONObject("style");
-        switch (style.getString("type")) {
-            case "generated":
-                os.write(getIntegerInRange(style, "thickness", 0, 63));
-                break;
-        }
-        os.write(control.optBoolean("leftPadded", false) ? 0x80 : 0);
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.NUMBER, numberRange));
+        os.write(compileSource(source, DataSourceType.STRING, 17));
         return os.toByteArray();
     }
 
@@ -320,6 +340,18 @@ public class WatchSetCompiler {
                 return WatchConstants.NUMBER_RANGE_0__19;
             case "0-99":
                 return WatchConstants.NUMBER_RANGE_0__99;
+            case "0-199":
+                return WatchConstants.NUMBER_RANGE_0__199;
+            case "0-999":
+                return WatchConstants.NUMBER_RANGE_0__999;
+            case "0-1999":
+                return WatchConstants.NUMBER_RANGE_0__1999;
+            case "0-9999":
+                return WatchConstants.NUMBER_RANGE_0__9999;
+            case "0-19999":
+                return WatchConstants.NUMBER_RANGE_0__19999;
+            case "0-99999":
+                return WatchConstants.NUMBER_RANGE_0__99999;
             default:
                 throw new RuntimeException("Unknown number format: " + numberRange);
         }
@@ -331,11 +363,11 @@ public class WatchSetCompiler {
         int value;
         switch (source.getString("type")) {
             case "internal":
-                type = WatchConstants.DATA_SOURCE_TYPE_INTERNAL;
+                type = WatchConstants.DATA_SOURCE_INTERNAL;
                 value = getInternalSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
                 break;
             case "extension":
-                type = WatchConstants.DATA_SOURCE_TYPE_EXTERNAL;
+                type = WatchConstants.DATA_SOURCE_EXTERNAL;
                 String extensionId = source.getString("extensionId");
                 String property = source.getString("property");
                 value = addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, dataSourceRange));
@@ -359,7 +391,7 @@ public class WatchSetCompiler {
             if (!oldProperty.getType().equals(property.getType())) {
                 throw new IllegalArgumentException("Property type does not match");
             }
-            property.setRange(mergePropertyRange(property.getType(), property.getRange(), oldProperty.getRange()));
+            oldProperty.setRange(mergePropertyRange(property.getType(), property.getRange(), oldProperty.getRange()));
             return paramIdx;
         }
     }

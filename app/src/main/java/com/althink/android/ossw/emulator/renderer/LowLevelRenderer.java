@@ -45,11 +45,11 @@ public class LowLevelRenderer {
         }
 
         if (digit != 5 && digit != 6) {
-            drawRect(x + width - thickness, y, thickness, height / 2);
+            drawRect(x + width - thickness, y, thickness, (height+1) / 2);
         }
 
         if (digit != 2) {
-            drawRect(x + width - thickness, y + height / 2, thickness, height / 2);
+            drawRect(x + width - thickness, y + height / 2, thickness, (height+1) / 2);
         }
 
         if (digit != 1 && digit != 4 && digit != 7) {
@@ -57,11 +57,11 @@ public class LowLevelRenderer {
         }
 
         if (digit == 2 || digit == 6 || digit == 8 || digit == 0) {
-            drawRect(x, y + height / 2, thickness, height / 2);
+            drawRect(x, y + height / 2, thickness, (height + 1) / 2);
         }
 
         if (digit != 1 && digit != 2 && digit != 3 && digit != 7) {
-            drawRect(x, y, thickness, height / 2);
+            drawRect(x, y, thickness, (height + 1) / 2);
         }
 
         if (digit != 1 && digit != 7 && digit != 0) {

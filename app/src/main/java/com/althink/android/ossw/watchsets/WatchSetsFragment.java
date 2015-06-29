@@ -68,7 +68,7 @@ public class WatchSetsFragment extends Fragment {
                 StringBuilder text = new StringBuilder();
                 try {
                     File sdcard = Environment.getExternalStorageDirectory();
-                    File file = new File(sdcard, "watchmatch1.json");
+                    File file = new File(sdcard, "watchmatch3.json");
 
                     CompiledWatchSet watchSet = parseWatchSet(file);
 

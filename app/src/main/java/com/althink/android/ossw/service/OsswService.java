@@ -32,6 +32,8 @@ import com.althink.android.ossw.plugins.PluginManager;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -112,7 +114,7 @@ public class OsswService extends Service {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
 
-           // Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid());
+            // Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid());
         }
 
         @Override
@@ -120,7 +122,7 @@ public class OsswService extends Service {
             super.onCharacteristicChanged(gatt, characteristic);
 
             byte[] value = characteristic.getValue();
-           // Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
+            // Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION:
@@ -205,6 +207,17 @@ public class OsswService extends Service {
         return value;
     }
 
+    private String getStringPropertyFromExtension(String pluginId, String property) {
+        Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
+        if (query == null) {
+            return null;
+        }
+        query.moveToNext();
+        String value = query.getString(query.getColumnIndex(property));
+        query.close();
+        return value;
+    }
+
     private class PluginPropertyObserver extends ContentObserver {
         private final String TAG = "PluginPropertyObserver";
         private Handler mHandler;
@@ -218,7 +231,7 @@ public class OsswService extends Service {
 
         @Override
         public void onChange(boolean selfChange) {
-           // Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
+            // Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
 
             if (watchContext == null || watchContext.getExternalParameters() == null) {
                 return;
@@ -228,15 +241,21 @@ public class OsswService extends Service {
             for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
                 if (property.getPluginId().equals(pluginId)) {
                     switch (property.getType()) {
-                        case NUMBER:
+                        case NUMBER: {
                             Integer value = getIntPropertyFromExtension(pluginId, property.getPropertyId());
                             if (value != null) {
                                 sendExternalParamToWatchAsync((byte) propertyId, property, value);
                             }
-                            break;
+                        }
+                        break;
+                        case STRING: {
+                            String value = getStringPropertyFromExtension(pluginId, property.getPropertyId());
+                            if (value != null) {
+                                sendExternalParamToWatchAsync((byte) propertyId, property, value);
+                            }
+                        }
+                        break;
                     }
-
-
                 }
                 propertyId++;
             }
@@ -532,6 +551,25 @@ public class OsswService extends Service {
         return getIntPropertyFromExtension(parameter.getPluginId(), parameter.getPropertyId());
     }
 
+    private int calcExternalPropertySize(DataSourceType type, int range) {
+        switch (type) {
+            case NUMBER:
+                if (range == WatchConstants.NUMBER_RANGE_0__9 || range == WatchConstants.NUMBER_RANGE_0__19 || range == WatchConstants.NUMBER_RANGE_0__99 || range == WatchConstants.NUMBER_RANGE_0__199) {
+                    return 1;
+                } else if (range == WatchConstants.NUMBER_RANGE_0__999 || range == WatchConstants.NUMBER_RANGE_0__1999 || range == WatchConstants.NUMBER_RANGE_0__9999 || range == WatchConstants.NUMBER_RANGE_0__19999) {
+                    return 2;
+                } else if (range == WatchConstants.NUMBER_RANGE_0__99999) {
+                    return 3;
+                }
+                return 0;
+            case ENUM:
+                return 1;
+            case STRING:
+                return range + 1;
+        }
+        return 0;
+    }
+
     private void sendExternalParamToWatchInternal(byte paramId, WatchExtensionProperty property, Object value) {
 
         if (watchContext == null || watchContext.getExternalParameters() == null || watchContext.getExternalParameters().size() <= paramId) {
@@ -548,14 +586,37 @@ public class OsswService extends Service {
         }
 
         byte commandId = 0x30;
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(commandId);
+        os.write(paramId);
         switch (property.getType()) {
             case NUMBER:
-                txCharact.setValue(new byte[]{commandId, (byte) paramId, ((Integer) value).byteValue()});
+                switch(calcExternalPropertySize(property.getType(), property.getRange())){
+                    case 3:
+                        os.write(((Integer) value)>>16 & 0xFF);
+                    case 2:
+                        os.write(((Integer) value)>>8 & 0xFF);
+                    case 1:
+                        os.write(((Integer) value) & 0xFF);
+                }
+                //txCharact.setValue(new byte[]{commandId, (byte) parger.toHexString((Integer) value)amId, ((Integer) value).byteValue()});
+                break;
+            case STRING:
+                String v = (String) value;
+                if (v.length() > property.getRange()) {
+                    v = v.substring(0, property.getRange());
+                }
+                try {
+                    os.write(((String) value).getBytes());
+                } catch (IOException e) {
+                }
+                //txCharact.setValue(new byte[]{commandId, (byte) paramId, ((Integer) value).byteValue()});
                 break;
         }
+        txCharact.setValue(os.toByteArray());
 
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
-      //  Log.i(TAG, "Write: " + value + ", result: " + status);
+        //  Log.i(TAG, "Write: " + value + ", result: " + status);
     }
 
     private class UpdatePropertyInWatchTask extends AsyncTask<Object, Void, Void> {
@@ -641,7 +702,7 @@ public class OsswService extends Service {
 
         try {
             Date date = dateFormatGmt.parse(dateFormatLocal.format(new Date()));
-            int currentTime = (int)(date.getTime()/1000);
+            int currentTime = (int) (date.getTime() / 1000);
             txCharact.setValue(new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
             Log.i(TAG, "Set current time");
             boolean status = mBluetoothGatt.writeCharacteristic(txCharact);

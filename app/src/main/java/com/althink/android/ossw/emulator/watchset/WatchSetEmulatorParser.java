@@ -4,6 +4,7 @@ import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.NumberEmulatorControl;
+import com.althink.android.ossw.emulator.control.TextEmulatorControl;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.emulator.source.EmulatorDataSourceFactory;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -124,32 +125,43 @@ public class WatchSetEmulatorParser {
         switch (controlType) {
             case WatchConstants.SCR_CONTROL_NUMBER:
                 return parseNumberControl(is);
+            case WatchConstants.SCR_CONTROL_TEXT:
+                return parseTextControl(is);
             default:
                 throw new RuntimeException("Unknown control type: " + controlType);
         }
     }
 
     private EmulatorControl parseNumberControl(InputStream is) throws Exception {
-        NumberEmulatorControl.NumberFormat numberFormat = NumberEmulatorControl.NumberFormat.resolveByKey(is.read());
+        NumberEmulatorControl.NumberRange numberRange = NumberEmulatorControl.NumberRange.resolveByKey(is.read());
+        int x = is.read();
+        int y = is.read();
+        int style1 = is.read();
+        int style2 = is.read();
+        int style3 = is.read();
+        int style4 = is.read();
+        EmulatorDataSource dataSource = parseDataSource(is);
+        return new NumberEmulatorControl(numberRange, x, y, style1<<24 | style2<<16 | style3<<8 | style4, dataSource);
+    }
+
+    private EmulatorControl parseTextControl(InputStream is) throws Exception {
+        int format = is.read();
         int x = is.read();
         int y = is.read();
         int width = is.read();
         int height = is.read();
-        int style1 = is.read();
-        int style2 = is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
 
-        int thickness = style1 & 0x3F;
-        return new NumberEmulatorControl(numberFormat, x, y, width, height, thickness, dataSource);
+        return new TextEmulatorControl(format, x, y, width, height, dataSource);
     }
 
     private EmulatorDataSource parseDataSource(InputStream is) throws Exception {
         int type = is.read();
         int property = is.read();
         switch (type) {
-            case WatchConstants.DATA_SOURCE_TYPE_INTERNAL:
+            case WatchConstants.DATA_SOURCE_INTERNAL:
                 return EmulatorDataSourceFactory.internalDataSource(property);
-            case WatchConstants.DATA_SOURCE_TYPE_EXTERNAL:
+            case WatchConstants.DATA_SOURCE_EXTERNAL:
                 return EmulatorDataSourceFactory.externalDataSource(property, emulator);
             default:
                 throw new RuntimeException("unknown data source type: " + type);
