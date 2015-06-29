@@ -23,6 +23,7 @@ public class TextEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-
+        String value = (String) getData();
+        renderer.drawText(value, x, y, width, height);
     }
 }

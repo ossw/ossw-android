@@ -546,9 +546,17 @@ public class OsswService extends Service {
         if (propertyId < 0 || propertyId >= watchContext.getExternalParameters().size()) {
             return null;
         }
-        WatchExtensionProperty parameter = watchContext.getExternalParameters().get(propertyId);
+        WatchExtensionProperty property = watchContext.getExternalParameters().get(propertyId);
 
-        return getIntPropertyFromExtension(parameter.getPluginId(), parameter.getPropertyId());
+        switch (property.getType()) {
+            case ENUM:
+            case NUMBER:
+                return getIntPropertyFromExtension(property.getPluginId(), property.getPropertyId());
+            case STRING:
+                return getStringPropertyFromExtension(property.getPluginId(), property.getPropertyId());
+
+        }
+        return null;
     }
 
     private int calcExternalPropertySize(DataSourceType type, int range) {

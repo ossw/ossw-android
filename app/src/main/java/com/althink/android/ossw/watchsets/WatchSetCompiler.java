@@ -1,7 +1,10 @@
 package com.althink.android.ossw.watchsets;
 
+import android.content.Context;
 import android.util.Log;
 
+import com.althink.android.ossw.plugins.PluginDefinition;
+import com.althink.android.ossw.plugins.PluginManager;
 import com.althink.android.ossw.service.WatchExtensionFunction;
 import com.althink.android.ossw.service.WatchExtensionProperty;
 import com.althink.android.ossw.service.WatchOperationContext;
@@ -32,20 +35,34 @@ public class WatchSetCompiler {
 
     private List<WatchExtensionFunction> extensionFunctions = new LinkedList<>();
 
+    private Map<String, PluginDefinition> plugins;
+
+    private Context context;
+
+    public WatchSetCompiler(Context context) {
+        this.context = context;
+    }
+
     public CompiledWatchSet compile(String watchsetData) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        plugins = new HashMap<>();
+        List<PluginDefinition> pluginList = new PluginManager(context).findPlugins();
+        for (PluginDefinition plugin : pluginList) {
+            plugins.put(plugin.getPluginId(), plugin);
+        }
 
         try {
             JSONObject jsonObject = new JSONObject(watchsetData);
 
             String type = jsonObject.getString("type");
             if (!"watchset".equals(type)) {
-                throw new RuntimeException("Invalid file");
+                throw new KnownParseError("Invalid file type");
             }
 
             int apiVersion = jsonObject.getInt("apiVersion");
             if (apiVersion != 1) {
-                throw new RuntimeException("Invalid api version");
+                throw new KnownParseError("Invalid api version");
             }
 
             JSONObject data = jsonObject.getJSONObject("data");
@@ -56,7 +73,7 @@ public class WatchSetCompiler {
             JSONArray screens = data.getJSONArray("screens");
 
             if (screens.length() < 1 || screens.length() > 255) {
-                throw new RuntimeException("Invalid number of screens");
+                throw new KnownParseError("Invalid number of screens");
             }
 
             os.write(WatchConstants.WATCH_SET_SECTION_SCREENS);
@@ -80,18 +97,19 @@ public class WatchSetCompiler {
             watchset.setWatchContext(new WatchOperationContext(extensionParameters, extensionFunctions));
             watchset.setWatchData(os.toByteArray());
 
-            for(WatchExtensionProperty prop : extensionParameters) {
-                Log.i(TAG, "PARAM: " + prop.getPropertyId() +", " + prop.getType() + ", " + prop.getRange());
+            for (WatchExtensionProperty prop : extensionParameters) {
+                Log.i(TAG, "PARAM: " + prop.getPropertyId() + ", " + prop.getType() + ", " + prop.getRange());
             }
 
             Log.i(TAG, "size: " + watchset.getWatchData().length + ", data: " + Arrays.toString(watchset.getWatchData()));
 
             return watchset;
+        } catch (KnownParseError e) {
+            throw e;
         } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new KnownParseError("JSON format error");
         }
-
     }
 
     private byte[] compileExternalProperties() {
@@ -121,7 +139,7 @@ public class WatchSetCompiler {
             String screenId = screen.getString("id");
 
             if (screenIdToNumber.containsKey("screenId")) {
-                throw new RuntimeException("Screen " + screenId + " already defined");
+                throw new KnownParseError("Screen " + screenId + " is already defined");
             }
             screenIdToNumber.put(screenId, scrNo);
         }
@@ -154,11 +172,11 @@ public class WatchSetCompiler {
         JSONArray controls = screen.getJSONArray("controls");
 
         if (controls == null && controls.length() == 0) {
-            throw new RuntimeException("Empty screen");
+            throw new KnownParseError("Empty screen");
         }
 
         if (controls.length() > 255) {
-            throw new RuntimeException("Too many controls, 255 is max");
+            throw new KnownParseError("Too many controls, 255 is max");
         }
 
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS);
@@ -172,7 +190,7 @@ public class WatchSetCompiler {
         JSONObject actions = screen.getJSONObject("actions");
 
         if (actions.length() > 255) {
-            throw new RuntimeException("Too many actions");
+            throw new KnownParseError("Too many actions");
         }
 
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS);
@@ -228,7 +246,7 @@ public class WatchSetCompiler {
                 fParam = 0;
                 break;
             default:
-                throw new RuntimeException("Invalid action: " + action);
+                throw new KnownParseError("Invalid action: " + action);
         }
         os.write(fId);
         os.write(fParam >> 8);
@@ -249,7 +267,7 @@ public class WatchSetCompiler {
     private int resolveScreenId(String screenId) {
         Integer screenNo = screenIdToNumber.get(screenId);
         if (screenNo == null) {
-            throw new RuntimeException("Screen is not defined: " + screenId);
+            throw new KnownParseError("Screen is not defined: " + screenId);
         }
         return screenNo;
     }
@@ -273,7 +291,7 @@ public class WatchSetCompiler {
             case "button_back_long":
                 return WatchConstants.EVENT_BUTTON_BACK_LONG;
         }
-        throw new IllegalArgumentException("Unknown event key: " + eventKey);
+        throw new KnownParseError("Unknown event key: " + eventKey);
     }
 
     private byte[] compileControl(JSONObject control) throws Exception {
@@ -286,7 +304,7 @@ public class WatchSetCompiler {
                 return compileTextControl(control);
 
         }
-        throw new RuntimeException("Not supported control type: " + controlType);
+        throw new KnownParseError("Not supported control type: " + controlType);
     }
 
     private byte[] compileNumberControl(JSONObject control) throws Exception {
@@ -301,10 +319,13 @@ public class WatchSetCompiler {
 
         JSONObject style = control.getJSONObject("style");
         int digitSpace = getIntegerInRange(style, "space", 0, 31);
-        os.write((control.optBoolean("leftPadded", false) ? 0x80 : 0) | (digitSpace >> 2));
+
+        // do not allow left padding for ranges 0-1XXX
+        boolean leftPadded = style.optBoolean("leftPadded", false) && (numberRange >> 4)%2 != 0;
+        os.write((leftPadded ? 0x80 : 0) | (digitSpace >> 2));
         switch (style.getString("type")) {
             case "generated":
-                os.write((digitSpace & 0x3)<<6 | getIntegerInRange(style, "thickness", 0, 63));
+                os.write((digitSpace & 0x3) << 6 | getIntegerInRange(style, "thickness", 0, 63));
                 os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
                 os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
                 break;
@@ -353,7 +374,7 @@ public class WatchSetCompiler {
             case "0-99999":
                 return WatchConstants.NUMBER_RANGE_0__99999;
             default:
-                throw new RuntimeException("Unknown number format: " + numberRange);
+                throw new KnownParseError("Unknown number format: " + numberRange);
         }
     }
 
@@ -373,7 +394,7 @@ public class WatchSetCompiler {
                 value = addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, dataSourceRange));
                 break;
             default:
-                throw new RuntimeException("Unknown type: " + source.getString("type"));
+                throw new KnownParseError("Unknown type: " + source.getString("type"));
         }
 
         os.write(type);
@@ -382,6 +403,10 @@ public class WatchSetCompiler {
     }
 
     private int addExtensionProperty(WatchExtensionProperty property) {
+        if (plugins.get(property.getPluginId()) == null) {
+            throw new KnownParseError("Plugin is not available: " + property.getPluginId());
+        }
+
         int paramIdx = extensionParameters.indexOf(property);
         if (paramIdx < 0) {
             extensionParameters.add(property);
@@ -389,7 +414,7 @@ public class WatchSetCompiler {
         } else {
             WatchExtensionProperty oldProperty = extensionParameters.get(paramIdx);
             if (!oldProperty.getType().equals(property.getType())) {
-                throw new IllegalArgumentException("Property type does not match");
+                throw new KnownParseError("Property " + property.getPropertyId() + " is defined multiple times with different type");
             }
             oldProperty.setRange(mergePropertyRange(property.getType(), property.getRange(), oldProperty.getRange()));
             return paramIdx;
@@ -404,7 +429,7 @@ public class WatchSetCompiler {
     }
 
     private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
-        if(!dataSourceType.equals(DataSourceType.NUMBER)) {
+        if (!dataSourceType.equals(DataSourceType.NUMBER)) {
             throw new IllegalArgumentException("Unknown data source type");
         }
         switch (property) {
@@ -415,13 +440,13 @@ public class WatchSetCompiler {
             case "seconds":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS;
         }
-        throw new RuntimeException("Unknown property: " + property);
+        throw new KnownParseError("Unknown internal property: " + property);
     }
 
     private int getIntegerInRange(JSONObject control, String property, int min, int max) throws JSONException {
         int val = control.getInt(property);
         if (val < min || val > max) {
-            throw new RuntimeException("Value of " + property + " is not in range");
+            throw new KnownParseError("Value of " + property + " is not in range");
         }
         return val;
     }

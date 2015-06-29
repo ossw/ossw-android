@@ -80,6 +80,8 @@ public class WatchSetsFragment extends Fragment {
 
                     WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet.getWatchData());
                     emulator.showWatchSet(model);
+                } catch (KnownParseError e) {
+                    Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
                 }
@@ -108,7 +110,7 @@ public class WatchSetsFragment extends Fragment {
 
     public CompiledWatchSet parseWatchSet(File file) {
         String fileData = loadFileData(file);
-        return new WatchSetCompiler().compile(fileData);
+        return new WatchSetCompiler(getActivity()).compile(fileData);
     }
 
     private String loadFileData(File file) {

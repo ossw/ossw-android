@@ -45,11 +45,11 @@ public class LowLevelRenderer {
         }
 
         if (digit != 5 && digit != 6) {
-            drawRect(x + width - thickness, y, thickness, (height+1) / 2);
+            drawRect(x + width - thickness, y, thickness, (height + 1) / 2);
         }
 
         if (digit != 2) {
-            drawRect(x + width - thickness, y + height / 2, thickness, (height+1) / 2);
+            drawRect(x + width - thickness, y + height / 2, thickness, (height + 1) / 2);
         }
 
         if (digit != 1 && digit != 4 && digit != 7) {
@@ -87,6 +87,14 @@ public class LowLevelRenderer {
             return inverted ? BACKLIGHT_COLOR : Color.WHITE;
         } else {
             return inverted ? Color.BLACK : Color.WHITE;
+        }
+    }
+
+    public void drawText(String value, int x, int y, int width, int height) {
+        paint.setColor(getForegroundColor());
+        paint.setTextSize(36);
+        if (value != null) {
+            canvas.drawText(value, x * scale, y * scale+20, paint);
         }
     }
 }

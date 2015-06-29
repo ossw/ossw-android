@@ -2,6 +2,7 @@ package com.althink.android.ossw.emulator.control;
 
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
+import com.althink.android.ossw.watch.WatchConstants;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -30,15 +31,19 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         return value;
     }
 
-    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
+    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness, boolean leftPadded) {
         int currentX = x;
         int div = 1;
         for (int i = 1; i < digitsNo; i++) {
             div *= 10;
         }
         for (int i = 0; i < digitsNo; i++) {
-            renderer.drawDigit((value / div)%10, currentX, y, digitWidth, digitHeight, digitThickness);
-            div = div/10;
+            int scaledVal = value / div;
+            int digit = scaledVal % 10;
+            if (scaledVal > 0 || leftPadded || div == 1) {
+                renderer.drawDigit(digit, currentX, y, digitWidth, digitHeight, digitThickness);
+            }
+            div = div / 10;
             currentX += digitWidth + digitSpace;
         }
     }
@@ -48,10 +53,10 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         for (int i = 1; i < digitsNo; i++) {
             div *= 10;
         }
-        if(value >= div) {
+        if (value >= div) {
             renderer.drawRect(x, y, digitThickness, digitHeight);
         }
-        drawIntDigits(renderer, value, digitsNo - 1, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness);
+        drawIntDigits(renderer, value, digitsNo - 1, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness, false);
     }
 
     public void draw(LowLevelRenderer renderer) {
@@ -63,34 +68,35 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         int digitHeight = style & 0xFF;
         int thickness = (style >> 16) & 0x3F;
         int digitSpace = (style >> 22) & 0x1F;
+        boolean leftPadded = (style & 0x80000000) != 0;
 
         switch (range) {
             case NUMBER_RANGE_0__9:
-                drawIntDigits(renderer, trimToRange(value, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawIntDigits(renderer, trimToRange(value, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__19:
                 drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__99:
-                drawIntDigits(renderer, trimToRange(value, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawIntDigits(renderer, trimToRange(value, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__199:
                 drawOneStartingIntDigits(renderer, trimToRange(value, 0, 199), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__999:
-                drawIntDigits(renderer, trimToRange(value, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawIntDigits(renderer, trimToRange(value, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__1999:
                 drawOneStartingIntDigits(renderer, trimToRange(value, 0, 1999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__9999:
-                drawIntDigits(renderer, trimToRange(value, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawIntDigits(renderer, trimToRange(value, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__19999:
                 drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__99999:
-                drawIntDigits(renderer, trimToRange(value, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawIntDigits(renderer, trimToRange(value, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
         }
     }
