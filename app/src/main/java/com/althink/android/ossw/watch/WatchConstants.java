@@ -86,5 +86,6 @@ public class WatchConstants {
     public static final int EVENT_BUTTON_DOWN_LONG = 6;
     public static final int EVENT_BUTTON_BACK_LONG = 7;
 
-    public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x10;
+    public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
+    public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;
 }

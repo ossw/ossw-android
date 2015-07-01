@@ -36,7 +36,7 @@ public class WatchSetsFragment extends Fragment {
     private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private LayoutInflater mInflator;
     private WatchEmulator emulator;
-    private byte[] data;
+    private CompiledWatchSet watchSet;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,8 +51,8 @@ public class WatchSetsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
-                if (data != null) {
-                    osswBleService.uploadData(UploadDataType.WATCHSET, data);
+                if (watchSet != null) {
+                    osswBleService.uploadData(UploadDataType.WATCHSET, watchSet.getWatchData());
                 }
             }
         });
@@ -70,13 +70,13 @@ public class WatchSetsFragment extends Fragment {
                     File sdcard = Environment.getExternalStorageDirectory();
                     File file = new File(sdcard, "watchmatch3.json");
 
-                    CompiledWatchSet watchSet = parseWatchSet(file);
+                    watchSet = parseWatchSet(file);
 
-                    Log.i(TAG, "File " + file.getPath() + " successfully loaded");
+                    Log.i(TAG, "File " + file.getPath() + " successfully loaded, watchSetId: " + watchSet.getId());
 
-                    ((MainActivity) getActivity()).getOsswBleService().setWatchOperationContext(watchSet.getWatchContext());
+                    //((MainActivity) getActivity()).getOsswBleService().setWatchOperationContext(watchSet.getWatchContext());
 
-                    data = watchSet.getWatchData();
+                    ((MainActivity) getActivity()).getOsswBleService().registerWatchSet(watchSet);
 
                     WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet.getWatchData());
                     emulator.showWatchSet(model);
@@ -136,16 +136,11 @@ public class WatchSetsFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Log.i(TAG, "On create");
-        Log.i(TAG, "DENSITY: " + getResources().getDisplayMetrics().widthPixels);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        Log.i(TAG, "On destroy");
     }
 
 }

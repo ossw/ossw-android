@@ -7,6 +7,7 @@ import com.althink.android.ossw.service.WatchOperationContext;
  */
 public class CompiledWatchSet {
 
+    private int id;
     private String name;
     private byte[] watchData;
     private WatchOperationContext watchContext;
@@ -25,6 +26,14 @@ public class CompiledWatchSet {
 
     public void setWatchData(byte[] watchData) {
         this.watchData = watchData;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public WatchOperationContext getWatchContext() {

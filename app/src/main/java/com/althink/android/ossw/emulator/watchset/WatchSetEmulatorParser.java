@@ -29,8 +29,13 @@ public class WatchSetEmulatorParser {
     public WatchSetEmulatorModel parse(byte[] watchSetData) {
         try {
             InputStream is = new ByteArrayInputStream(watchSetData);
+            //skip watchset id
+            int id = is.read()<<24;
+            id |= is.read()<<16;
+            id |= is.read()<<8;
+            id |= is.read();
 
-            WatchSetEmulatorModel model = new WatchSetEmulatorModel();
+            WatchSetEmulatorModel model = new WatchSetEmulatorModel(id);
 
             int key;
             while ((key = is.read()) != WatchConstants.WATCH_SET_END_OF_DATA) {

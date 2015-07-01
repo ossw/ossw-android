@@ -1,6 +1,8 @@
 package com.althink.android.ossw.watchsets;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.althink.android.ossw.plugins.PluginDefinition;
@@ -44,7 +46,6 @@ public class WatchSetCompiler {
     }
 
     public CompiledWatchSet compile(String watchsetData) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         plugins = new HashMap<>();
         List<PluginDefinition> pluginList = new PluginManager(context).findPlugins();
@@ -67,7 +68,6 @@ public class WatchSetCompiler {
 
             JSONObject data = jsonObject.getJSONObject("data");
 
-            CompiledWatchSet watchset = new CompiledWatchSet();
             String watchsetName = data.getString("name");
 
             JSONArray screens = data.getJSONArray("screens");
@@ -76,8 +76,21 @@ public class WatchSetCompiler {
                 throw new KnownParseError("Invalid number of screens");
             }
 
-            os.write(WatchConstants.WATCH_SET_SECTION_SCREENS);
             byte[] screensData = compileScreensSection(screens);
+
+            byte[] extensionPropertiesData = compileExternalProperties();
+
+            CompiledWatchSet watchset = new CompiledWatchSet();
+            watchset.setId(generateWatchSetId());
+
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            // write watch set id
+            os.write(watchset.getId()>>24);
+            os.write(watchset.getId()>>16 & 0xFF);
+            os.write(watchset.getId()>>8 & 0xFF);
+            os.write(watchset.getId() & 0xFF);
+
+            os.write(WatchConstants.WATCH_SET_SECTION_SCREENS);
 
             os.write(screensData.length >> 8);
             os.write(screensData.length & 0xFF);
@@ -86,7 +99,6 @@ public class WatchSetCompiler {
             // write external properties info
             os.write(WatchConstants.WATCH_SET_SECTION_EXTERNAL_PROPERTIES);
             //write number of properties
-            byte[] extensionPropertiesData = compileExternalProperties();
             os.write(extensionPropertiesData.length >> 8);
             os.write(extensionPropertiesData.length & 0xFF);
             os.write(extensionPropertiesData);
@@ -96,6 +108,10 @@ public class WatchSetCompiler {
             watchset.setName(watchsetName);
             watchset.setWatchContext(new WatchOperationContext(extensionParameters, extensionFunctions));
             watchset.setWatchData(os.toByteArray());
+
+            if (watchset.getWatchData().length + 1 > 0x1000) {
+                throw new KnownParseError("Watchset is too big, this version has 4K bytes limit");
+            }
 
             for (WatchExtensionProperty prop : extensionParameters) {
                 Log.i(TAG, "PARAM: " + prop.getPropertyId() + ", " + prop.getType() + ", " + prop.getRange());
@@ -110,6 +126,14 @@ public class WatchSetCompiler {
             Log.e(TAG, e.getMessage(), e);
             throw new KnownParseError("JSON format error");
         }
+    }
+
+    private int generateWatchSetId() {
+        String prefKey = "next_watchset_id";
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        int value = sharedPref.getInt(prefKey, 1);
+        sharedPref.edit().putInt(prefKey, value + 1).commit();
+        return value;
     }
 
     private byte[] compileExternalProperties() {
@@ -321,7 +345,7 @@ public class WatchSetCompiler {
         int digitSpace = getIntegerInRange(style, "space", 0, 31);
 
         // do not allow left padding for ranges 0-1XXX
-        boolean leftPadded = style.optBoolean("leftPadded", false) && (numberRange >> 4)%2 != 0;
+        boolean leftPadded = style.optBoolean("leftPadded", false) && (numberRange >> 4) % 2 != 0;
         os.write((leftPadded ? 0x80 : 0) | (digitSpace >> 2));
         switch (style.getString("type")) {
             case "generated":

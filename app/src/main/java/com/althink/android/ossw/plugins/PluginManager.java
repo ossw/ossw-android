@@ -59,7 +59,7 @@ public class PluginManager {
             Cursor cursor = context.getContentResolver().query(propertiesApiUri, null, null, null, null);
             if (cursor != null && cursor.getCount() > 0) {
                 while (cursor.moveToNext()) {
-                    properties.add(new PluginPropertyDefinition(cursor.getInt(0), cursor.getString(1), cursor.getString(2)));
+                    properties.add(new PluginPropertyDefinition(cursor.getInt(0), cursor.getString(1), cursor.getString(2), PluginPropertyType.valueOf(cursor.getString(3))));
                 }
             }
             cursor.close();

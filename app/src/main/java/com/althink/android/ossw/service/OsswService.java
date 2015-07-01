@@ -29,7 +29,9 @@ import com.althink.android.ossw.gmail.GmailProvider;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
+import com.althink.android.ossw.plugins.PluginPropertyDefinition;
 import com.althink.android.ossw.watch.WatchConstants;
+import com.althink.android.ossw.watchsets.CompiledWatchSet;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.io.ByteArrayOutputStream;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +79,11 @@ public class OsswService extends Service {
 
     private Map<String, ContentObserver> contentObservers = new HashMap<>();
 
+    private Map<String, Object> sentValuesCache = new HashMap<>();
+
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
+
+    private Map<Integer, CompiledWatchSet> watchSets = new HashMap<>();
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
@@ -125,6 +132,15 @@ public class OsswService extends Service {
             // Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
                 switch (value[0]) {
+                    case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
+                        int watchSetId = value[1] << 24 | value[2] << 16 | value[3] >> 8 | value[4];
+                        CompiledWatchSet watchSet = watchSets.get(watchSetId);
+                        if (watchSet != null) {
+                            setWatchOperationContext(watchSet.getWatchContext());
+                        } else {
+                            setWatchOperationContext(null);
+                        }
+                        break;
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION:
                         invokeExtensionFunction(value[1]);
                         break;
@@ -142,6 +158,7 @@ public class OsswService extends Service {
                     public void run() {
                         setCharacteristicNotification(getOsswRxCharacteristic(), true);
 
+                        resetSentValuesCache();
                         mConnectionState = STATE_CONNECTED;
                         broadcastUpdate(ACTION_WATCH_CONNECTED);
 
@@ -156,6 +173,10 @@ public class OsswService extends Service {
             }
         }
     };
+
+    private void resetSentValuesCache() {
+        sentValuesCache.clear();
+    }
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
@@ -188,6 +209,11 @@ public class OsswService extends Service {
 
     public void setWatchOperationContext(WatchOperationContext watchContext) {
         this.watchContext = watchContext;
+        resetSentValuesCache();
+    }
+
+    public void registerWatchSet(CompiledWatchSet watchSet) {
+        watchSets.put(watchSet.getId(), watchSet);
     }
 
     public class LocalBinder extends Binder {
@@ -196,25 +222,26 @@ public class OsswService extends Service {
         }
     }
 
-    private Integer getIntPropertyFromExtension(String pluginId, String property) {
+    private Object getPropertyFromExtension(String pluginId, String property, DataSourceType type) {
         Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
         if (query == null) {
             return null;
         }
-        query.moveToNext();
-        int value = query.getInt(query.getColumnIndex(property));
-        query.close();
-        return value;
-    }
-
-    private String getStringPropertyFromExtension(String pluginId, String property) {
-        Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
-        if (query == null) {
-            return null;
+        Object value = null;
+        try {
+            query.moveToNext();
+            switch (type) {
+                case ENUM:
+                case NUMBER:
+                    value = query.getInt(query.getColumnIndex(property));
+                    break;
+                case STRING:
+                    value = query.getString(query.getColumnIndex(property));
+                    break;
+            }
+        } finally {
+            query.close();
         }
-        query.moveToNext();
-        String value = query.getString(query.getColumnIndex(property));
-        query.close();
         return value;
     }
 
@@ -240,25 +267,19 @@ public class OsswService extends Service {
             int propertyId = 0;
             for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
                 if (property.getPluginId().equals(pluginId)) {
-                    switch (property.getType()) {
-                        case NUMBER: {
-                            Integer value = getIntPropertyFromExtension(pluginId, property.getPropertyId());
-                            if (value != null) {
-                                sendExternalParamToWatchAsync((byte) propertyId, property, value);
-                            }
-                        }
-                        break;
-                        case STRING: {
-                            String value = getStringPropertyFromExtension(pluginId, property.getPropertyId());
-                            if (value != null) {
-                                sendExternalParamToWatchAsync((byte) propertyId, property, value);
-                            }
-                        }
-                        break;
-                    }
+                    handleExternalProprtyChange((byte) propertyId, property);
                 }
                 propertyId++;
             }
+        }
+
+        private void handleExternalProprtyChange(byte propertyId, WatchExtensionProperty property) {
+            Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId(), property.getType());
+            Object cachedValue = sentValuesCache.get(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()));
+            if ((cachedValue != null && cachedValue.equals(value)) || (value == null && cachedValue == null)) {
+                return;
+            }
+            sendExternalParamToWatchAsync((byte) propertyId, property, value);
         }
     }
 
@@ -539,24 +560,17 @@ public class OsswService extends Service {
         new UpdatePropertyInWatchTask().execute(paramId, property, value);
     }
 
-    public Object getExternalProperty(int propertyId) {
-        if (watchContext == null || watchContext.getExternalParameters() == null) {
+    public Object getExternalProperty(int watchSetId, int propertyId) {
+        CompiledWatchSet watchSet = watchSets.get(watchSetId);
+        if (watchSet == null || watchSet.getWatchContext() == null || watchSet.getWatchContext().getExternalParameters() == null) {
             return null;
         }
-        if (propertyId < 0 || propertyId >= watchContext.getExternalParameters().size()) {
+        if (propertyId < 0 || propertyId >= watchSet.getWatchContext().getExternalParameters().size()) {
             return null;
         }
-        WatchExtensionProperty property = watchContext.getExternalParameters().get(propertyId);
+        WatchExtensionProperty property = watchSet.getWatchContext().getExternalParameters().get(propertyId);
 
-        switch (property.getType()) {
-            case ENUM:
-            case NUMBER:
-                return getIntPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-            case STRING:
-                return getStringPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-
-        }
-        return null;
+        return getPropertyFromExtension(property.getPluginId(), property.getPropertyId(), property.getType());
     }
 
     private int calcExternalPropertySize(DataSourceType type, int range) {
@@ -593,21 +607,22 @@ public class OsswService extends Service {
             return;
         }
 
+        Log.i(TAG, "Update property: " + property.getPropertyId());
+
         byte commandId = 0x30;
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         os.write(commandId);
         os.write(paramId);
         switch (property.getType()) {
             case NUMBER:
-                switch(calcExternalPropertySize(property.getType(), property.getRange())){
+                switch (calcExternalPropertySize(property.getType(), property.getRange())) {
                     case 3:
-                        os.write(((Integer) value)>>16 & 0xFF);
+                        os.write(((Integer) value) >> 16 & 0xFF);
                     case 2:
-                        os.write(((Integer) value)>>8 & 0xFF);
+                        os.write(((Integer) value) >> 8 & 0xFF);
                     case 1:
                         os.write(((Integer) value) & 0xFF);
                 }
-                //txCharact.setValue(new byte[]{commandId, (byte) parger.toHexString((Integer) value)amId, ((Integer) value).byteValue()});
                 break;
             case STRING:
                 String v = (String) value;
@@ -618,13 +633,19 @@ public class OsswService extends Service {
                     os.write(((String) value).getBytes());
                 } catch (IOException e) {
                 }
-                //txCharact.setValue(new byte[]{commandId, (byte) paramId, ((Integer) value).byteValue()});
                 break;
         }
         txCharact.setValue(os.toByteArray());
 
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        if (status) {
+            sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
+        }
         //  Log.i(TAG, "Write: " + value + ", result: " + status);
+    }
+
+    private String buildCachePropertyKey(String pluginId, String propertyId) {
+        return pluginId + ":" + propertyId;
     }
 
     private class UpdatePropertyInWatchTask extends AsyncTask<Object, Void, Void> {

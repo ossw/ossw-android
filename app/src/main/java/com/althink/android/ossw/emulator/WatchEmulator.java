@@ -24,6 +24,8 @@ public class WatchEmulator {
 
     private boolean backlight = false;
 
+    private int watchSetId = 0;
+
     public WatchEmulator(OsswServiceProvider osswBleServiceProvider) {
         this.osswBleServiceProvider = osswBleServiceProvider;
     }
@@ -45,6 +47,8 @@ public class WatchEmulator {
     }
 
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
+
+        watchSetId = watchSet.getId();
         screenRenderer = new WatchSetRenderer(watchSet, osswBleServiceProvider.getService(), this);
     }
 
@@ -61,6 +65,6 @@ public class WatchEmulator {
         if (service == null) {
             return null;
         }
-        return service.getExternalProperty(property);
+        return service.getExternalProperty(watchSetId, property);
     }
 }

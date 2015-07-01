@@ -17,12 +17,14 @@ import java.util.Map;
  */
 public class WatchSetEmulatorModel {
 
+    private int id;
     List<WatchSetScreenEmulatorModel> screens;
     private int currentScreen;
     private Map<EmulatorEvent, EmulatorAction> eventMapping =  new HashMap<>();
 
 
-    public WatchSetEmulatorModel() {
+    public WatchSetEmulatorModel(int id) {
+        this.id = id;
     }
 
     private EmulatorEvent buildEventForId(int eventId) {
@@ -62,6 +64,10 @@ public class WatchSetEmulatorModel {
     public void setScreens(List<WatchSetScreenEmulatorModel> screens) {
         this.screens = screens;
         setCurrentScreen(0);
+    }
+
+    public int getId() {
+        return id;
     }
 
     public EmulatorAction getActionForEvent(EmulatorEvent event) {
