@@ -397,6 +397,42 @@ public class WatchSetCompiler {
                 return WatchConstants.NUMBER_RANGE_0__19999;
             case "0-99999":
                 return WatchConstants.NUMBER_RANGE_0__99999;
+            case "0-9.9":
+                return WatchConstants.NUMBER_RANGE_0__9_9;
+            case "0-19.9":
+                return WatchConstants.NUMBER_RANGE_0__19_9;
+            case "0-99.9":
+                return WatchConstants.NUMBER_RANGE_0__99_9;
+            case "0-199.9":
+                return WatchConstants.NUMBER_RANGE_0__199_9;
+            case "0-999.9":
+                return WatchConstants.NUMBER_RANGE_0__999_9;
+            case "0-1999.9":
+                return WatchConstants.NUMBER_RANGE_0__1999_9;
+            case "0-9999.9":
+                return WatchConstants.NUMBER_RANGE_0__9999_9;
+            case "0-19999.9":
+                return WatchConstants.NUMBER_RANGE_0__19999_9;
+            case "0-99999.9":
+                return WatchConstants.NUMBER_RANGE_0__99999_9;
+            case "0-9.99":
+                return WatchConstants.NUMBER_RANGE_0__9_99;
+            case "0-19.99":
+                return WatchConstants.NUMBER_RANGE_0__19_99;
+            case "0-99.99":
+                return WatchConstants.NUMBER_RANGE_0__99_99;
+            case "0-199.99":
+                return WatchConstants.NUMBER_RANGE_0__199_99;
+            case "0-999.99":
+                return WatchConstants.NUMBER_RANGE_0__999_99;
+            case "0-1999.99":
+                return WatchConstants.NUMBER_RANGE_0__1999_99;
+            case "0-9999.99":
+                return WatchConstants.NUMBER_RANGE_0__9999_99;
+            case "0-19999.99":
+                return WatchConstants.NUMBER_RANGE_0__19999_99;
+            case "0-99999.99":
+                return WatchConstants.NUMBER_RANGE_0__99999_99;
             default:
                 throw new KnownParseError("Unknown number format: " + numberRange);
         }

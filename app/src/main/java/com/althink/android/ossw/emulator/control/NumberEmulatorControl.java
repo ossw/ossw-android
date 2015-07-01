@@ -60,43 +60,47 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-        Integer value = (Integer) getData();
-        if (value == null) {
+        Object value = getData();
+        if (value == null || !(value instanceof Integer)) {
             return;
         }
+        int intValue = (int)value;
+        
         int digitWidth = style >> 8 & 0xFF;
         int digitHeight = style & 0xFF;
         int thickness = (style >> 16) & 0x3F;
         int digitSpace = (style >> 22) & 0x1F;
         boolean leftPadded = (style & 0x80000000) != 0;
 
+
+
         switch (range) {
             case NUMBER_RANGE_0__9:
-                drawIntDigits(renderer, trimToRange(value, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+                drawIntDigits(renderer, trimToRange(intValue, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__19:
-                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 19), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__99:
-                drawIntDigits(renderer, trimToRange(value, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+                drawIntDigits(renderer, trimToRange(intValue, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__199:
-                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 199), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 199), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__999:
-                drawIntDigits(renderer, trimToRange(value, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+                drawIntDigits(renderer, trimToRange(intValue, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__1999:
-                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 1999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 1999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__9999:
-                drawIntDigits(renderer, trimToRange(value, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+                drawIntDigits(renderer, trimToRange(intValue, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
             case NUMBER_RANGE_0__19999:
-                drawOneStartingIntDigits(renderer, trimToRange(value, 0, 19999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
+                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 19999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
                 break;
             case NUMBER_RANGE_0__99999:
-                drawIntDigits(renderer, trimToRange(value, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+                drawIntDigits(renderer, trimToRange(intValue, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
                 break;
         }
     }
@@ -110,7 +114,25 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         NUMBER_RANGE_0__1999(0x60),
         NUMBER_RANGE_0__9999(0x70),
         NUMBER_RANGE_0__19999(0x80),
-        NUMBER_RANGE_0__99999(0x90);
+        NUMBER_RANGE_0__99999(0x90),
+        NUMBER_RANGE_0__9_9(0x11),
+        NUMBER_RANGE_0__19_9(0x21),
+        NUMBER_RANGE_0__99_9(0x31),
+        NUMBER_RANGE_0__199_9(0x41),
+        NUMBER_RANGE_0__999_9(0x51),
+        NUMBER_RANGE_0__1999_9(0x61),
+        NUMBER_RANGE_0__9999_9(0x71),
+        NUMBER_RANGE_0__19999_9(0x81),
+        NUMBER_RANGE_0__99999_9(0x91),
+        NUMBER_RANGE_0__9_99(0x12),
+        NUMBER_RANGE_0__19_99(0x22),
+        NUMBER_RANGE_0__99_99(0x32),
+        NUMBER_RANGE_0__199_99(0x42),
+        NUMBER_RANGE_0__999_99(0x52),
+        NUMBER_RANGE_0__1999_99(0x62),
+        NUMBER_RANGE_0__9999_99(0x72),
+        NUMBER_RANGE_0__19999_99(0x82),
+        NUMBER_RANGE_0__99999_99(0x92);
 
         private int key;
 

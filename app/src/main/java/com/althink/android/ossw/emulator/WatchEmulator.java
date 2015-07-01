@@ -65,6 +65,6 @@ public class WatchEmulator {
         if (service == null) {
             return null;
         }
-        return service.getExternalProperty(watchSetId, property);
+        return service.getExternalPropertyValue(watchSetId, property);
     }
 }

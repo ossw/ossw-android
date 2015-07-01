@@ -36,6 +36,8 @@ import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -137,6 +139,7 @@ public class OsswService extends Service {
                         CompiledWatchSet watchSet = watchSets.get(watchSetId);
                         if (watchSet != null) {
                             setWatchOperationContext(watchSet.getWatchContext());
+                            sendAllExternalParamsValues();
                         } else {
                             setWatchOperationContext(null);
                         }
@@ -145,6 +148,15 @@ public class OsswService extends Service {
                         invokeExtensionFunction(value[1]);
                         break;
                 }
+            }
+        }
+
+        private void sendAllExternalParamsValues() {
+            byte paramId = 0;
+            for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
+                Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
+                sendExternalParamToWatchAsync(paramId, property, value);
+                paramId++;
             }
         }
 
@@ -222,7 +234,12 @@ public class OsswService extends Service {
         }
     }
 
-    private Object getPropertyFromExtension(String pluginId, String property, DataSourceType type) {
+    private Object getPropertyFromExtension(String pluginId, String property) {
+        PluginPropertyDefinition propertyDefinition = getPropertyDefinition(pluginId, property);
+        if (propertyDefinition == null) {
+            return null;
+        }
+
         Cursor query = getContentResolver().query(Uri.parse("content://" + pluginId + "/properties"), new String[]{property}, null, null, null);
         if (query == null) {
             return null;
@@ -230,10 +247,13 @@ public class OsswService extends Service {
         Object value = null;
         try {
             query.moveToNext();
-            switch (type) {
+            switch (propertyDefinition.getType()) {
                 case ENUM:
-                case NUMBER:
+                case INTEGER:
                     value = query.getInt(query.getColumnIndex(property));
+                    break;
+                case FLOAT:
+                    value = query.getFloat(query.getColumnIndex(property));
                     break;
                 case STRING:
                     value = query.getString(query.getColumnIndex(property));
@@ -267,20 +287,29 @@ public class OsswService extends Service {
             int propertyId = 0;
             for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
                 if (property.getPluginId().equals(pluginId)) {
-                    handleExternalProprtyChange((byte) propertyId, property);
+                    handleExternalPropertyChange((byte) propertyId, property);
                 }
                 propertyId++;
             }
         }
 
-        private void handleExternalProprtyChange(byte propertyId, WatchExtensionProperty property) {
-            Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId(), property.getType());
-            Object cachedValue = sentValuesCache.get(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()));
-            if ((cachedValue != null && cachedValue.equals(value)) || (value == null && cachedValue == null)) {
-                return;
-            }
+        private void handleExternalPropertyChange(byte propertyId, WatchExtensionProperty property) {
+            Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
             sendExternalParamToWatchAsync((byte) propertyId, property, value);
         }
+    }
+
+    private PluginPropertyDefinition getPropertyDefinition(String pluginId, String propertyId) {
+        for (PluginDefinition plugin : plugins) {
+            if (plugin.getPluginId().equals(pluginId)) {
+                for (PluginPropertyDefinition propertyDef : plugin.getProperties()) {
+                    if (propertyDef.getName().equals(propertyId)) {
+                        return propertyDef;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -557,10 +586,14 @@ public class OsswService extends Service {
     }
 
     public void sendExternalParamToWatchAsync(byte paramId, WatchExtensionProperty property, Object value) {
+        Object cachedValue = sentValuesCache.get(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()));
+        if ((cachedValue != null && cachedValue.equals(value)) || (value == null && cachedValue == null)) {
+            return;
+        }
         new UpdatePropertyInWatchTask().execute(paramId, property, value);
     }
 
-    public Object getExternalProperty(int watchSetId, int propertyId) {
+    public Object getExternalPropertyValue(int watchSetId, int propertyId) {
         CompiledWatchSet watchSet = watchSets.get(watchSetId);
         if (watchSet == null || watchSet.getWatchContext() == null || watchSet.getWatchContext().getExternalParameters() == null) {
             return null;
@@ -570,17 +603,41 @@ public class OsswService extends Service {
         }
         WatchExtensionProperty property = watchSet.getWatchContext().getExternalParameters().get(propertyId);
 
-        return getPropertyFromExtension(property.getPluginId(), property.getPropertyId(), property.getType());
+        return getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
     }
 
     private int calcExternalPropertySize(DataSourceType type, int range) {
         switch (type) {
             case NUMBER:
-                if (range == WatchConstants.NUMBER_RANGE_0__9 || range == WatchConstants.NUMBER_RANGE_0__19 || range == WatchConstants.NUMBER_RANGE_0__99 || range == WatchConstants.NUMBER_RANGE_0__199) {
+                if (range == WatchConstants.NUMBER_RANGE_0__9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19 ||
+                        range == WatchConstants.NUMBER_RANGE_0__99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__199 ||
+                        range == WatchConstants.NUMBER_RANGE_0__9_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19_9) {
                     return 1;
-                } else if (range == WatchConstants.NUMBER_RANGE_0__999 || range == WatchConstants.NUMBER_RANGE_0__1999 || range == WatchConstants.NUMBER_RANGE_0__9999 || range == WatchConstants.NUMBER_RANGE_0__19999) {
+                } else if (range == WatchConstants.NUMBER_RANGE_0__999 ||
+                        range == WatchConstants.NUMBER_RANGE_0__1999 ||
+                        range == WatchConstants.NUMBER_RANGE_0__9999 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19999 ||
+                        range == WatchConstants.NUMBER_RANGE_0__99_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__199_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__999_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__1999_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__9_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__99_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__199_99) {
                     return 2;
-                } else if (range == WatchConstants.NUMBER_RANGE_0__99999) {
+                } else if (range == WatchConstants.NUMBER_RANGE_0__99999 ||
+                        range == WatchConstants.NUMBER_RANGE_0__9999_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19999_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__99999_9 ||
+                        range == WatchConstants.NUMBER_RANGE_0__999_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__1999_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__9999_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__19999_99 ||
+                        range == WatchConstants.NUMBER_RANGE_0__99999_99) {
                     return 3;
                 }
                 return 0;
@@ -607,7 +664,7 @@ public class OsswService extends Service {
             return;
         }
 
-        Log.i(TAG, "Update property: " + property.getPropertyId());
+        Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
 
         byte commandId = 0x30;
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -615,13 +672,14 @@ public class OsswService extends Service {
         os.write(paramId);
         switch (property.getType()) {
             case NUMBER:
+                Integer intValue = buildIntValue(value, property.getRange());
                 switch (calcExternalPropertySize(property.getType(), property.getRange())) {
                     case 3:
-                        os.write(((Integer) value) >> 16 & 0xFF);
+                        os.write((intValue) >> 16 & 0xFF);
                     case 2:
-                        os.write(((Integer) value) >> 8 & 0xFF);
+                        os.write((intValue) >> 8 & 0xFF);
                     case 1:
-                        os.write(((Integer) value) & 0xFF);
+                        os.write((intValue) & 0xFF);
                 }
                 break;
             case STRING:
@@ -642,6 +700,24 @@ public class OsswService extends Service {
             sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
         }
         //  Log.i(TAG, "Write: " + value + ", result: " + status);
+    }
+
+    private Integer buildIntValue(Object value, int range) {
+        if (value instanceof Integer) {
+            return ((Integer) value) * pow(10, range & 0xF);
+        } else if (value instanceof Float) {
+            BigDecimal decimal = new BigDecimal(((float) value) * pow(10, range & 0xF));
+            return decimal.setScale(0, RoundingMode.HALF_UP).intValue();
+        }
+        return 0;
+    }
+
+    private Integer pow(int x, int n) {
+        int val = 1;
+        for (int i = 0; i < n; i++) {
+            val *= x;
+        }
+        return val;
     }
 
     private String buildCachePropertyKey(String pluginId, String propertyId) {
