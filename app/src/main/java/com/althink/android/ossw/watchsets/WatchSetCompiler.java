@@ -85,9 +85,9 @@ public class WatchSetCompiler {
 
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             // write watch set id
-            os.write(watchset.getId()>>24);
-            os.write(watchset.getId()>>16 & 0xFF);
-            os.write(watchset.getId()>>8 & 0xFF);
+            os.write(watchset.getId() >> 24);
+            os.write(watchset.getId() >> 16 & 0xFF);
+            os.write(watchset.getId() >> 8 & 0xFF);
             os.write(watchset.getId() & 0xFF);
 
             os.write(WatchConstants.WATCH_SET_SECTION_SCREENS);
@@ -211,20 +211,24 @@ public class WatchSetCompiler {
             os.write(controlData);
         }
 
-        JSONObject actions = screen.getJSONObject("actions");
-
-        if (actions.length() > 255) {
-            throw new KnownParseError("Too many actions");
-        }
+        JSONObject actions = screen.optJSONObject("actions");
 
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS);
-        os.write(actions.length());
+        if (actions == null) {
+            os.write(0); //no actions
+        } else {
+            if (actions.length() > 255) {
+                throw new KnownParseError("Too many actions");
+            }
 
-        Iterator<String> events = actions.keys();
-        while (events.hasNext()) {
-            String eventKey = events.next();
-            byte[] actionData = compileAction(eventKey, actions.getJSONObject(eventKey));
-            os.write(actionData);
+            os.write(actions.length());
+
+            Iterator<String> events = actions.keys();
+            while (events.hasNext()) {
+                String eventKey = events.next();
+                byte[] actionData = compileAction(eventKey, actions.getJSONObject(eventKey));
+                os.write(actionData);
+            }
         }
 
         os.write(WatchConstants.WATCH_SET_END_OF_DATA);
@@ -326,9 +330,47 @@ public class WatchSetCompiler {
                 return compileNumberControl(control);
             case "text":
                 return compileTextControl(control);
+            case "progress":
+                return compileProgressControl(control);
 
         }
         throw new KnownParseError("Not supported control type: " + controlType);
+    }
+
+    private byte[] compileProgressControl(JSONObject control) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        os.write(WatchConstants.SCR_CONTROL_HORIZONTAL_PROGRESS_BAR);
+        int maxValue = control.getInt("maxValue");
+        os.write(maxValue >> 24);
+        os.write(maxValue >> 16 & 0xFF);
+        os.write(maxValue >> 8 & 0xFF);
+        os.write(maxValue & 0xFF);
+        JSONObject position = control.getJSONObject("position");
+        os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
+        os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
+        JSONObject size = control.getJSONObject("size");
+        os.write(getIntegerInRange(size, "width", 0, WatchConstants.SCREEN_WIDTH));
+        os.write(getIntegerInRange(size, "height", 0, WatchConstants.SCREEN_HEIGHT));
+        JSONObject style = control.optJSONObject("size");
+        int border = 0;
+        if (style != null) {
+            border = style.optInt("border", 0);
+        }
+        os.write(border);
+        os.write(0); //RFU
+        JSONObject source = control.getJSONObject("source");
+        os.write(compileSource(source, DataSourceType.NUMBER, buildNumberRangeFromMaxValue(maxValue)));
+        return os.toByteArray();
+    }
+
+    private int buildNumberRangeFromMaxValue(int maxValue) {
+        int bytesNo = 0;
+        while (maxValue > 0) {
+            maxValue = maxValue / 256;
+            bytesNo++;
+        }
+        return bytesNo;
     }
 
     private byte[] compileNumberControl(JSONObject control) throws Exception {
@@ -363,18 +405,76 @@ public class WatchSetCompiler {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_TEXT);
-        // format
-        os.write(0);
         JSONObject position = control.getJSONObject("position");
         os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
         os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
         JSONObject size = control.getJSONObject("size");
         os.write(getIntegerInRange(size, "width", 0, WatchConstants.SCREEN_WIDTH));
         os.write(getIntegerInRange(size, "height", 0, WatchConstants.SCREEN_HEIGHT));
+        // write style
+        int font = parseFont(control.getJSONObject("font"));
+        os.write(font);
+        int alignment = parseFontAlignment(control.getJSONObject("style"));
+        os.write(alignment);
+        int flags = parseFontFlags(control.getJSONObject("style"));
+        os.write(flags);
+        os.write(0);
 
         JSONObject source = control.getJSONObject("source");
         os.write(compileSource(source, DataSourceType.STRING, 17));
         return os.toByteArray();
+    }
+
+    private int parseFontFlags(JSONObject style) {
+        int flags = 0;
+        Boolean multiline = style.optBoolean("multiline");
+        flags = (multiline != null && multiline) ? 0x1 : 0x0;
+        return flags;
+    }
+
+    private int parseFontAlignment(JSONObject style) {
+        int alignment = 0;
+        String horizontalAlign = style.optString("horizontalAlign");
+        if (horizontalAlign != null) {
+            switch (horizontalAlign) {
+                case "center":
+                    alignment |= WatchConstants.HORIZONTAL_ALIGN_CENTER;
+                    break;
+                case "left":
+                    alignment |= WatchConstants.HORIZONTAL_ALIGN_LEFT;
+                    break;
+                case "right":
+                    alignment |= WatchConstants.HORIZONTAL_ALIGN_RIGHT;
+                    break;
+                default:
+                    throw new KnownParseError("Invalid horizontal align: " + horizontalAlign);
+            }
+        }
+        return alignment;
+    }
+
+    private int parseFont(JSONObject font) throws JSONException {
+        String fontType = font.getString("type");
+        String fontName = font.getString("name");
+        switch (fontType) {
+            case "builtin":
+                return buildBuiltinFontData(fontName);
+        }
+        throw new KnownParseError("Invalid font type: " + fontType);
+    }
+
+    private int buildBuiltinFontData(String fontName) {
+        switch (fontName) {
+            case "optionBig":
+                return WatchConstants.FONT_NAME_OPTION_BIG;
+            case "optionNormal":
+                return WatchConstants.FONT_NAME_OPTION_NORMAL;
+            case "normalRegular":
+                return WatchConstants.FONT_NAME_NORMAL_REGULAR;
+            case "normalBold":
+                return WatchConstants.FONT_NAME_NORMAL_BOLD;
+        }
+        throw new KnownParseError("Invalid font name: " + fontName);
     }
 
     private int getIntegerNumberFormat(String numberRange) {

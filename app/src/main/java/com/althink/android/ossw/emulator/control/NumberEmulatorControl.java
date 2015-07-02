@@ -65,7 +65,7 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
             return;
         }
         int intValue = (int)value;
-        
+
         int digitWidth = style >> 8 & 0xFF;
         int digitHeight = style & 0xFF;
         int thickness = (style >> 16) & 0x3F;

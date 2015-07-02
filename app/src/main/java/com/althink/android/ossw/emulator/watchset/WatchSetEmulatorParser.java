@@ -4,6 +4,7 @@ import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.NumberEmulatorControl;
+import com.althink.android.ossw.emulator.control.ProgressEmulatorControl;
 import com.althink.android.ossw.emulator.control.TextEmulatorControl;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.emulator.source.EmulatorDataSourceFactory;
@@ -30,9 +31,9 @@ public class WatchSetEmulatorParser {
         try {
             InputStream is = new ByteArrayInputStream(watchSetData);
             //skip watchset id
-            int id = is.read()<<24;
-            id |= is.read()<<16;
-            id |= is.read()<<8;
+            int id = is.read() << 24;
+            id |= is.read() << 16;
+            id |= is.read() << 8;
             id |= is.read();
 
             WatchSetEmulatorModel model = new WatchSetEmulatorModel(id);
@@ -68,7 +69,7 @@ public class WatchSetEmulatorParser {
         int screensNo = is.read();
 
         //skip screens table
-        for (int i=0; i<screensNo; i++) {
+        for (int i = 0; i < screensNo; i++) {
             is.read();
             is.read();
         }
@@ -132,6 +133,8 @@ public class WatchSetEmulatorParser {
                 return parseNumberControl(is);
             case WatchConstants.SCR_CONTROL_TEXT:
                 return parseTextControl(is);
+            case WatchConstants.SCR_CONTROL_HORIZONTAL_PROGRESS_BAR:
+                return parseProgressControl(is);
             default:
                 throw new RuntimeException("Unknown control type: " + controlType);
         }
@@ -146,18 +149,36 @@ public class WatchSetEmulatorParser {
         int style3 = is.read();
         int style4 = is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
-        return new NumberEmulatorControl(numberRange, x, y, style1<<24 | style2<<16 | style3<<8 | style4, dataSource);
+        return new NumberEmulatorControl(numberRange, x, y, style1 << 24 | style2 << 16 | style3 << 8 | style4, dataSource);
     }
 
     private EmulatorControl parseTextControl(InputStream is) throws Exception {
-        int format = is.read();
         int x = is.read();
         int y = is.read();
         int width = is.read();
         int height = is.read();
+        int style1 = is.read();
+        int style2 = is.read();
+        int style3 = is.read();
+        int style4 = is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
 
-        return new TextEmulatorControl(format, x, y, width, height, dataSource);
+        return new TextEmulatorControl(x, y, width, height, style1 << 24 | style2 << 16 | style3 << 8 | style4, dataSource);
+    }
+
+    private EmulatorControl parseProgressControl(InputStream is) throws Exception {
+        int maxValue = is.read() << 24;
+        maxValue |= is.read() << 16;
+        maxValue |= is.read() << 8;
+        maxValue |= is.read();
+        int x = is.read();
+        int y = is.read();
+        int width = is.read();
+        int height = is.read();
+        int style = is.read() << 8;
+        style |= is.read();
+        EmulatorDataSource dataSource = parseDataSource(is);
+        return new ProgressEmulatorControl(maxValue, x, y, width, height, style, dataSource);
     }
 
     private EmulatorDataSource parseDataSource(InputStream is) throws Exception {

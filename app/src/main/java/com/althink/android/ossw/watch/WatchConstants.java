@@ -43,6 +43,20 @@ public class WatchConstants {
     public static final int NUMBER_RANGE_0__19999_99 = 0x82;
     public static final int NUMBER_RANGE_0__99999_99 = 0x92;
 
+    public static final int FONT_NAME_NORMAL_REGULAR =    0;
+    public static final int FONT_NAME_NORMAL_BOLD =       1;
+    public static final int FONT_NAME_OPTION_NORMAL = 0x10;
+    public static final int FONT_NAME_OPTION_BIG =    0x11;
+
+    public static final int HORIZONTAL_ALIGN_LEFT = 			    0x0;
+    public static final int HORIZONTAL_ALIGN_CENTER	=				0x40;
+    public static final int HORIZONTAL_ALIGN_RIGHT =				0x80;
+
+    public static final int VERTICAL_ALIGN_TOP = 			        0x0;
+    public static final int VERTICAL_ALIGN_CENTER	=				0x1;
+    public static final int VERTICAL_ALIGN_BOTTOM =				    0x2;
+
+    public static final int TEXT_FLAGS_MULTILINE =		            0x1;
 
     public static final int WATCH_SET_SECTION_SCREENS = 1;
     public static final int WATCH_SET_SECTION_EXTERNAL_PROPERTIES = 2;
