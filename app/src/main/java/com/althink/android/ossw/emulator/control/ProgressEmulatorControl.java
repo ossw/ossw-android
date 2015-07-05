@@ -2,6 +2,7 @@ package com.althink.android.ossw.emulator.control;
 
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
+import com.althink.android.ossw.watchsets.DataSourceType;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -25,7 +26,7 @@ public class ProgressEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-        Object value = getData();
+        Object value = getData(DataSourceType.NUMBER, 0);
         if (value == null || !(value instanceof Integer)) {
             return;
         }

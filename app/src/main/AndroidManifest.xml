@@ -43,7 +43,8 @@
         android:theme="@style/AppTheme"
         android:process="com.althink.android.ossw">
 
-        <activity android:name=".DeviceScanActivity" />
+        <activity android:name=".DeviceScanActivity"
+            android:label="@string/title_select_watch"  />
 
         <service
             android:name=".service.OsswService"

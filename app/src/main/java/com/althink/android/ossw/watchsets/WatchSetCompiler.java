@@ -65,10 +65,9 @@ public class WatchSetCompiler {
             if (apiVersion != 1) {
                 throw new KnownParseError("Invalid api version");
             }
+            String watchsetName = jsonObject.getString("name");
 
             JSONObject data = jsonObject.getJSONObject("data");
-
-            String watchsetName = data.getString("name");
 
             JSONArray screens = data.getJSONArray("screens");
 

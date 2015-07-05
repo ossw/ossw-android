@@ -1,6 +1,7 @@
 package com.althink.android.ossw.emulator.source.internal;
 
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
+import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.util.Calendar;
 
@@ -10,7 +11,10 @@ import java.util.Calendar;
 public class HourInternalEmulatorDataSource implements EmulatorDataSource {
 
     @Override
-    public Object getData() {
+    public Object getData(DataSourceType type, int range) {
+        if(!DataSourceType.NUMBER.equals(type) && !DataSourceType.ENUM.equals(type)) {
+            return null;
+        }
         return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
     }
 }

@@ -1,94 +1,24 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:choiceMode="multipleChoice"></ListView>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Reload watchset"
-            android:id="@+id/load_watchset"
-            android:layout_gravity="left|top" />
+        <TextView android:id="@id/android:empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/no_watchsets_found"
+            android:padding="10dp" />
+    </FrameLayout>
 
-        <com.althink.android.ossw.emulator.WatchView
-            android:id="@+id/watch_emulator_screen_view"
-            android:layout_width="@dimen/watch_emulator_view_width"
-            android:layout_height="@dimen/watch_emulator_view_height"
-            android:layout_gravity="center"
-            android:layout_below="@+id/load_watchset"
-            android:layout_centerHorizontal="true" />
-
-        <RelativeLayout
-            android:orientation="vertical"
-            android:layout_width="fill_parent"
-            android:layout_height="@dimen/watch_emulator_view_height"
-            android:layout_alignTop="@+id/watch_emulator_screen_view"
-            android:layout_alignParentEnd="true"
-            android:layout_toEndOf="@+id/watch_emulator_screen_view">
-
-            <ImageButton
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:id="@+id/watch_emulator_button_up"
-                android:src="@drawable/ic_crop_free_black_48dp"
-                android:background="#00ffffff" />
-
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/watch_emulator_button_select"
-                android:src="@drawable/ic_crop_free_black_48dp"
-                android:background="#00ffffff"
-                android:layout_gravity="center_vertical"
-                android:layout_centerVertical="true"
-                android:layout_alignParentStart="true" />
-
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/watch_emulator_button_down"
-                android:src="@drawable/ic_crop_free_black_48dp"
-                android:background="#00ffffff"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="true" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:orientation="vertical"
-            android:layout_width="fill_parent"
-            android:layout_height="@dimen/watch_emulator_view_height"
-            android:layout_toStartOf="@+id/watch_emulator_screen_view"
-            android:layout_alignBottom="@+id/watch_emulator_screen_view"
-            android:layout_below="@+id/load_watchset">
-
-            <ImageButton
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:id="@+id/watch_emulator_button_back"
-                android:src="@drawable/ic_crop_free_black_48dp"
-                android:background="#00ffffff"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="false"
-                android:layout_alignParentRight="true" />
-
-        </RelativeLayout>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Upload"
-            android:id="@+id/upload_watchset"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true" />
-
-    </RelativeLayout>
-
-</ScrollView>
+</RelativeLayout>

@@ -6,6 +6,7 @@ import com.althink.android.ossw.emulator.event.ButtonLongPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.ButtonPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.EmulatorButton;
 import com.althink.android.ossw.emulator.event.EmulatorEvent;
+import com.althink.android.ossw.service.WatchOperationContext;
 import com.althink.android.ossw.watch.WatchConstants;
 
 import java.util.HashMap;
@@ -21,6 +22,8 @@ public class WatchSetEmulatorModel {
     List<WatchSetScreenEmulatorModel> screens;
     private int currentScreen;
     private Map<EmulatorEvent, EmulatorAction> eventMapping =  new HashMap<>();
+
+    private WatchOperationContext operationContext;
 
 
     public WatchSetEmulatorModel(int id) {
@@ -64,6 +67,14 @@ public class WatchSetEmulatorModel {
     public void setScreens(List<WatchSetScreenEmulatorModel> screens) {
         this.screens = screens;
         setCurrentScreen(0);
+    }
+
+    public WatchOperationContext getOperationContext() {
+        return operationContext;
+    }
+
+    public void setOperationContext(WatchOperationContext operationContext) {
+        this.operationContext = operationContext;
     }
 
     public int getId() {

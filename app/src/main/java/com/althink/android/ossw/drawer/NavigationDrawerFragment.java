@@ -66,7 +66,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private RecyclerView mDrawerList;
     private View mFragmentContainerView;
 
-    private int mCurrentSelectedItem = OPTION_HOME_SCREEN;
+    private int mCurrentSelectedItem = OPTION_WATCHSETS;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 

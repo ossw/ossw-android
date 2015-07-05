@@ -2,6 +2,7 @@ package com.althink.android.ossw.emulator.control;
 
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
+import com.althink.android.ossw.watchsets.DataSourceType;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -23,7 +24,7 @@ public class TextEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-        String value = (String) getData();
+        String value = (String) getData(DataSourceType.STRING, 0);
         renderer.drawText(value, x, y, width, height);
     }
 }

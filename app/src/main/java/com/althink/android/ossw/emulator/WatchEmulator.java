@@ -8,6 +8,8 @@ import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorParser;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.OsswServiceProvider;
+import com.althink.android.ossw.service.WatchExtensionProperty;
+import com.althink.android.ossw.watchsets.CompiledWatchSet;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -24,7 +26,7 @@ public class WatchEmulator {
 
     private boolean backlight = false;
 
-    private int watchSetId = 0;
+    private WatchSetEmulatorModel watchSet;
 
     public WatchEmulator(OsswServiceProvider osswBleServiceProvider) {
         this.osswBleServiceProvider = osswBleServiceProvider;
@@ -42,13 +44,15 @@ public class WatchEmulator {
         screenRenderer.handleEvent(event);
     }
 
-    public WatchSetEmulatorModel parseWatchSet(byte[] watchSet) {
-        return new WatchSetEmulatorParser(this).parse(watchSet);
+    public WatchSetEmulatorModel parseWatchSet(CompiledWatchSet watchSet) {
+        WatchSetEmulatorModel emulatorModel = new WatchSetEmulatorParser(this).parse(watchSet.getWatchData());
+        emulatorModel.setOperationContext(watchSet.getWatchContext());
+        return emulatorModel;
     }
 
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
 
-        watchSetId = watchSet.getId();
+        this.watchSet = watchSet;
         screenRenderer = new WatchSetRenderer(watchSet, osswBleServiceProvider.getService(), this);
     }
 
@@ -65,6 +69,7 @@ public class WatchEmulator {
         if (service == null) {
             return null;
         }
-        return service.getExternalPropertyValue(watchSetId, property);
+        WatchExtensionProperty extensionProperty = watchSet.getOperationContext().getExternalParameters().get(property);
+        return service.getPropertyFromExtension(extensionProperty.getPluginId(), extensionProperty.getPropertyId());
     }
 }

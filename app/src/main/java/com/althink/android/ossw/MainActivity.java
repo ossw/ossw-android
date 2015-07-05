@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private Toolbar mToolbar;
+    private Toolbar mBottomToolbar;
 
     private HomeFragment mHomeFragment;
     private WatchSetsFragment mWatchsetsFragment;
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         setSupportActionBar(mToolbar);
 
+        getBottomToolbar().setVisibility(View.GONE);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_drawer);
@@ -133,9 +135,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         startService(osswServiceIntent);
         bindService(osswServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        if (savedInstanceState == null) {
-            onNavigationDrawerItemSelected(NavigationDrawerFragment.OPTION_WATCHSETS);
-        }
+        //    if (savedInstanceState == null) {
+        //       onNavigationDrawerItemSelected(NavigationDrawerFragment.OPTION_WATCHSETS);
+        //   }
         //Intent intent = new Intent();
         // intent.setAction("com.althink.android.ossw.plugins.musicplayer.PluginService");
         // bindService(intent, pluginServiceConnection, BIND_AUTO_CREATE);
@@ -149,10 +151,12 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                         .commit();
                 break;
             case NavigationDrawerFragment.OPTION_WATCHSETS:
+                setTitle(R.string.drawer_watchsets);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, mWatchsetsFragment).commit();
                 break;
             case NavigationDrawerFragment.OPTION_EXTENSIONS:
+                setTitle(R.string.drawer_plugins);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, mPluginsFragment).commit();
         }
@@ -277,5 +281,18 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     @Override
     public OsswService getService() {
         return getOsswBleService();
+    }
+
+    public Toolbar getBottomToolbar() {
+        if(mBottomToolbar == null) {
+            mBottomToolbar = (Toolbar) findViewById(R.id.toolbar_bottom);
+        }
+        return mBottomToolbar;
+    }
+
+    public void resetBottomToolbar() {
+        Toolbar bottomToolbar = this.getBottomToolbar();
+        bottomToolbar.getMenu().clear();
+        bottomToolbar.setNavigationIcon(null);
     }
 }

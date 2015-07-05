@@ -3,6 +3,7 @@ package com.althink.android.ossw.emulator.control;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
+import com.althink.android.ossw.watchsets.DataSourceType;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -31,16 +32,19 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         return value;
     }
 
-    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness, boolean leftPadded) {
+    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness, boolean leftPadded) {
         int currentX = x;
-        int div = 1;
-        for (int i = 1; i < digitsNo; i++) {
-            div *= 10;
-        }
+        int div = pow(10, digitsNo - 1);
+
         for (int i = 0; i < digitsNo; i++) {
+            if (decimalSize > 0 && digitsNo - i == decimalSize) {
+                renderer.drawRect(currentX, y + digitHeight - digitThickness, digitThickness, digitThickness);
+                currentX += digitThickness + digitSpace;
+            }
             int scaledVal = value / div;
             int digit = scaledVal % 10;
-            if (scaledVal > 0 || leftPadded || div == 1) {
+            boolean drawZeroValue = leftPadded || (digitsNo - i - 1 <= decimalSize);
+            if (scaledVal > 0 || drawZeroValue || div == 1) {
                 renderer.drawDigit(digit, currentX, y, digitWidth, digitHeight, digitThickness);
             }
             div = div / 10;
@@ -48,23 +52,29 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         }
     }
 
-    private void drawOneStartingIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
-        int div = 1;
-        for (int i = 1; i < digitsNo; i++) {
-            div *= 10;
-        }
+    private void drawOneStartingIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
+        int div = pow(10, digitsNo - 1);
         if (value >= div) {
             renderer.drawRect(x, y, digitThickness, digitHeight);
         }
-        drawIntDigits(renderer, value, digitsNo - 1, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness, false);
+        drawIntDigits(renderer, value, digitsNo - 1, decimalSize, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness, false);
+    }
+
+    static int pow(int x, int n) {
+        int result = 1;
+        for (int i = 0; i < n; i++) {
+            result *= x;
+        }
+        return result;
     }
 
     public void draw(LowLevelRenderer renderer) {
-        Object value = getData();
-        if (value == null || !(value instanceof Integer)) {
+        int decimalSize = range.getValue() & 0xF;
+        Object value = getData(DataSourceType.NUMBER, range.getValue());
+        if (value == null) {
             return;
         }
-        int intValue = (int)value;
+        int intValue = (int) value;
 
         int digitWidth = style >> 8 & 0xFF;
         int digitHeight = style & 0xFF;
@@ -72,36 +82,13 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         int digitSpace = (style >> 22) & 0x1F;
         boolean leftPadded = (style & 0x80000000) != 0;
 
+        int digit_no = (range.getValue() >> 4) / 2 + 1 + decimalSize;
+        boolean is_1X_format = (range.getValue() >> 4) % 2 == 0;
 
-
-        switch (range) {
-            case NUMBER_RANGE_0__9:
-                drawIntDigits(renderer, trimToRange(intValue, 0, 9), 1, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
-                break;
-            case NUMBER_RANGE_0__19:
-                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 19), 2, x, y, digitWidth, digitHeight, digitSpace, thickness);
-                break;
-            case NUMBER_RANGE_0__99:
-                drawIntDigits(renderer, trimToRange(intValue, 0, 99), 2, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
-                break;
-            case NUMBER_RANGE_0__199:
-                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 199), 3, x, y, digitWidth, digitHeight, digitSpace, thickness);
-                break;
-            case NUMBER_RANGE_0__999:
-                drawIntDigits(renderer, trimToRange(intValue, 0, 999), 3, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
-                break;
-            case NUMBER_RANGE_0__1999:
-                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 1999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness);
-                break;
-            case NUMBER_RANGE_0__9999:
-                drawIntDigits(renderer, trimToRange(intValue, 0, 9999), 4, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
-                break;
-            case NUMBER_RANGE_0__19999:
-                drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 19999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness);
-                break;
-            case NUMBER_RANGE_0__99999:
-                drawIntDigits(renderer, trimToRange(intValue, 0, 99999), 5, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
-                break;
+        if (is_1X_format) {
+            drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 2 * pow(10, digit_no - 1) - 1), digit_no, decimalSize, x, y, digitWidth, digitHeight, digitSpace, thickness);
+        } else {
+            drawIntDigits(renderer, trimToRange(intValue, 0, pow(10, digit_no) - 1), digit_no, decimalSize, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
         }
     }
 
@@ -147,6 +134,10 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
                 }
             }
             return null;
+        }
+
+        public int getValue() {
+            return key;
         }
     }
 }

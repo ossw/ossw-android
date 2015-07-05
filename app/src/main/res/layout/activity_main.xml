@@ -1,70 +1,105 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
-    <include android:id="@+id/toolbar_actionbar" layout="@layout/toolbar_default"
-        android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <include
+        android:id="@+id/toolbar_actionbar"
+        layout="@layout/toolbar_default"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-    <android.support.v4.widget.DrawerLayout android:id="@+id/drawer"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent" android:layout_height="match_parent">
+    <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/drawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <FrameLayout android:id="@+id/container" android:layout_width="match_parent"
-            android:clickable="true" android:layout_height="match_parent" >
-
-            <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent"
-                android:clickable="true" android:layout_height="match_parent" >
-            </FrameLayout>
+        <RelativeLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:orientation="vertical">
 
             <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:layout_above="@+id/linearLayout"></FrameLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:background="@color/myPrimaryAlternativeColor"
-                android:paddingLeft="5dp"
-                android:id="@+id/watch_connection_alert"
-                android:paddingRight="5dp">
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentBottom="true"
+                android:id="@+id/linearLayout"
+                android:background="#ff8f8f8f">
 
-                <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="50dp"
-                    android:id="@+id/imageView"
-                    android:layout_gravity="center_vertical|left"
-                    android:src="@drawable/watch"
-                    android:paddingLeft="0dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="1dp"
-                    android:layout_marginBottom="1dp" />
-
-                <TextView android:id="@+id/connectionStatus" android:text="@string/watch_is_disconnected" android:layout_width="518dp"
+                <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/toolbar_bottom"
+                    style="@style/ToolBarStyle"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginLeft="50dp" />
+                    android:background="?attr/colorPrimary"
+                    android:minHeight="@dimen/abc_action_bar_default_height_material" />
 
-                <ImageButton
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:id="@+id/find_watch"
-                    android:layout_gravity="right|center_vertical"
-                    android:src="@android:drawable/ic_menu_search"
+                <FrameLayout
+                    android:id="@+id/watch_connection_alert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
                     android:background="@color/myPrimaryAlternativeColor"
-                    android:layout_marginRight="5dp"
-                    android:clickable="true" />
-            </FrameLayout>
-        </FrameLayout>
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:layout_marginTop="0.5dp">
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="34dp"
+                        android:layout_height="50dp"
+                        android:layout_gravity="center_vertical|left"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="1dp"
+                        android:paddingLeft="0dp"
+                        android:src="@drawable/watch" />
+
+                    <TextView
+                        android:id="@+id/connectionStatus"
+                        android:layout_width="518dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="50dp"
+                        android:text="@string/watch_is_disconnected" />
+
+                    <ImageButton
+                        android:id="@+id/find_watch"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_gravity="right|center_vertical"
+                        android:background="@color/myPrimaryAlternativeColor"
+                        android:clickable="true"
+                        android:src="@android:drawable/ic_menu_search" />
+                </FrameLayout>
+
+                </LinearLayout>
+
+        </RelativeLayout>
 
         <!-- android:layout_marginTop="?android:attr/actionBarSize"-->
-        <fragment android:id="@+id/fragment_drawer"
+        <fragment
+            android:id="@+id/fragment_drawer"
             android:name="com.althink.android.ossw.drawer.NavigationDrawerFragment"
             android:layout_width="@dimen/navigation_drawer_width"
-            android:layout_height="match_parent" android:layout_gravity="start"
-            app:layout="@layout/fragment_navigation_drawer"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout="@layout/fragment_navigation_drawer"
             tools:layout="@layout/fragment_navigation_drawer" />
 
     </android.support.v4.widget.DrawerLayout>

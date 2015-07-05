@@ -14,6 +14,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -22,26 +23,25 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.althink.android.ossw.UploadDataType;
+import com.althink.android.ossw.db.OsswDB;
 import com.althink.android.ossw.gmail.GmailProvider;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
 import com.althink.android.ossw.plugins.PluginPropertyDefinition;
 import com.althink.android.ossw.watch.WatchConstants;
-import com.althink.android.ossw.watchsets.CompiledWatchSet;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +62,7 @@ public class OsswService extends Service {
     private BluetoothGatt mBluetoothGatt;
     private int mConnectionState = STATE_DISCONNECTED;
     private BluetoothGattServer mGattServer;
+    private boolean started = false;
 
     public static final int STATE_DISCONNECTED = 0;
     public static final int STATE_CONNECTING = 1;
@@ -85,7 +86,7 @@ public class OsswService extends Service {
 
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
 
-    private Map<Integer, CompiledWatchSet> watchSets = new HashMap<>();
+    private OsswDB db;
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
@@ -131,17 +132,15 @@ public class OsswService extends Service {
             super.onCharacteristicChanged(gatt, characteristic);
 
             byte[] value = characteristic.getValue();
-            // Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
+            Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
-                        int watchSetId = value[1] << 24 | value[2] << 16 | value[3] >> 8 | value[4];
-                        CompiledWatchSet watchSet = watchSets.get(watchSetId);
-                        if (watchSet != null) {
-                            setWatchOperationContext(watchSet.getWatchContext());
+                        int watchSetId = value[1] << 24 | value[2] << 16 | value[3] << 8 | value[4] & 0xFF;
+                        WatchOperationContext ctx = db.getWatchContextByExtWatchSetId(watchSetId);
+                        setWatchOperationContext(ctx);
+                        if (ctx != null) {
                             sendAllExternalParamsValues();
-                        } else {
-                            setWatchOperationContext(null);
                         }
                         break;
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION:
@@ -174,12 +173,17 @@ public class OsswService extends Service {
                         mConnectionState = STATE_CONNECTED;
                         broadcastUpdate(ACTION_WATCH_CONNECTED);
 
-                        new Timer().schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                sendCurrentTime();
-                            }
-                        }, 3000);
+                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
+                        boolean syncTime = sharedPref.getBoolean("synchronize_time", true);
+
+                        if (syncTime) {
+                            new Timer().schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    sendCurrentTime();
+                                }
+                            }, 3000);
+                        }
                     }
                 }, 1000);
             }
@@ -212,20 +216,13 @@ public class OsswService extends Service {
         }
     };
 
-
-    private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
-    }
-
     public void setWatchOperationContext(WatchOperationContext watchContext) {
         this.watchContext = watchContext;
         resetSentValuesCache();
     }
 
-    public void registerWatchSet(CompiledWatchSet watchSet) {
-        watchSets.put(watchSet.getId(), watchSet);
+    public void createOrUpdateWatchSet(String name, String source, WatchOperationContext watchContext, int id) {
+        db.addWatchSet(name, source, watchContext, id);
     }
 
     public class LocalBinder extends Binder {
@@ -234,7 +231,7 @@ public class OsswService extends Service {
         }
     }
 
-    private Object getPropertyFromExtension(String pluginId, String property) {
+    public Object getPropertyFromExtension(String pluginId, String property) {
         PluginPropertyDefinition propertyDefinition = getPropertyDefinition(pluginId, property);
         if (propertyDefinition == null) {
             return null;
@@ -316,24 +313,30 @@ public class OsswService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Start service");
 
-        plugins = new PluginManager(getApplicationContext()).findPlugins();
-        for (PluginDefinition plugin : plugins) {
-            ExternalServiceConnection connection = new ExternalServiceConnection();
+        if (!started) {
+            Log.i(TAG, "Initialize service");
+            db = new OsswDB(this);
 
-            // bind plugin service
-            Intent serviceIntent = new Intent();
-            serviceIntent.setAction(plugin.getPluginId());
-            bindService(serviceIntent, connection.getConnection(), BIND_AUTO_CREATE);
-            externalServiceConnections.put(plugin.getPluginId(), connection);
+            plugins = new PluginManager(getApplicationContext()).findPlugins();
+            for (PluginDefinition plugin : plugins) {
+                ExternalServiceConnection connection = new ExternalServiceConnection();
 
-            // listen on plugin property change
-            PluginPropertyObserver observer = new PluginPropertyObserver(handler, plugin.getPluginId());
-            Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
-            Log.i(TAG, "Register handler for uri: " + contentUri);
-            getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
-            contentObservers.put(plugin.getPluginId(), observer);
+                // bind plugin service
+                Intent serviceIntent = new Intent();
+                serviceIntent.setAction(plugin.getPluginId());
+                serviceIntent.setPackage(plugin.getPluginId());
+                bindService(serviceIntent, connection.getConnection(), BIND_AUTO_CREATE);
+                externalServiceConnections.put(plugin.getPluginId(), connection);
+
+                // listen on plugin property change
+                PluginPropertyObserver observer = new PluginPropertyObserver(handler, plugin.getPluginId());
+                Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
+                Log.i(TAG, "Register handler for uri: " + contentUri);
+                getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
+                contentObservers.put(plugin.getPluginId(), observer);
+            }
+            started = true;
         }
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -402,6 +405,7 @@ public class OsswService extends Service {
         }
         contentObservers.clear();
         close();
+        started = false;
     }
 
     private final IBinder mBinder = new LocalBinder();
@@ -591,19 +595,6 @@ public class OsswService extends Service {
             return;
         }
         new UpdatePropertyInWatchTask().execute(paramId, property, value);
-    }
-
-    public Object getExternalPropertyValue(int watchSetId, int propertyId) {
-        CompiledWatchSet watchSet = watchSets.get(watchSetId);
-        if (watchSet == null || watchSet.getWatchContext() == null || watchSet.getWatchContext().getExternalParameters() == null) {
-            return null;
-        }
-        if (propertyId < 0 || propertyId >= watchSet.getWatchContext().getExternalParameters().size()) {
-            return null;
-        }
-        WatchExtensionProperty property = watchSet.getWatchContext().getExternalParameters().get(propertyId);
-
-        return getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
     }
 
     private int calcExternalPropertySize(DataSourceType type, int range) {

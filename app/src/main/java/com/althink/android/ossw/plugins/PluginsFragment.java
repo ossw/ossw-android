@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 
 import java.util.ArrayList;
@@ -47,6 +49,14 @@ public class PluginsFragment extends ListFragment {
         setListAdapter(listAdaptor);
 
         Log.i(TAG, "On create");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Toolbar bottomToolbar = ((MainActivity) getActivity()).getBottomToolbar();
+        bottomToolbar.setVisibility(View.GONE);
     }
 
     @Override
