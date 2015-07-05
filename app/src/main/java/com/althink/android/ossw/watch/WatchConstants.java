@@ -102,4 +102,14 @@ public class WatchConstants {
 
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;
+
+    public static final int ALIGN_LEFT = 0x0;
+    public static final int ALIGN_CENTER = 0x40;
+    public static final int ALIGN_RIGHT = 0x80;
+
+    public static final int FONT_SMALL_REGULAR = 0;
+    public static final int FONT_SMALL_BOLD = 1;
+    public static final int FONT_OPTION_NORMAL = 0x10;
+    public static final int FONT_OPTION_BIG = 0x11;
+
 }

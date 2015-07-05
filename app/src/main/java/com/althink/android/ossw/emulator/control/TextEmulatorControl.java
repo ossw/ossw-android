@@ -1,5 +1,7 @@
 package com.althink.android.ossw.emulator.control;
 
+import com.althink.android.ossw.emulator.fonts.FontInfo;
+import com.althink.android.ossw.emulator.fonts.OptionsBig;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.watchsets.DataSourceType;
@@ -25,6 +27,8 @@ public class TextEmulatorControl extends AbstractEmulatorControl {
 
     public void draw(LowLevelRenderer renderer) {
         String value = (String) getData(DataSourceType.STRING, 0);
-        renderer.drawText(value, x, y, width, height);
+        int fontType = (style >> 24) & 0xFF;
+        int alignment = (style >> 16) & 0xFF;
+        renderer.drawText(value, x, y, width, height, fontType, alignment);
     }
 }
