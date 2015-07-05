@@ -20,4 +20,14 @@
         android:title="@string/menu_import"
         android:icon="@drawable/ic_playlist_add_white_24dp"
         app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/menu_items_remove"
+        android:orderInCategory="110"
+        android:title="@string/menu_items_remove"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/menu_upload_to_watch"
+        android:orderInCategory="111"
+        android:title="@string/menu_upload_to_watch"
+        app:showAsAction="always|withText" />
 </menu>

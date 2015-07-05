@@ -44,4 +44,6 @@
     <string name="title_select_watch">Select watch</string>
     <string name="menu_watchset_reload">Reload</string>
     <string name="menu_cancel">Cancel</string>
+    <string name="menu_items_remove">Delete</string>
+    <string name="menu_upload_to_watch">Upload</string>
 </resources>

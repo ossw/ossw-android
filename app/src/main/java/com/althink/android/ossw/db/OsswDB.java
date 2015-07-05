@@ -59,6 +59,18 @@ public class OsswDB {
         return source;
     }
 
+    public Integer getExtWatchSetId(int id) {
+        String sql = "SELECT extWatchSetId from watchSets WHERE id = ?";
+        Cursor cursor = db.rawQuery(sql, new String[]{Integer.toString(id)});
+        boolean exists = cursor.moveToFirst();
+        Integer extWatchSetId = null;
+        if (exists) {
+            extWatchSetId = cursor.getInt(0);
+        }
+        cursor.close();
+        return extWatchSetId;
+    }
+
     public List<WatchSetInfo> listWatchSets() {
         LinkedList<WatchSetInfo> list = new LinkedList<>();
 
@@ -101,6 +113,14 @@ public class OsswDB {
             Log.i(TAG, "Watchset \"" + name + "\" successfully created");
         }
 
+    }
+
+    public boolean deleteWatchSet(int watchSetInternalId) {
+        String sql = "DELETE FROM watchSets WHERE id = ?";
+        SQLiteStatement updateStmt = db.compileStatement(sql);
+        updateStmt.clearBindings();
+        updateStmt.bindLong(1, watchSetInternalId);
+        return updateStmt.executeUpdateDelete() > 0;
     }
 
 //    private boolean checkWatchSetExists(String name) {

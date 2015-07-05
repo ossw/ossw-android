@@ -9,6 +9,7 @@
     <color name="myTextPrimaryColor">#212121</color>
     <color name="myNavigationColor">#000</color>
 
-    <drawable name="pressed_gray">#0c000000</drawable>
-    <drawable name="selected_gray">#2c000000</drawable>
+    <drawable name="pressed_gray">#a0f5e9</drawable>
+    <drawable name="selected_gray">#d5fbf5</drawable>
+    <drawable name="activated_gray">#d5fbf5</drawable>
 </resources>

@@ -17,7 +17,8 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-    android:padding="14dp">
+    android:padding="14dp"
+    android:background="@drawable/row_selector">
     <TextView android:id="@+id/watchset_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

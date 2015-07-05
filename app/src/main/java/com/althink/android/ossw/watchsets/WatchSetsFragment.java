@@ -7,9 +7,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,13 +19,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.althink.android.ossw.DeviceScanActivity;
 import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
-import com.althink.android.ossw.SettingsActivity;
+import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
 import com.althink.android.ossw.db.WatchSetInfo;
-import com.althink.android.ossw.plugins.PluginDefinition;
+import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
 
@@ -37,6 +36,9 @@ public class WatchSetsFragment extends ListFragment {
     private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
+    private Toolbar bottomToolbar;
+    private WatchSetsListAdapter listAdaptor;
+    private OsswDB db;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,25 +52,89 @@ public class WatchSetsFragment extends ListFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        db = new OsswDB(getActivity());
         setHasOptionsMenu(true);
 
+        listAdaptor = new WatchSetsListAdapter();
+        setListAdapter(listAdaptor);
+
         Log.i(TAG, "On create");
+    }
+
+    private void refreshWatchSetList() {
+        listAdaptor.clear();
+        for (WatchSetInfo info : db.listWatchSets()) {
+            listAdaptor.addWatchSet(info);
+        }
+        listAdaptor.notifyDataSetChanged();
+        resetSelection();
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        int count = getListView().getCount();
+//        SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+//        for (int i = 0; i < count; i++) {
+//            if (sparseBooleanArray.get(i)) {
+//                prompt += getListView().getItemAtPosition(i).toString() + "\n";
+//            }
+//        }
+        int checkedCount = getListView().getCheckedItemCount();
+
+        setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
+    }
+
+    private void setMenuOptions(Mode mode) {
+        View uploadAction = bottomToolbar.findViewById(R.id.menu_upload_to_watch);
+        View itemsRemoveAction = bottomToolbar.findViewById(R.id.menu_items_remove);
+        switch (mode) {
+            case MULTI:
+                enableDeselectOption();
+                uploadAction.setVisibility(View.GONE);
+                itemsRemoveAction.setVisibility(View.VISIBLE);
+                break;
+            case SINGLE:
+                enableDeselectOption();
+                uploadAction.setVisibility(View.VISIBLE);
+                itemsRemoveAction.setVisibility(View.VISIBLE);
+                break;
+            case NONE:
+                disableDeselectOption();
+                uploadAction.setVisibility(View.GONE);
+                itemsRemoveAction.setVisibility(View.GONE);
+                break;
+        }
+    }
+
+    private void disableDeselectOption() {
+        bottomToolbar.setNavigationIcon(null);
+        bottomToolbar.setNavigationOnClickListener(null);
+    }
+
+    private void enableDeselectOption() {
+        bottomToolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        bottomToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resetSelection();
+            }
+        });
+    }
+
+    private void resetSelection() {
+        getListView().clearChoices();
+        getListView().requestLayout();
+        setMenuOptions(Mode.NONE);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        OsswDB db = new OsswDB(getActivity());
-        WatchSetsListAdapter listAdaptor = new WatchSetsListAdapter();
-        for (WatchSetInfo info : db.listWatchSets()) {
-            listAdaptor.addWatchSet(info);
-        }
-        setListAdapter(listAdaptor);
-
         MainActivity activity = ((MainActivity) getActivity());
         activity.resetBottomToolbar();
-        Toolbar bottomToolbar = activity.getBottomToolbar();
+        bottomToolbar = activity.getBottomToolbar();
 
         bottomToolbar.inflateMenu(R.menu.watchsets);
         bottomToolbar.setVisibility(View.VISIBLE);
@@ -81,10 +147,39 @@ public class WatchSetsFragment extends ListFragment {
                 if (id == R.id.menu_import) {
                     showFileChooser();
                     return true;
+                } else if (id == R.id.menu_items_remove) {
+
+                    SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+                    int count = getListView().getCount();
+                    for (int i = 0; i < count; i++) {
+                        if (sparseBooleanArray.get(i)) {
+                            WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                            db.deleteWatchSet(info.getId());
+                        }
+                    }
+                    refreshWatchSetList();
+                    return true;
+                } else if (id == R.id.menu_upload_to_watch) {
+                    SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+                    int count = getListView().getCount();
+                    for (int i = 0; i < count; i++) {
+                        if (sparseBooleanArray.get(i)) {
+                            WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                            String source = db.getWatchSetSourceById(info.getId());
+                            Integer extWatchSetId = db.getExtWatchSetId(info.getId());
+                            CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
+                            OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
+                            osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                            return true;
+                        }
+                    }
                 }
                 return false;
             }
         });
+
+        refreshWatchSetList();
+        setMenuOptions(Mode.NONE);
     }
 
     private void showFileChooser() {
@@ -186,5 +281,9 @@ public class WatchSetsFragment extends ListFragment {
 
     static class ViewHolder {
         TextView watchSetName;
+    }
+
+    private enum Mode {
+        NONE, SINGLE, MULTI
     }
 }

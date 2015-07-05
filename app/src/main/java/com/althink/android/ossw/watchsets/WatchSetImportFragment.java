@@ -112,7 +112,7 @@ public class WatchSetImportFragment extends Fragment {
 
     public CompiledWatchSet parseWatchSet(File file) {
         source = loadFileData(file);
-        return new WatchSetCompiler(getActivity()).compile(source);
+        return new WatchSetCompiler(getActivity()).compile(source, null);
     }
 
     private String loadFileData(File file) {

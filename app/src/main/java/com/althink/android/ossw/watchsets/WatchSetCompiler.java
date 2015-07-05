@@ -45,7 +45,7 @@ public class WatchSetCompiler {
         this.context = context;
     }
 
-    public CompiledWatchSet compile(String watchsetData) {
+    public CompiledWatchSet compile(String watchSetSource, Integer extWatchSetId) {
 
         plugins = new HashMap<>();
         List<PluginDefinition> pluginList = new PluginManager(context).findPlugins();
@@ -54,7 +54,7 @@ public class WatchSetCompiler {
         }
 
         try {
-            JSONObject jsonObject = new JSONObject(watchsetData);
+            JSONObject jsonObject = new JSONObject(watchSetSource);
 
             String type = jsonObject.getString("type");
             if (!"watchset".equals(type)) {
@@ -80,7 +80,11 @@ public class WatchSetCompiler {
             byte[] extensionPropertiesData = compileExternalProperties();
 
             CompiledWatchSet watchset = new CompiledWatchSet();
-            watchset.setId(generateWatchSetId());
+            if (extWatchSetId != null) {
+                watchset.setId(extWatchSetId);
+            } else {
+                watchset.setId(generateWatchSetId());
+            }
 
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             // write watch set id

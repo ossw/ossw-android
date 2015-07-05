@@ -12,13 +12,14 @@
             android:id="@android:id/list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:choiceMode="multipleChoice"></ListView>
+            android:choiceMode="multipleChoice" />
 
-        <TextView android:id="@id/android:empty"
+        <TextView
+            android:id="@id/android:empty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="@string/no_watchsets_found"
-            android:padding="10dp" />
+            android:padding="10dp"
+            android:text="@string/no_watchsets_found" />
     </FrameLayout>
 
 </RelativeLayout>
