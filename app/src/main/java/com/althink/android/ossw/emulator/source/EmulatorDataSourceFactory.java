@@ -1,9 +1,13 @@
 package com.althink.android.ossw.emulator.source;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
+import com.althink.android.ossw.emulator.source.internal.BatteryLevelInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.DayOfMonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.HourInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.MonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.YearInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.ZeroDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
 
@@ -20,13 +24,13 @@ public class EmulatorDataSourceFactory {
             case WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS:
                 return new SecondsInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH:
-                return new ZeroDataSource();
+                return new DayOfMonthInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH:
-                return new ZeroDataSource();
+                return new MonthInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR:
-                return new ZeroDataSource();
+                return new YearInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL:
-                return new ZeroDataSource();
+                return new BatteryLevelInternalEmulatorDataSource();
             default:
                 throw new IllegalArgumentException("Invalid property: " + property);
         }

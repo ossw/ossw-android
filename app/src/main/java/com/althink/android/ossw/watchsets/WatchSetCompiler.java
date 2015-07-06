@@ -608,7 +608,7 @@ public class WatchSetCompiler {
                 return WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH;
             case "year":
                 return WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR;
-            case "battery":
+            case "batteryLevel":
                 return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
         }
         throw new KnownParseError("Unknown internal property: " + property);
