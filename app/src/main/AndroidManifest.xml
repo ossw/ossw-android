@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.althink.android.ossw"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0">
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -32,9 +32,9 @@
         <intent-filter>
             <action android:name="android.intent.action.PHONE_STATE" />
         </intent-filter>
-        <intent-filter>
-            <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-        </intent-filter>
+        <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.NEW_OUTGOING_CALL" />-->
+        <!--</intent-filter>-->
     </receiver>
 
     <application
@@ -65,34 +65,13 @@
         </activity>
 
         <service android:name=".NotificationListener"
-            android:label="NotificationListener"
+            android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
 
-   <!--     <receiver android:name=".gmail.GmailReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.PROVIDER_CHANGED"
-                    android:priority="-10">
-                </action>
-                <data android:scheme="content" android:host="gmail-ls"
-                    android:pathPattern="/unread/.*">
-                </data>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.PROVIDER_CHANGED"
-                    android:priority="-10">
-                </action>
-                <data android:mimeType="*/*" android:scheme="content"
-                    android:host="gmail-ls" android:path="/unread/^i">
-                </data>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>-->
     </application>
 
 </manifest>

@@ -76,7 +76,7 @@ public class WatchSetImportFragment extends Fragment {
 
                 watchSet = parseWatchSet(file);
 
-                Log.i(TAG, "File " + file.getPath() + " successfully loaded, watchSetId: " + watchSet.getId());
+                //Log.i(TAG, "File " + file.getPath() + " successfully loaded, watchSetId: " + watchSet.getId());
 
                 WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet);
                 emulator.showWatchSet(model);
@@ -84,10 +84,10 @@ public class WatchSetImportFragment extends Fragment {
                 return true;
             } catch (KnownParseError e) {
                 Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                Log.e(TAG, e.getMessage(), e);
+                //Log.e(TAG, e.getMessage(), e);
             } catch (Exception e) {
                 Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
-                Log.e(TAG, e.getMessage(), e);
+                //Log.e(TAG, e.getMessage(), e);
             }
         }
         watchSet = null;
@@ -130,7 +130,7 @@ public class WatchSetImportFragment extends Fragment {
             return content.toString();
 
         } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
+            //Log.e(TAG, e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }

@@ -48,7 +48,7 @@ public class PluginsFragment extends ListFragment {
         }
         setListAdapter(listAdaptor);
 
-        Log.i(TAG, "On create");
+        //Log.i(TAG, "On create");
     }
 
     @Override
@@ -62,7 +62,7 @@ public class PluginsFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-        Log.i(TAG, "Click: " + position);
+        //Log.i(TAG, "Click: " + position);
         PluginDefinition plugin = (PluginDefinition) getListAdapter().getItem(position);
         Intent configIntent = new Intent();
         configIntent.setAction(plugin.getPluginId() + ".config");
@@ -79,7 +79,7 @@ public class PluginsFragment extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
 
-        Log.i(TAG, "On destroy");
+        //Log.i(TAG, "On destroy");
     }
 
     private class PluginListAdapter extends BaseAdapter {

@@ -100,7 +100,7 @@ public class OsswDB {
         boolean success = updateStmt.executeUpdateDelete() > 0;
 
         if (success) {
-            Log.i(TAG, "Watchset \"" + name + "\" successfully updated");
+            //Log.i(TAG, "Watchset \"" + name + "\" successfully updated");
         } else {
             sql = "INSERT INTO watchSets (id, name, source, context, extWatchSetId) VALUES($next_id,?,?,?,?)";
             SQLiteStatement insertStmt = db.compileStatement(sql);
@@ -110,7 +110,7 @@ public class OsswDB {
             insertStmt.bindBlob(4, contextData);
             insertStmt.bindLong(5, extWatchSetId);
             insertStmt.executeInsert();
-            Log.i(TAG, "Watchset \"" + name + "\" successfully created");
+            //Log.i(TAG, "Watchset \"" + name + "\" successfully created");
         }
 
     }

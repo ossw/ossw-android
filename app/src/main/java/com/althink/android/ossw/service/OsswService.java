@@ -28,7 +28,6 @@ import android.util.Log;
 
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
-import com.althink.android.ossw.gmail.GmailProvider;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
@@ -70,8 +69,6 @@ public class OsswService extends Service {
     public static final int STATE_CONNECTED = 3;
     public static final int STATE_RECONNECT = 4;
 
-    private GmailProvider gmailProvider;
-
     private boolean autoreconnect = true;
 
     private WatchOperationContext watchContext;
@@ -98,23 +95,24 @@ public class OsswService extends Service {
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.i(TAG, "onConnection: " + status + ", " + newState);
+            //Log.i(TAG, "onConnection: " + status + ", " + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 //intentAction = ACTION_WATCH_CONNECTED;
                 mConnectionState = STATE_SERVICE_DISCOVERING;
                 //broadcastUpdate(intentAction);
-                Log.i(TAG, "Connected to GATT server.");
+                //Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        mBluetoothGatt.discoverServices());
+                //Log.i(TAG, "Attempting to start service discovery:" +
+                //        mBluetoothGatt.discoverServices());
+                mBluetoothGatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 mConnectionState = STATE_DISCONNECTED;
-                Log.i(TAG, "Disconnected from GATT server.");
+                //Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(ACTION_WATCH_DISCONNECTED);
 
                 if (autoreconnect) {
-                    Log.i(TAG, "Reconnect");
+                    //Log.i(TAG, "Reconnect");
                     connect(mBluetoothDeviceAddress);
                 }
             }
@@ -132,7 +130,7 @@ public class OsswService extends Service {
             super.onCharacteristicChanged(gatt, characteristic);
 
             byte[] value = characteristic.getValue();
-            Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
+            //Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
@@ -162,7 +160,7 @@ public class OsswService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
+                //Log.w(TAG, "onServicesDiscovered received: " + status);
 
                 new Timer().schedule(new TimerTask() {
                     @Override
@@ -196,7 +194,7 @@ public class OsswService extends Service {
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
-        Log.i(TAG, "Send Intent: " + intent);
+        //Log.i(TAG, "Send Intent: " + intent);
         sendBroadcast(intent);
     }
 
@@ -311,10 +309,10 @@ public class OsswService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Start service");
+        //Log.i(TAG, "Start service");
 
         if (!started) {
-            Log.i(TAG, "Initialize service");
+            //Log.i(TAG, "Initialize service");
             db = new OsswDB(this);
 
             plugins = new PluginManager(getApplicationContext()).findPlugins();
@@ -331,7 +329,7 @@ public class OsswService extends Service {
                 // listen on plugin property change
                 PluginPropertyObserver observer = new PluginPropertyObserver(handler, plugin.getPluginId());
                 Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
-                Log.i(TAG, "Register handler for uri: " + contentUri);
+                //Log.i(TAG, "Register handler for uri: " + contentUri);
                 getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
                 contentObservers.put(plugin.getPluginId(), observer);
             }
@@ -351,7 +349,7 @@ public class OsswService extends Service {
     public void invokeExtensionFunction(String extensionId, String functionName) {
         ExternalServiceConnection connection = externalServiceConnections.get(extensionId);
         if (connection == null) {
-            Log.e(TAG, "Service " + extensionId + " is not connected");
+            //Log.e(TAG, "Service " + extensionId + " is not connected");
             return;
         }
         try {
@@ -360,7 +358,7 @@ public class OsswService extends Service {
                 connection.getMessanger().send(Message.obtain(null, functionId, 0, 0));
             }
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
+            //Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -379,20 +377,20 @@ public class OsswService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, "Service bind");
+        //Log.i(TAG, "Service bind");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "Service unbind");
+        //Log.i(TAG, "Service unbind");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Service destroyed");
+        //Log.i(TAG, "Service destroyed");
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
@@ -416,19 +414,16 @@ public class OsswService extends Service {
      * @return Return true if the initialization is successful.
      */
     public boolean initialize() {
-        Log.i(TAG, "Initialize");
+        //Log.i(TAG, "Initialize");
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                //Log.e(TAG, "Unable to initialize BluetoothManager.");
                 return false;
             }
         }
-
-        gmailProvider = new GmailProvider(this);
-        gmailProvider.onInitialize(false);
 
         try {
             BluetoothGattServer mGattServer = mBluetoothManager.openGattServer(getApplicationContext(), mBluetoothGattServerCallback);
@@ -443,7 +438,7 @@ public class OsswService extends Service {
 
             mBluetoothAdapter = mBluetoothManager.getAdapter();
             if (mBluetoothAdapter == null) {
-                Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+                //Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
                 return false;
             }
             characteristic.addDescriptor(descriptor);
@@ -456,7 +451,7 @@ public class OsswService extends Service {
             }
 
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
+            //Log.e(TAG, e.getMessage(), e);
             return true;
         }
         return true;
@@ -472,21 +467,21 @@ public class OsswService extends Service {
      * callback.
      */
     public boolean connect(final String address) {
-        Log.i(TAG, "Connect");
+        //Log.i(TAG, "Connect");
 
         if (mBluetoothManager == null) {
             initialize();
         }
 
         if (mBluetoothAdapter == null || address == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            //Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
 
         // Previously connected device.  Try to reconnect.
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+            //Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
                 return true;
@@ -497,7 +492,7 @@ public class OsswService extends Service {
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
-            Log.w(TAG, "Device not found. Unable to connect.");
+            //Log.w(TAG, "Device not found. Unable to connect.");
             return false;
         }
 
@@ -505,7 +500,7 @@ public class OsswService extends Service {
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-        Log.d(TAG, "Trying to create a new connection.");
+        //Log.d(TAG, "Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
         mConnectionState = STATE_CONNECTING;
         return true;
@@ -519,7 +514,7 @@ public class OsswService extends Service {
      */
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.disconnect();
@@ -546,7 +541,7 @@ public class OsswService extends Service {
      */
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.readCharacteristic(characteristic);
@@ -563,7 +558,7 @@ public class OsswService extends Service {
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enabled) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
@@ -655,7 +650,7 @@ public class OsswService extends Service {
             return;
         }
 
-        Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
+        //Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
 
         byte commandId = 0x30;
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -741,6 +736,7 @@ public class OsswService extends Service {
     private void internalUploadData(UploadDataType type, byte[] data) {
 
         if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
+
             return;
         }
 
@@ -754,7 +750,7 @@ public class OsswService extends Service {
         txCharact.setValue(new byte[]{0x20, (byte) 0, (byte) (size >> 24), (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
 
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
-        Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+        //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
 
         int sizeLeft = data.length;
 
@@ -772,13 +768,13 @@ public class OsswService extends Service {
             txCharact.setValue(dataCommand);
             status = mBluetoothGatt.writeCharacteristic(txCharact);
 
-            Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
+            //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
             sizeLeft -= 16;
         }
         txCharact.setValue(new byte[]{0x22});
         status = mBluetoothGatt.writeCharacteristic(txCharact);
-        Log.i(TAG, "Upload data done: " + status);
+        //Log.i(TAG, "Upload data done: " + status);
     }
 
     private void sendCurrentTime() {
@@ -800,7 +796,7 @@ public class OsswService extends Service {
             Date date = dateFormatGmt.parse(dateFormatLocal.format(new Date()));
             int currentTime = (int) (date.getTime() / 1000);
             txCharact.setValue(new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
-            Log.i(TAG, "Set current time");
+            //Log.i(TAG, "Set current time");
             boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
         } catch (Exception e) {
             // do nothing

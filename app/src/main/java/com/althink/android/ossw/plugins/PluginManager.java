@@ -44,7 +44,7 @@ public class PluginManager {
             }
         }
 
-        Log.d(TAG, "plugin scanning time: " + (System.currentTimeMillis() - start));
+        //Log.d(TAG, "plugin scanning time: " + (System.currentTimeMillis() - start));
 
         return plugins;
     }
@@ -64,7 +64,7 @@ public class PluginManager {
             }
             cursor.close();
         } catch (Exception e) {
-            Log.e(TAG, "Failed to load plugin properties: " + plugin.getPluginId());
+            //Log.e(TAG, "Failed to load plugin properties: " + plugin.getPluginId());
         }
         plugin.setProperties(properties);
 
@@ -78,7 +78,7 @@ public class PluginManager {
             }
             cursor.close();
         } catch (Exception e) {
-            Log.e(TAG, "Failed to load plugin functions: " + plugin.getPluginId());
+            //Log.e(TAG, "Failed to load plugin functions: " + plugin.getPluginId());
         }
         plugin.setFunctions(functions);
     }

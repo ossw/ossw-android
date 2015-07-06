@@ -15,12 +15,12 @@
  limitations under the License.
 -->
 <resources>
-    <string name="app_name">Sport watch</string>
+    <string name="app_name">OSSW</string>
     <string name="intro_message">
         <![CDATA[
         
             
-            Open Source Sport Watch android app.
+            Open Source Smart Watch android app.
             
         
         ]]>

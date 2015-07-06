@@ -116,17 +116,13 @@ public class WatchSetCompiler {
                 throw new KnownParseError("Watchset is too big, this version has 4K bytes limit");
             }
 
-            for (WatchExtensionProperty prop : extensionParameters) {
-                Log.i(TAG, "PARAM: " + prop.getPropertyId() + ", " + prop.getType() + ", " + prop.getRange());
-            }
-
-            Log.i(TAG, "size: " + watchset.getWatchData().length + ", data: " + Arrays.toString(watchset.getWatchData()));
+            //Log.i(TAG, "size: " + watchset.getWatchData().length + ", data: " + Arrays.toString(watchset.getWatchData()));
 
             return watchset;
         } catch (KnownParseError e) {
             throw e;
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
+            //Log.e(TAG, e.getMessage(), e);
             throw new KnownParseError("JSON format error");
         }
     }

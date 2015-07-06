@@ -13,7 +13,7 @@ public class CallReceiver extends BaseCallReceiver {
 
     @Override
     protected void onIncomingCallStarted(Context ctx, String number, Date start) {
-        Log.i(TAG, "incoming call started: " + number);
+        //Log.i(TAG, "incoming call started: " + number);
     }
 
     @Override
@@ -22,7 +22,7 @@ public class CallReceiver extends BaseCallReceiver {
 
     @Override
     protected void onIncomingCallEnded(Context ctx, String number, Date start, Date end) {
-        Log.i(TAG, "incoming call ended: " + number);
+        //Log.i(TAG, "incoming call ended: " + number);
     }
 
     @Override
@@ -31,7 +31,7 @@ public class CallReceiver extends BaseCallReceiver {
 
     @Override
     protected void onMissedCall(Context ctx, String number, Date start) {
-        Log.i(TAG, "missed call: " + number);
+        //Log.i(TAG, "missed call: " + number);
     }
 
 }

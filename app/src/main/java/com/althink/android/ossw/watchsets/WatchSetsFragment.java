@@ -58,7 +58,7 @@ public class WatchSetsFragment extends ListFragment {
         listAdaptor = new WatchSetsListAdapter();
         setListAdapter(listAdaptor);
 
-        Log.i(TAG, "On create");
+        //Log.i(TAG, "On create");
     }
 
     private void refreshWatchSetList() {
@@ -170,6 +170,7 @@ public class WatchSetsFragment extends ListFragment {
                             CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
                             OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
                             osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                            resetSelection();
                             return true;
                         }
                     }
@@ -200,13 +201,13 @@ public class WatchSetsFragment extends ListFragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i(TAG, "result code: " + resultCode);
+        //Log.i(TAG, "result code: " + resultCode);
         switch (requestCode) {
             case FILE_SELECT_CODE:
                 if (resultCode == Activity.RESULT_OK) {
                     // Get the Uri of the selected file
                     Uri uri = data.getData();
-                    Log.i(TAG, "File Uri: " + uri.toString());
+                    //Log.i(TAG, "File Uri: " + uri.toString());
                     final FragmentTransaction ft = getFragmentManager().beginTransaction();
                     WatchSetImportFragment importFragment = new WatchSetImportFragment();
                     importFragment.setUri(uri);
@@ -222,7 +223,7 @@ public class WatchSetsFragment extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
 
-        Log.i(TAG, "On destroy");
+        //Log.i(TAG, "On destroy");
     }
 
     private class WatchSetsListAdapter extends BaseAdapter {

@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "CREATE");
+        //Log.i(TAG, "CREATE");
 
         mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
@@ -208,13 +208,13 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
-        Log.i(TAG, "PAUSE");
+        //Log.i(TAG, "PAUSE");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "DESTROY");
+        //Log.i(TAG, "DESTROY");
         unbindService(mServiceConnection);
 
 //        unbindService(pluginServiceConnection);
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                     String address = data.getStringExtra("watch_ble_address");
                     if (address != null) {
 
-                        Log.i(TAG, "Connect to: " + address);
+                        //Log.i(TAG, "Connect to: " + address);
                         connectToWatch(address);
                     }
                 }

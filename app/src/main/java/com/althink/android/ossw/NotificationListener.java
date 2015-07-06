@@ -1,25 +1,17 @@
 package com.althink.android.ossw;
 
-import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
-import android.os.Message;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.widget.RemoteViews;
 import android.widget.TextView;
-
-import com.althink.android.ossw.gmail.GmailContract;
 
 /**
  * Created by krzysiek on 05/06/15.
@@ -53,13 +45,12 @@ public class NotificationListener  extends NotificationListenerService {
         filter.addAction("com.kpbird.nlsexample.NOTIFICATION_LISTENER_SERVICE_EXAMPLE");
         registerReceiver(nlservicereciver,filter);*/
 
-
         Resources resources = null;
         try {
             PackageManager pkm = getPackageManager();
-            resources = pkm.getResourcesForApplication(GmailContract.AUTHORITY);
+            resources = pkm.getResourcesForApplication("com.google.android.gm");
         } catch (Exception ex){
-            Log.e(TAG, "Failed to initialize ids: " + ex.getMessage());
+            //Log.e(TAG, "Failed to initialize ids: " + ex.getMessage());
         }
         if (resources == null)
             return;
@@ -88,8 +79,8 @@ public class NotificationListener  extends NotificationListenerService {
     @Override
     public void onNotificationPosted(final StatusBarNotification sbn) {
 
-        Log.i(TAG,"**********  onNotificationPosted");
-        Log.i(TAG,"ID :" + sbn.getId() + "t" + sbn.getNotification().tickerText + "t" + sbn.getPackageName());
+        //Log.i(TAG,"**********  onNotificationPosted");
+        //Log.i(TAG,"ID :" + sbn.getId() + "t" + sbn.getNotification().tickerText + "t" + sbn.getPackageName());
         //Intent i = new  Intent("com.kpbird.nlsexample.NOTIFICATION_LISTENER_EXAMPLE");
         //i.putExtra("notification_event","onNotificationPosted :" + sbn.getPackageName() + "n");
         //sendBroadcast(i);
@@ -125,13 +116,13 @@ public class NotificationListener  extends NotificationListenerService {
         if(tv == null) {
             return;
         }
-        Log.d(TAG, name + " " + tv.getText());
+        //Log.d(TAG, name + " " + tv.getText());
     }
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        Log.i(TAG,"********** onNOtificationRemoved");
-        Log.i(TAG,"ID :" + sbn.getId() + "t" + sbn.getNotification().tickerText +"t" + sbn.getPackageName());
+        //Log.i(TAG,"********** onNOtificationRemoved");
+        //Log.i(TAG,"ID :" + sbn.getId() + "t" + sbn.getNotification().tickerText +"t" + sbn.getPackageName());
         //Intent i = new  Intent("com.kpbird.nlsexample.NOTIFICATION_LISTENER_EXAMPLE");
         //i.putExtra("notification_event","onNotificationRemoved :" + sbn.getPackageName() + "n");
 

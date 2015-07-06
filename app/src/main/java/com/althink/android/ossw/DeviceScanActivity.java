@@ -161,7 +161,7 @@ public class DeviceScanActivity extends AppCompatListActivity implements Navigat
             mScanning = false;
         }
 
-        Log.i(TAG, "Return ble address: " +  device.getAddress());
+        //Log.i(TAG, "Return ble address: " +  device.getAddress());
 
         Intent retIntent = new Intent();
         retIntent.putExtra("watch_ble_address", device.getAddress());
