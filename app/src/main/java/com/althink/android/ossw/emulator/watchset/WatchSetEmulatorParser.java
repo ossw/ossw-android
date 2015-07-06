@@ -189,6 +189,8 @@ public class WatchSetEmulatorParser {
                 return EmulatorDataSourceFactory.internalDataSource(property);
             case WatchConstants.DATA_SOURCE_EXTERNAL:
                 return EmulatorDataSourceFactory.externalDataSource(property, emulator);
+            case WatchConstants.DATA_SOURCE_SENSOR:
+                return EmulatorDataSourceFactory.sensorDataSource(property);
             default:
                 throw new RuntimeException("unknown data source type: " + type);
         }

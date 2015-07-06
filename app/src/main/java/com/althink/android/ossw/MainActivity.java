@@ -270,6 +270,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             final Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
+        } else if (id == R.id.action_close) {
+            mOsswBleService.stopSelf();
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

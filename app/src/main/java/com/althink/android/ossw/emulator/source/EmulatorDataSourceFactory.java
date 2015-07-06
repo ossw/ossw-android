@@ -4,6 +4,7 @@ import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.source.internal.HourInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.ZeroDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
 
 /**
@@ -18,6 +19,14 @@ public class EmulatorDataSourceFactory {
                 return new MinutesInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS:
                 return new SecondsInternalEmulatorDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH:
+                return new ZeroDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH:
+                return new ZeroDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR:
+                return new ZeroDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL:
+                return new ZeroDataSource();
             default:
                 throw new IllegalArgumentException("Invalid property: " + property);
         }
@@ -25,5 +34,9 @@ public class EmulatorDataSourceFactory {
 
     public static EmulatorDataSource externalDataSource(int property, WatchEmulator emulator) {
         return new ExternalEmulatorDataSource(emulator, property);
+    }
+
+    public static EmulatorDataSource sensorDataSource(int property) {
+        return new ZeroDataSource();
     }
 }

@@ -69,6 +69,7 @@ public class WatchConstants {
 
     public static final int DATA_SOURCE_INTERNAL = 0;
     public static final int DATA_SOURCE_EXTERNAL = 1;
+    public static final int DATA_SOURCE_SENSOR   = 2;
 
     public static final int INTERNAL_DATA_SOURCE_TIME_HOUR = 0;
     public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 1;
@@ -78,9 +79,9 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 5;
     public static final int INTERNAL_DATA_SOURCE_BATTERY_LEVEL = 6;
 
-    public static final int INTERNAL_DATA_SOURCE_SENSOR_HR = 0x10;
-    public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
-    public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_CADENCE = 0x12;
+    public static final int SENSOR_DATA_SOURCE_HR = 0;
+    //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
+    //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_CADENCE = 0x12;
 
     public static final int WATCHSET_FUNCTION_TOGGLE_BACKLIGHT = 1;
     public static final int WATCHSET_FUNCTION_TOGGLE_COLORS = 2;

@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by krzysiek on 12/06/15.
  */
-public class PluginDefinition {
+public class PluginDefinition implements Comparable<PluginDefinition> {
 
     private String pluginId;
     private String label;
@@ -44,5 +44,10 @@ public class PluginDefinition {
 
     public void setProperties(List<PluginPropertyDefinition> properties) {
         this.properties = properties;
+    }
+
+    @Override
+    public int compareTo(PluginDefinition another) {
+        return label.compareTo(another.getLabel());
     }
 }

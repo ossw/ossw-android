@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class PluginManager {
                 plugins.add(plugin);
             }
         }
+        Collections.sort(plugins);
 
         //Log.d(TAG, "plugin scanning time: " + (System.currentTimeMillis() - start));
 

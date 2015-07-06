@@ -546,6 +546,10 @@ public class WatchSetCompiler {
                 type = WatchConstants.DATA_SOURCE_INTERNAL;
                 value = getInternalSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
                 break;
+            case "sensor":
+                type = WatchConstants.DATA_SOURCE_SENSOR;
+                value = getSensorSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
+                break;
             case "extension":
                 type = WatchConstants.DATA_SOURCE_EXTERNAL;
                 String extensionId = source.getString("extensionId");
@@ -598,8 +602,27 @@ public class WatchSetCompiler {
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_MINUTES;
             case "seconds":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS;
+            case "dayOfMonth":
+                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH;
+            case "month":
+                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH;
+            case "year":
+                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR;
+            case "battery":
+                return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
         }
         throw new KnownParseError("Unknown internal property: " + property);
+    }
+
+    private int getSensorSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
+        if (!dataSourceType.equals(DataSourceType.NUMBER)) {
+            throw new IllegalArgumentException("Unknown data source type");
+        }
+        switch (property) {
+            case "heartRate":
+                return WatchConstants.SENSOR_DATA_SOURCE_HR;
+        }
+        throw new KnownParseError("Unknown sensor property: " + property);
     }
 
     private int getIntegerInRange(JSONObject control, String property, int min, int max) throws JSONException {
