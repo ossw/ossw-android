@@ -185,7 +185,7 @@ public class WatchSetsFragment extends ListFragment {
 
     private void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/json");
+        intent.setType("application/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         try {
