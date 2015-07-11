@@ -6,10 +6,12 @@ package com.althink.android.ossw.service;
 public class WatchExtensionFunction {
     private String pluginId;
     private String functionId;
+    private String parameter;
 
-    public WatchExtensionFunction(String pluginId, String functionId) {
+    public WatchExtensionFunction(String pluginId, String functionId, String parameter) {
         this.pluginId = pluginId;
         this.functionId = functionId;
+        this.parameter = parameter;
     }
 
     public String getPluginId() {
@@ -20,6 +22,10 @@ public class WatchExtensionFunction {
         return functionId;
     }
 
+    public String getParameter() {
+        return parameter;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -27,16 +33,21 @@ public class WatchExtensionFunction {
 
         WatchExtensionFunction that = (WatchExtensionFunction) o;
 
-        if (!functionId.equals(that.functionId)) return false;
-        if (!pluginId.equals(that.pluginId)) return false;
+        if (functionId != null ? !functionId.equals(that.functionId) : that.functionId != null)
+            return false;
+        if (parameter != null ? !parameter.equals(that.parameter) : that.parameter != null)
+            return false;
+        if (pluginId != null ? !pluginId.equals(that.pluginId) : that.pluginId != null)
+            return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = pluginId.hashCode();
-        result = 31 * result + functionId.hashCode();
+        int result = pluginId != null ? pluginId.hashCode() : 0;
+        result = 31 * result + (functionId != null ? functionId.hashCode() : 0);
+        result = 31 * result + (parameter != null ? parameter.hashCode() : 0);
         return result;
     }
 }

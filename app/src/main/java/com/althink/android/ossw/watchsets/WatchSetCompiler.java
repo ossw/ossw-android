@@ -247,9 +247,9 @@ public class WatchSetCompiler {
             case "extensionFunction":
                 String extensionId = config.getString("extensionId");
                 String function = config.getString("function");
-                //String parameter = config.optString("parameter");
+                String parameter = config.optString("parameter");
                 fId = WatchConstants.WATCHSET_FUNCTION_EXTENSION;
-                fParam = addExtensionFunction(new WatchExtensionFunction(extensionId, function));
+                fParam = addExtensionFunction(new WatchExtensionFunction(extensionId, function, parameter));
                 break;
             case "toggleBacklight":
                 fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT;

@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -343,10 +344,10 @@ public class OsswService extends Service {
             return;
         }
         WatchExtensionFunction function = watchContext.getExternalFunctions().get(extFunctionId);
-        invokeExtensionFunction(function.getPluginId(), function.getFunctionId());
+        invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
     }
 
-    public void invokeExtensionFunction(String extensionId, String functionName) {
+    public void invokeExtensionFunction(String extensionId, String functionName, String parameter) {
         ExternalServiceConnection connection = externalServiceConnections.get(extensionId);
         if (connection == null) {
             //Log.e(TAG, "Service " + extensionId + " is not connected");
@@ -355,7 +356,11 @@ public class OsswService extends Service {
         try {
             Integer functionId = findFunctionId(extensionId, functionName);
             if (functionId != null) {
-                connection.getMessanger().send(Message.obtain(null, functionId, 0, 0));
+                Message message = Message.obtain(null, functionId, 0, 0);
+                Bundle b = new Bundle();
+                b.putString("parameter", parameter);
+                message.setData(b);
+                connection.getMessanger().send(message);
             }
         } catch (Exception e) {
             //Log.e(TAG, e.getMessage(), e);

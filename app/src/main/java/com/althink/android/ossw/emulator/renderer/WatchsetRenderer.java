@@ -48,7 +48,7 @@ public class WatchSetRenderer implements ScreenRender {
                     break;
                 case WatchConstants.WATCHSET_FUNCTION_EXTENSION:
                     WatchExtensionFunction function = watchset.getOperationContext().getExternalFunctions().get(param);
-                    service.invokeExtensionFunction(function.getPluginId(), function.getFunctionId());
+                    service.invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
                     break;
             }
         }
