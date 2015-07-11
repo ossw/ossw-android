@@ -71,7 +71,7 @@ public class WatchSetCompiler {
 
             JSONArray screens = data.getJSONArray("screens");
 
-            if (screens.length() < 1 || screens.length() > 255) {
+            if (screens.length() > 255) {
                 throw new KnownParseError("Invalid number of screens");
             }
 
