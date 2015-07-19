@@ -25,14 +25,17 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
+import com.althink.android.ossw.NotificationType;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
+import com.althink.android.ossw.notifications.IncomingCallNotificationHandler;
+import com.althink.android.ossw.notifications.NotificationHandler;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
 import com.althink.android.ossw.plugins.PluginPropertyDefinition;
+import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
@@ -41,7 +44,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +66,8 @@ public class OsswService extends Service {
     private BluetoothGattServer mGattServer;
     private boolean started = false;
 
+    private NotificationHandler lastNotificationHandler = null;
+
     public static final int STATE_DISCONNECTED = 0;
     public static final int STATE_CONNECTING = 1;
     public static final int STATE_SERVICE_DISCOVERING = 2;
@@ -85,6 +89,8 @@ public class OsswService extends Service {
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
 
     private OsswDB db;
+
+    private int nextNotificationId = 1;
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
@@ -145,6 +151,9 @@ public class OsswService extends Service {
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION:
                         invokeExtensionFunction(value[1]);
                         break;
+                    case WatchConstants.OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION:
+                        invokeNotificationFunction(value[1]);
+                        break;
                 }
             }
         }
@@ -189,6 +198,17 @@ public class OsswService extends Service {
         }
     };
 
+    private int getNextNotificationId() {
+        int notificationId = nextNotificationId;
+
+        nextNotificationId++;
+        if (nextNotificationId > 65535) {
+            nextNotificationId = 1;
+        }
+
+        return notificationId;
+    }
+
     private void resetSentValuesCache() {
         sentValuesCache.clear();
     }
@@ -222,6 +242,108 @@ public class OsswService extends Service {
 
     public void createOrUpdateWatchSet(String name, String source, WatchOperationContext watchContext, int id) {
         db.addWatchSet(name, source, watchContext, id);
+    }
+
+    public void extendNotification(int notificationId, int timeout) {
+
+        if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
+
+            return;
+        }
+
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return;
+        }
+
+        txCharact.setValue(new byte[]{0x26, (byte) (notificationId >> 8), (byte) (notificationId & 0xFF), (byte) (timeout >> 8), (byte) (timeout & 0xFF)});
+
+        boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+    }
+
+    public void closeNotification(int notificationId) {
+
+        if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
+
+            return;
+        }
+
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return;
+        }
+
+        txCharact.setValue(new byte[]{0x27, (byte) (notificationId >> 8), (byte) (notificationId & 0xFF)});
+
+        boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+    }
+
+    private class UploadNotificationToWatch extends AsyncTask<Object, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Object... params) {
+            internalUploadNotification((int) params[0], (NotificationType) params[1], (byte[]) params[2], (int) params[3], (int) params[4]);
+            return null;
+        }
+    }
+
+    public int uploadNotification(NotificationType type, byte[] data, int vibrationPattern, int timeout) {
+        int notificationId = getNextNotificationId();
+        new UploadNotificationToWatch().execute(notificationId, type, data, vibrationPattern, timeout);
+        return notificationId;
+    }
+
+    private void internalUploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout) {
+
+        if (mBluetoothGatt == null || !(mConnectionState == STATE_CONNECTED)) {
+
+            return;
+        }
+
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return;
+        }
+
+        int size = data.length;
+
+        txCharact.setValue(new byte[]{0x23, (byte) type.ordinal(), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
+
+        boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+
+        int sizeLeft = data.length;
+
+        int dataPtr = 0;
+        byte[] dataCommand = new byte[17];
+        dataCommand[0] = 0x24;
+        while (sizeLeft > 0) {
+            int dataInPacket = sizeLeft > 16 ? 16 : sizeLeft;
+
+            for (int i = 0; i < dataInPacket; i++) {
+                dataCommand[i + 1] = data[dataPtr++];
+            }
+
+
+            txCharact.setValue(dataCommand);
+            status = mBluetoothGatt.writeCharacteristic(txCharact);
+
+            //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
+
+            sizeLeft -= 16;
+        }
+        txCharact.setValue(new byte[]{0x25, (byte) (notificationId >> 8), (byte) (notificationId & 0xFF), (byte) ((vibrationPattern >> 24) & 0xFF), (byte) ((vibrationPattern >> 16) & 0xFF), (byte) ((vibrationPattern >> 8) & 0xFF), (byte) (vibrationPattern & 0xFF), (byte) (timeout >> 8), (byte) (timeout & 0xFF)});
+        status = mBluetoothGatt.writeCharacteristic(txCharact);
+
+        switch (data[0]) {
+            case 1:
+                lastNotificationHandler = new IncomingCallNotificationHandler(notificationId, this);
+                break;
+        }
+
+        //Log.i(TAG, "Upload data done: " + status);
     }
 
     public class LocalBinder extends Binder {
@@ -339,7 +461,13 @@ public class OsswService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public void invokeExtensionFunction(int extFunctionId) {
+    private void invokeNotificationFunction(int functionId) {
+        if (lastNotificationHandler != null) {
+            lastNotificationHandler.handleFunction(functionId);
+        }
+    }
+
+    private void invokeExtensionFunction(int extFunctionId) {
         if (watchContext == null || extFunctionId < 0 || watchContext.getExternalFunctions() == null || watchContext.getExternalFunctions().size() <= extFunctionId) {
             return;
         }
@@ -675,6 +803,7 @@ public class OsswService extends Service {
                 break;
             case STRING:
                 String v = (String) value;
+                v = StringNormalizer.removeAccents(v);
                 if (v.length() > property.getRange()) {
                     v = v.substring(0, property.getRange());
                 }
@@ -734,8 +863,8 @@ public class OsswService extends Service {
         }
     }
 
-    public void uploadData(UploadDataType watchSet, byte[] data) {
-        new UploadDataToWatch().execute(watchSet, data);
+    public void uploadData(UploadDataType type, byte[] data) {
+        new UploadDataToWatch().execute(type, data);
     }
 
     private void internalUploadData(UploadDataType type, byte[] data) {
@@ -752,7 +881,7 @@ public class OsswService extends Service {
 
         int size = data.length;
 
-        txCharact.setValue(new byte[]{0x20, (byte) 0, (byte) (size >> 24), (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
+        txCharact.setValue(new byte[]{0x20, (byte) type.ordinal(), (byte) (size >> 24), (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
 
         boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
         //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
