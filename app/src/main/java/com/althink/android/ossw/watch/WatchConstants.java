@@ -104,6 +104,7 @@ public class WatchConstants {
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;;
     public static final int OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION = 0x12;
+    public static final int OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION = 0x23;
 
     public static final int ALIGN_LEFT = 0x0;
     public static final int ALIGN_CENTER = 0x40;
