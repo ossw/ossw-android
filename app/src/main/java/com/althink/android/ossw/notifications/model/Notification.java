@@ -15,4 +15,5 @@ public interface Notification extends Comparable<Notification> {
     List<Operation> getOperations();
     Integer getExternalId();
     void setExternalId(Integer externalId);
+    Object getNotificationObject();
 }

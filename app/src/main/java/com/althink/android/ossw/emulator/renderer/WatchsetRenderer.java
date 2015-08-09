@@ -15,12 +15,10 @@ import com.althink.android.ossw.watch.WatchConstants;
 public class WatchSetRenderer implements ScreenRender {
 
     private WatchSetEmulatorModel watchset;
-    private OsswService service;
     private WatchEmulator emulator;
 
-    public WatchSetRenderer(WatchSetEmulatorModel watchset, OsswService service, WatchEmulator emulator) {
+    public WatchSetRenderer(WatchSetEmulatorModel watchset, WatchEmulator emulator) {
         this.watchset = watchset;
-        this.service = service;
         this.emulator = emulator;
     }
 
@@ -48,7 +46,10 @@ public class WatchSetRenderer implements ScreenRender {
                     break;
                 case WatchConstants.WATCHSET_FUNCTION_EXTENSION:
                     WatchExtensionFunction function = watchset.getOperationContext().getExternalFunctions().get(param);
-                    service.invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
+                    OsswService service = OsswService.getInstance();
+                    if (service != null) {
+                        service.invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
+                    }
                     break;
             }
         }

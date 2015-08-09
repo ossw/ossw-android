@@ -14,7 +14,6 @@ import com.althink.android.ossw.emulator.source.internal.HourInternalEmulatorDat
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetScreenEmulatorModel;
-import com.althink.android.ossw.service.OsswServiceProvider;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -45,12 +44,7 @@ public class WatchView extends View {
     public WatchView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        OsswServiceProvider osswProvider = null;
-        if (context instanceof OsswServiceProvider) {
-            osswProvider = ((OsswServiceProvider) context);
-        }
-
-        watchEmulator = new WatchEmulator(osswProvider);
+        watchEmulator = new WatchEmulator();
 
         List<EmulatorControl> controls = new LinkedList<>();
         controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 4, 8, new HourInternalEmulatorDataSource()));

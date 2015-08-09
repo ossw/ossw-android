@@ -168,8 +168,10 @@ public class WatchSetsFragment extends ListFragment {
                             String source = db.getWatchSetSourceById(info.getId());
                             Integer extWatchSetId = db.getExtWatchSetId(info.getId());
                             CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
-                            OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
-                            osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                            OsswService osswBleService = OsswService.getInstance();
+                            if(osswBleService != null) {
+                                osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                            }
                             resetSelection();
                             return true;
                         }

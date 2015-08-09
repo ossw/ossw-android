@@ -30,6 +30,7 @@ import android.util.Log;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
 import com.althink.android.ossw.notifications.NotificationHandler;
+import com.althink.android.ossw.notifications.NotificationListener;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
@@ -59,6 +60,8 @@ public class OsswService extends Service {
     private final static String TAG = OsswService.class.getSimpleName();
 
     public final static UUID OSSW_SERVICE_UUID = UUID.fromString("58C60001-20B7-4904-96FA-CBA8E1B95702");
+
+    private static OsswService INSTANCE;
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
@@ -91,8 +94,6 @@ public class OsswService extends Service {
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
 
     private OsswDB db;
-
-    private int nextNotificationId = 1;
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
@@ -143,6 +144,7 @@ public class OsswService extends Service {
             byte[] value = characteristic.getValue();
             //Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
+                Log.i(TAG, "Command: " + Arrays.toString(value));
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
                         int watchSetId = value[1] << 24 | value[2] << 16 | value[3] << 8 | value[4] & 0xFF;
@@ -156,7 +158,7 @@ public class OsswService extends Service {
                         invokeExtensionFunction(value[1]);
                         break;
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION:
-                        invokeNotificationFunction(value[1]);
+                        invokeNotificationFunction(value[1], Arrays.copyOfRange(value, 2, value.length));
                         break;
                     case WatchConstants.OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION:
                         synchronized (uploadNotificationPermission) {
@@ -208,17 +210,6 @@ public class OsswService extends Service {
         }
     };
 
-    private int getNextNotificationId() {
-        int notificationId = nextNotificationId;
-
-        nextNotificationId++;
-        if (nextNotificationId > 65535) {
-            nextNotificationId = 1;
-        }
-
-        return notificationId;
-    }
-
     private void resetSentValuesCache() {
         sentValuesCache.clear();
     }
@@ -262,10 +253,8 @@ public class OsswService extends Service {
         new NotificationRelatedAsyncTask().execute(NotificationOperation.CLOSE_ALERT, notificationId);
     }
 
-    public int uploadNotification(NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
-        int notificationId = getNextNotificationId();
+    public void uploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
         new NotificationRelatedAsyncTask().execute(NotificationOperation.UPLOAD, notificationId, type, data, vibrationPattern, timeout, handler);
-        return notificationId;
     }
 
     private class NotificationRelatedAsyncTask extends AsyncTask<Object, Void, Void> {
@@ -516,14 +505,59 @@ public class OsswService extends Service {
                     contentObservers.put(plugin.getPluginId(), observer);
                 }
                 started = true;
+                INSTANCE = this;
             }
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void invokeNotificationFunction(int functionId) {
-        if (lastNotificationHandler != null) {
-            lastNotificationHandler.handleFunction(functionId);
+    private void invokeNotificationFunction(int functionId, byte[] data) {
+        NotificationListener nl = NotificationListener.getInstance();
+        switch (functionId) {
+            case WatchConstants.NOTIFICATIONS_FUNCTION_ALERT_DISMISS:
+            case WatchConstants.NOTIFICATIONS_FUNCTION_ALERT_OPTION_1:
+            case WatchConstants.NOTIFICATIONS_FUNCTION_ALERT_OPTION_2:
+                if (lastNotificationHandler != null) {
+                    lastNotificationHandler.handleFunction(functionId);
+                }
+                break;
+
+            case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
+                Log.i(TAG, "NOTIFICATIONS_NEXT");
+
+                if (nl != null) {
+                    nl.sendFirstNotification();
+                }
+                break;
+            case WatchConstants.NOTIFICATIONS_NEXT_PART:
+                Log.i(TAG, "NOTIFICATIONS_NEXT_PART");
+
+                if (nl != null) {
+                    int notificationId = data[0] << 8 | data[1];
+                    int part = data[2] & 0xFF;
+                    nl.sendNotificationPart(notificationId, part+1);
+                }
+                break;
+            case WatchConstants.NOTIFICATIONS_PREV_PART:
+                Log.i(TAG, "NOTIFICATIONS_PREV_PART");
+
+                if (nl != null) {
+                    int notificationId = data[0] << 8 | data[1];
+                    int part = data[2] & 0xFF;
+                    nl.sendNotificationPart(notificationId, part-1);
+                }
+                break;
+
+            case WatchConstants.NOTIFICATIONS_NEXT:
+                Log.i(TAG, "NOTIFICATIONS_NEXT");
+
+                if (nl != null) {
+                    int notificationId = data[0] << 8 | data[1];
+                    nl.sendNextNotification(notificationId);
+                }
+                break;
+
+
         }
     }
 
@@ -597,6 +631,7 @@ public class OsswService extends Service {
         contentObservers.clear();
         close();
         started = false;
+        INSTANCE = null;
     }
 
     private final IBinder mBinder = new LocalBinder();
@@ -868,7 +903,7 @@ public class OsswService extends Service {
                     v = v.substring(0, property.getRange());
                 }
                 try {
-                    os.write(((String) value).getBytes());
+                    os.write(v.getBytes());
                 } catch (IOException e) {
                 }
                 break;
@@ -1013,5 +1048,9 @@ public class OsswService extends Service {
         }
         return service
                 .getCharacteristic(UUID.fromString("58C60003-20B7-4904-96FA-CBA8E1B95702"));
+    }
+
+    public static OsswService getInstance() {
+        return INSTANCE;
     }
 }

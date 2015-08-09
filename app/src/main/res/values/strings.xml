@@ -48,4 +48,7 @@
     <string name="menu_upload_to_watch">Upload</string>
     <string name="action_close">Close</string>
     <string name="action_notifications">Notifications</string>
+    <string name="pref_notifications_font">Notifications font</string>
+    <string name="select_font">Select font</string>
+    <string name="pref_notifications_font_desc">Select font for notifications screen</string>
 </resources>

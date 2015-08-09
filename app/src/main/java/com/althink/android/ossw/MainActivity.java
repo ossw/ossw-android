@@ -23,10 +23,9 @@ import com.althink.android.ossw.drawer.NavigationDrawerFragment;
 import com.althink.android.ossw.home.HomeFragment;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.service.OsswServiceProvider;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks, OsswServiceProvider {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private OsswService mOsswBleService;
@@ -281,15 +280,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public OsswService getOsswBleService() {
-        return mOsswBleService;
-    }
-
-    @Override
-    public OsswService getService() {
-        return getOsswBleService();
     }
 
     public Toolbar getBottomToolbar() {

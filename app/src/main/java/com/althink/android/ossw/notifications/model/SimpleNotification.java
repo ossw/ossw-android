@@ -11,8 +11,8 @@ public class SimpleNotification extends AbstractNotification {
     private String title;
     private String text;
 
-    public SimpleNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, String title, String text) {
-        super(id, type, category, application, date, operations);
+    public SimpleNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, String title, String text, Object notificationObject) {
+        super(id, type, category, application, date, operations, notificationObject);
         this.title = title;
         this.text = text;
     }

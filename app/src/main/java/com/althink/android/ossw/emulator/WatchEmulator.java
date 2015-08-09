@@ -7,7 +7,6 @@ import com.althink.android.ossw.emulator.renderer.WatchSetRenderer;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorParser;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.service.OsswServiceProvider;
 import com.althink.android.ossw.service.WatchExtensionProperty;
 import com.althink.android.ossw.watchsets.CompiledWatchSet;
 
@@ -20,17 +19,11 @@ public class WatchEmulator {
 
     private ScreenRender screenRenderer;
 
-    private OsswServiceProvider osswBleServiceProvider;
-
     private boolean colorsInverted = false;
 
     private boolean backlight = false;
 
     private WatchSetEmulatorModel watchSet;
-
-    public WatchEmulator(OsswServiceProvider osswBleServiceProvider) {
-        this.osswBleServiceProvider = osswBleServiceProvider;
-    }
 
     public void render(LowLevelRenderer llr) {
         llr.setMode(colorsInverted, backlight);
@@ -53,7 +46,7 @@ public class WatchEmulator {
     public void showWatchSet(WatchSetEmulatorModel watchSet) {
 
         this.watchSet = watchSet;
-        screenRenderer = new WatchSetRenderer(watchSet, osswBleServiceProvider.getService(), this);
+        screenRenderer = new WatchSetRenderer(watchSet, this);
     }
 
     public void toggleBacklight() {
@@ -65,7 +58,7 @@ public class WatchEmulator {
     }
 
     public Object getExternalProperty(int property) {
-        OsswService service = osswBleServiceProvider.getService();
+        OsswService service = OsswService.getInstance();
         if (service == null) {
             return null;
         }

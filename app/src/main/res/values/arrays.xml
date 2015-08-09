@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="notifications_font_keys">
+        <item>Small regular</item>
+        <item>Small bold</item>
+        <item>Medium regular</item>
+        <item>Medium bold</item>
+        <item>Big regular</item>
+    </string-array>
+    <string-array name="notification_font_values">
+        <item>smallRegular</item>
+        <item>smallBold</item>
+        <item>normalRegular</item>
+        <item>normalBold</item>
+        <item>bigRegular</item>
+    </string-array>
+</resources>

@@ -13,36 +13,14 @@ public class NotificationSummaryMessageBuilder implements NotificationMessageBui
 
     private ByteArrayOutputStream out;
 
-    public NotificationSummaryMessageBuilder(List<Notification> notifications) {
+    public NotificationSummaryMessageBuilder(int messagesNo) {
         out = new ByteArrayOutputStream();
 
-
-        byte[] phoneNumberData = "Summary".getBytes();
-        byte[] contactNameData = Integer.toString(countMessages(notifications)).getBytes();
-        out.write(0);
-        out.write(0);
-        out.write(5);
-        out.write(0);
-        out.write(5 + phoneNumberData.length + 1);
-        out.write(phoneNumberData, 0, phoneNumberData.length);
-        out.write(0);
-        out.write(contactNameData, 0, contactNameData.length);
-        out.write(0);
-    }
-
-    private int countMessages(List<Notification> notifications) {
-        int count = 0;
-        for (Notification notification : notifications) {
-            if (notification instanceof ListNotification) {
-                count += ((ListNotification) notification).getItems().size();
-            } else {
-                count++;
-            }
+        if (messagesNo > 255) {
+            messagesNo = 255;
         }
-        if (count > 255) {
-            return 255;
-        }
-        return count;
+        out.write(0);
+        out.write(messagesNo);
     }
 
     @Override

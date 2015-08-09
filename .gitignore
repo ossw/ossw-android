@@ -4,3 +4,4 @@ I.gradle
 /.idea/libraries
 .DS_Store
 /build
+.gradle/2.2.1/taskArtifacts

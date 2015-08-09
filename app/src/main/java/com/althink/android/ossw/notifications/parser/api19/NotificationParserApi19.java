@@ -79,7 +79,7 @@ public class NotificationParserApi19 {
             } else {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
             }
         }
         else if ("com.android.dialer".equals(sbn.getPackageName())) {
@@ -101,11 +101,11 @@ public class NotificationParserApi19 {
             for (Object line : lines) {
                 items.add(new SimpleListItem(line.toString()));
             }
-            return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items);
+            return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
         }
 
         if (title != null && text != null) {
-            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text);
+            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn);
         }
 
         return null;

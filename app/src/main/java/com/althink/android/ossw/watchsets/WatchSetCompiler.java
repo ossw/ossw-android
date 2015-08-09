@@ -414,8 +414,9 @@ public class WatchSetCompiler {
         int font = parseFont(control.getJSONObject("font"));
         os.write(font);
         int alignment = parseFontAlignment(control.getJSONObject("style"));
+        alignment |= parseFontFlags(control.getJSONObject("style"));
         os.write(alignment);
-        int flags = parseFontFlags(control.getJSONObject("style"));
+        int flags = 0;//parseFontFlags(control.getJSONObject("style"));
         os.write(flags);
         os.write(0);
 
@@ -427,7 +428,7 @@ public class WatchSetCompiler {
     private int parseFontFlags(JSONObject style) {
         int flags = 0;
         Boolean multiline = style.optBoolean("multiline");
-        flags = (multiline != null && multiline) ? 0x1 : 0x0;
+        flags = (multiline != null && multiline) ? WatchConstants.TEXT_FLAGS_MULTILINE : 0x0;
         return flags;
     }
 
@@ -468,10 +469,18 @@ public class WatchSetCompiler {
                 return WatchConstants.FONT_NAME_OPTION_BIG;
             case "optionNormal":
                 return WatchConstants.FONT_NAME_OPTION_NORMAL;
+            case "smallRegular":
+                return WatchConstants.FONT_NAME_SMALL_REGULAR;
+            case "smallBold":
+                return WatchConstants.FONT_NAME_SMALL_BOLD;
             case "normalRegular":
                 return WatchConstants.FONT_NAME_NORMAL_REGULAR;
             case "normalBold":
                 return WatchConstants.FONT_NAME_NORMAL_BOLD;
+            case "bigRegular":
+                return WatchConstants.FONT_NAME_BIG_REGULAR;
+            case "bigBold":
+                return WatchConstants.FONT_NAME_BIG_BOLD;
         }
         throw new KnownParseError("Invalid font name: " + fontName);
     }

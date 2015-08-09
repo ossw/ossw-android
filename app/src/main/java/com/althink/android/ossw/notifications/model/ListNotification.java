@@ -10,8 +10,8 @@ public class ListNotification extends AbstractNotification {
     private String title;
     private List items;
 
-    public ListNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, String title, List items) {
-        super(id, type, category, application, date, operations);
+    public ListNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, String title, List items, Object notificationObject) {
+        super(id, type, category, application, date, operations, notificationObject);
         this.title = title;
         this.items = items;
     }

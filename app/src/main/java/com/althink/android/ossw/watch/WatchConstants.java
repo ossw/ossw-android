@@ -43,20 +43,25 @@ public class WatchConstants {
     public static final int NUMBER_RANGE_0__19999_99 = 0x82;
     public static final int NUMBER_RANGE_0__99999_99 = 0x92;
 
-    public static final int FONT_NAME_NORMAL_REGULAR =    0;
-    public static final int FONT_NAME_NORMAL_BOLD =       1;
+    public static final int FONT_NAME_SMALL_REGULAR = 1;
+    public static final int FONT_NAME_SMALL_BOLD = 2;
+    public static final int FONT_NAME_NORMAL_REGULAR = 3;
+    public static final int FONT_NAME_NORMAL_BOLD = 4;
+    public static final int FONT_NAME_BIG_REGULAR = 5;
+    public static final int FONT_NAME_BIG_BOLD = 6;
     public static final int FONT_NAME_OPTION_NORMAL = 0x10;
-    public static final int FONT_NAME_OPTION_BIG =    0x11;
+    public static final int FONT_NAME_OPTION_BIG = 0x11;
 
-    public static final int HORIZONTAL_ALIGN_LEFT = 			    0x0;
-    public static final int HORIZONTAL_ALIGN_CENTER	=				0x40;
-    public static final int HORIZONTAL_ALIGN_RIGHT =				0x80;
+    public static final int HORIZONTAL_ALIGN_LEFT = 0x0;
+    public static final int HORIZONTAL_ALIGN_CENTER = 0x40;
+    public static final int HORIZONTAL_ALIGN_RIGHT = 0x80;
 
-    public static final int VERTICAL_ALIGN_TOP = 			        0x0;
-    public static final int VERTICAL_ALIGN_CENTER	=				0x1;
-    public static final int VERTICAL_ALIGN_BOTTOM =				    0x2;
+    public static final int VERTICAL_ALIGN_TOP = 0x0;
+    public static final int VERTICAL_ALIGN_CENTER = 0x1;
+    public static final int VERTICAL_ALIGN_BOTTOM = 0x2;
 
-    public static final int TEXT_FLAGS_MULTILINE =		            0x1;
+    public static final int TEXT_FLAGS_MULTILINE = 0x8;
+    public static final int TEXT_FLAGS_SPLIT_WORD = 0x4;
 
     public static final int WATCH_SET_SECTION_SCREENS = 1;
     public static final int WATCH_SET_SECTION_EXTERNAL_PROPERTIES = 2;
@@ -69,7 +74,7 @@ public class WatchConstants {
 
     public static final int DATA_SOURCE_INTERNAL = 0;
     public static final int DATA_SOURCE_EXTERNAL = 1;
-    public static final int DATA_SOURCE_SENSOR   = 2;
+    public static final int DATA_SOURCE_SENSOR = 2;
 
     public static final int INTERNAL_DATA_SOURCE_TIME_HOUR = 0;
     public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 1;
@@ -102,17 +107,26 @@ public class WatchConstants {
     public static final int EVENT_BUTTON_BACK_LONG = 7;
 
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
-    public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;;
+    public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;
+    ;
     public static final int OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION = 0x12;
     public static final int OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION = 0x23;
 
-    public static final int ALIGN_LEFT = 0x0;
-    public static final int ALIGN_CENTER = 0x40;
-    public static final int ALIGN_RIGHT = 0x80;
-
-    public static final int FONT_SMALL_REGULAR = 0;
-    public static final int FONT_SMALL_BOLD = 1;
+    public static final int FONT_SMALL_REGULAR = 1;
+    public static final int FONT_SMALL_BOLD = 2;
+    public static final int FONT_NORMAL_REGULAR = 3;
+    public static final int FONT_NORMAL_BOLD = 4;
+    public static final int FONT_BIG_REGULAR = 5;
     public static final int FONT_OPTION_NORMAL = 0x10;
     public static final int FONT_OPTION_BIG = 0x11;
 
+    public static final int NOTIFICATIONS_FUNCTION_DISMISS_ALL = 0x10;
+    public static final int NOTIFICATIONS_FUNCTION_ALERT_DISMISS = 0x20;
+    public static final int NOTIFICATIONS_FUNCTION_ALERT_OPTION_1 = 0x21;
+    public static final int NOTIFICATIONS_FUNCTION_ALERT_OPTION_2 = 0x22;
+
+    public static final int NOTIFICATIONS_SHOW_FIRST = 0x30;
+    public static final int NOTIFICATIONS_NEXT_PART = 0x31;
+    public static final int NOTIFICATIONS_NEXT = 0x32;
+    public static final int NOTIFICATIONS_PREV_PART = 0x33;
 }

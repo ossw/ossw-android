@@ -13,6 +13,7 @@ import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.althink.android.ossw.notifications.message.ListNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationSummaryMessageBuilder;
 import com.althink.android.ossw.notifications.message.SimpleNotificationMessageBuilder;
@@ -23,12 +24,14 @@ import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.parser.NotificationIdBuilder;
 import com.althink.android.ossw.notifications.parser.api19.NotificationParserApi19;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.service.OsswServiceProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,27 +39,18 @@ import java.util.Set;
 /**
  * Created by krzysiek on 05/06/15.
  */
-public class NotificationListener extends NotificationListenerService implements OsswServiceProvider {
+public class NotificationListener extends NotificationListenerService {
 
     private String TAG = this.getClass().getSimpleName();
 
-    private OsswService mOsswService;
-
     private AlertNotificationHandler alertHandler;
 
-    // Code to manage Service lifecycle.
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+    private int nextNotificationId = 1;
 
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder service) {
-            mOsswService = ((OsswService.LocalBinder) service).getService();
-        }
+    private static boolean isNotificationAccessEnabled = false;
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mOsswService = null;
-        }
-    };
+    private static NotificationListener instance;
+
 //    public static int LINE_1;
 //    public static int ICON;
 //    public static int TITLE;
@@ -81,13 +75,11 @@ public class NotificationListener extends NotificationListenerService implements
     public void onCreate() {
         super.onCreate();
 
-        Intent osswServiceIntent = new Intent(this, OsswService.class);
-        startService(osswServiceIntent);
-        bindService(osswServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        alertHandler = new AlertNotificationHandler(this);
+        alertHandler = new AlertNotificationHandler();
 
         notifications = new HashMap<>();
+
+        instance = this;
 //        Resources resources = getResources();
 //        LINE_1 = resources.getIdentifier("android:id/line1", null, null);
 //        ICON = resources.getIdentifier("android:id/icon", null, null);
@@ -110,7 +102,21 @@ public class NotificationListener extends NotificationListenerService implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
+        instance = null;
+    }
+
+    @Override
+    public IBinder onBind(Intent mIntent) {
+        IBinder mIBinder = super.onBind(mIntent);
+        isNotificationAccessEnabled = true;
+        return mIBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent mIntent) {
+        boolean mOnUnbind = super.onUnbind(mIntent);
+        isNotificationAccessEnabled = false;
+        return mOnUnbind;
     }
 
     @Override
@@ -141,6 +147,10 @@ public class NotificationListener extends NotificationListenerService implements
         Notification notification = new NotificationParserApi19(getApplicationContext()).parse(notificationId, sbn, existingNotification);
 
         if (notification != null) {
+            if (notification.getExternalId() == null) {
+                notification.setExternalId(getNextNotificationId());
+            }
+
             Log.i(TAG, "Successfully parsed message:");
             Log.i(TAG, notification.toString());
 
@@ -150,34 +160,74 @@ public class NotificationListener extends NotificationListenerService implements
                 alertHandler.handleNotificationStart(notification);
             }
             if (NotificationType.INFO == notification.getType()) {
-                int vibration_pattern = (6 << 28) | (100 << 16) | (44 << (16 - 6));
-
-                updateNotificationList(true, vibration_pattern);
+                if (isUpdate && !hasNewElements(notification, existingNotification)) {
+                    updateNotificationList(false, 0);
+                } else {
+                    int vibration_pattern = (6 << 28) | (70 << 16) | (44 << (16 - 6));
+                    updateNotificationList(true, vibration_pattern);
+                }
             }
         }
         printNotifications();
 
     }
 
+    private boolean hasNewElements(Notification newNotification, Notification existingNotification) {
+        if (newNotification instanceof SimpleNotification) {
+            return false;
+        }
+        if (newNotification instanceof ListNotification && existingNotification instanceof ListNotification) {
+            return ((ListNotification) newNotification).getItems().size() > ((ListNotification) existingNotification).getItems().size();
+        }
+        return true;
+    }
+
     private void updateNotificationList(boolean notify, int vibration_pattern) {
         Log.i(TAG, "UPDATE NOTIFICATIONS");
         NotificationType type = notify ? NotificationType.INFO : NotificationType.UPDATE;
         List<Notification> notifyList = getAllInfoNotifications();
-        if (notifyList.size() == 1) {
+
+        OsswService osswService = OsswService.getInstance();
+        if (osswService == null) {
+            return;
+        }
+        int messagesNo = countMessages(notifyList);
+        if (messagesNo == 1) {
+            // if new notification and only one then show notification content
             Notification onlyNotification = notifyList.get(0);
             if (onlyNotification instanceof SimpleNotification) {
-                NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder(onlyNotification.getCategory(), ((SimpleNotification) onlyNotification).getTitle(), ((SimpleNotification) onlyNotification).getText());
-                mOsswService.uploadNotification(type, builder.build(), vibration_pattern, 1000, null);
-            } else {
-                NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder(onlyNotification.getCategory(), ((ListNotification) onlyNotification).getTitle(), Integer.toString(((ListNotification) onlyNotification).getItems().size()));
-                mOsswService.uploadNotification(type, builder.build(), vibration_pattern, 1000, null);
+                NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
+                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibration_pattern, 1200, null);
+            } else if (onlyNotification instanceof ListNotification) {
+                NotificationMessageBuilder builder = new ListNotificationMessageBuilder((ListNotification) onlyNotification, 0);
+                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibration_pattern, 1200, null);
             }
-        } else if (notifyList.size() > 1) {
-            NotificationMessageBuilder builder = new NotificationSummaryMessageBuilder(notifyList);
-            mOsswService.uploadNotification(type, builder.build(), vibration_pattern, 1000, null);
+        } else if (messagesNo > 0) {
+            NotificationMessageBuilder builder = new NotificationSummaryMessageBuilder(messagesNo);
+            osswService.uploadNotification(0, type, builder.build(), vibration_pattern, 1200, null);
         } else {
-            mOsswService.uploadNotification(type, new byte[0], 0, 0, null);
+            closeNotifications();
         }
+    }
+
+    private int countMessages(List<Notification> notifications) {
+        int count = 0;
+        for (Notification notification : notifications) {
+            if (notification instanceof ListNotification) {
+                count += ((ListNotification) notification).getItems().size();
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void closeNotifications() {
+        OsswService osswService = OsswService.getInstance();
+        if (osswService == null) {
+            return;
+        }
+        osswService.uploadNotification(0, NotificationType.UPDATE, new byte[0], 0, 0, null);
     }
 
     @Override
@@ -252,8 +302,95 @@ public class NotificationListener extends NotificationListenerService implements
         return o.toString();
     }
 
-    @Override
-    public OsswService getService() {
-        return mOsswService;
+    private int getNextNotificationId() {
+        int notificationId = nextNotificationId;
+
+        nextNotificationId++;
+        if (nextNotificationId > 65535) {
+            nextNotificationId = 1;
+        }
+
+        return notificationId;
+    }
+
+    public static boolean isNotificationAccessEnabled() {
+        return isNotificationAccessEnabled;
+    }
+
+    public static NotificationListener getInstance() {
+        return instance;
+    }
+
+    public void sendNextNotification(int lastNotificationId) {
+        List<Notification> notificationList = getSortedNotificationsList();
+        if (notificationList == null) return;
+        Notification lastNotification = null;
+        Notification nextNotification = null;
+        for (Notification n : notificationList) {
+            if (lastNotification != null) {
+                nextNotification = n;
+                break;
+            }
+            if (n.getExternalId() == lastNotificationId) {
+                lastNotification = n;
+            }
+        }
+        if (lastNotification != null) {
+            dismissNotification(lastNotification);
+        }
+        if (nextNotification == null) {
+            notificationList = getSortedNotificationsList();
+            if (notificationList.size() == 0) {
+                closeNotifications();
+                return;
+            }
+            nextNotification = notificationList.get(0);
+        }
+        sendNotificationPart(nextNotification.getExternalId(), 0);
+    }
+
+    private void dismissNotification(Notification lastNotification) {
+        notifications.remove(lastNotification.getId());
+        StatusBarNotification sbn = (StatusBarNotification) lastNotification.getNotificationObject();
+        cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+    }
+
+    private List<Notification> getSortedNotificationsList() {
+        List<Notification> notificationList = new LinkedList(notifications.values());
+
+        Collections.sort(notificationList, new Comparator<Notification>() {
+            @Override
+            public int compare(Notification lhs, Notification rhs) {
+                return lhs.getDate().compareTo(rhs.getDate());
+            }
+        });
+        return notificationList;
+    }
+
+    public void sendNotificationPart(int notificationId, int page) {
+        OsswService osswService = OsswService.getInstance();
+        if (osswService == null) {
+            return;
+        }
+        for (Notification n : notifications.values()) {
+            if (n.getExternalId() == notificationId) {
+                if (n instanceof SimpleNotification) {
+                    NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) n, page);
+                    osswService.uploadNotification(n.getExternalId(), NotificationType.UPDATE, builder.build(), 0, 0, null);
+                } else if (n instanceof ListNotification) {
+                    NotificationMessageBuilder builder = new ListNotificationMessageBuilder((ListNotification) n, page);
+                    osswService.uploadNotification(n.getExternalId(), NotificationType.UPDATE, builder.build(), 0, 0, null);
+                }
+                break;
+            }
+        }
+    }
+
+    public void sendFirstNotification() {
+        List<Notification> notificationList = getSortedNotificationsList();
+        if (notificationList.size() == 0) {
+            return;
+        }
+        sendNotificationPart(notificationList.get(0).getExternalId(), 0);
     }
 }

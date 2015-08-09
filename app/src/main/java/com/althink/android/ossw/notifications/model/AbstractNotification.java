@@ -15,14 +15,16 @@ public class AbstractNotification implements Notification {
     private Date date;
     private Integer externalId;
     private List<Operation> operations;
+    private Object notificationObject;
 
-    public AbstractNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations) {
+    public AbstractNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, Object notificationObject) {
         this.id = id;
         this.type = type;
         this.category = category;
         this.application = application;
         this.date = date;
         this.operations = operations;
+        this.notificationObject = notificationObject;
     }
 
     @Override
@@ -57,6 +59,10 @@ public class AbstractNotification implements Notification {
 
     public void setExternalId(Integer externalId) {
         this.externalId = externalId;
+    }
+
+    public Object getNotificationObject() {
+        return notificationObject;
     }
 
     @Override

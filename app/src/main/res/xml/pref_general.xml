@@ -6,4 +6,13 @@
         android:summary="@string/pref_synchronize_time_desc"
         android:title="@string/pref_synchronize_time_title" />
 
+    <ListPreference android:title="@string/pref_notifications_font"
+        android:key="notifications_font"
+        android:entries="@array/notifications_font_keys"
+        android:entryValues="@array/notification_font_values"
+        android:defaultValue="normalBold"
+        android:dialogTitle="@string/select_font"
+        android:summary="@string/pref_notifications_font_desc">
+    </ListPreference>
+
 </PreferenceScreen>

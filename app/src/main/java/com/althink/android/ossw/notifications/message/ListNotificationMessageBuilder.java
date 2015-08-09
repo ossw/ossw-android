@@ -1,10 +1,10 @@
 package com.althink.android.ossw.notifications.message;
 
-import android.util.Log;
-
 import com.althink.android.ossw.emulator.fonts.FontUtils;
-import com.althink.android.ossw.notifications.model.NotificationCategory;
+import com.althink.android.ossw.notifications.model.ListNotification;
+import com.althink.android.ossw.notifications.model.SimpleListItem;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
+import com.althink.android.ossw.notifications.model.SubjectMessageItem;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
 
@@ -13,24 +13,28 @@ import java.io.ByteArrayOutputStream;
 /**
  * Created by krzysiek on 19/07/15.
  */
-public class SimpleNotificationMessageBuilder extends AbstractNotificationMessageBuilder {
+public class ListNotificationMessageBuilder extends AbstractNotificationMessageBuilder {
 
     private ByteArrayOutputStream out;
 
-    public SimpleNotificationMessageBuilder(SimpleNotification simpleNotification, int page) {
+    public ListNotificationMessageBuilder(ListNotification simpleNotification, int page) {
         out = new ByteArrayOutputStream();
+
+        int font = getFont();
 
         StringBuilder sb = new StringBuilder();
         sb.append(simpleNotification.getTitle());
-        if (NotificationCategory.EMAIL == simpleNotification.getCategory()) {
-            sb.append((char) 0x0B).append(simpleNotification.getText().replaceFirst("\n", "\u000B"));
-        } else {
-            sb.append((char) 0x0B).append(simpleNotification.getText());
+        for (Object item : simpleNotification.getItems()) {
+            if (sb.length() > 0) {
+                sb.append((char)0x0B);
+            }
+            if (item instanceof SimpleListItem) {
+                sb.append(((SimpleListItem) item).getText());
+            } else if (item instanceof SubjectMessageItem) {
+                sb.append(((SubjectMessageItem) item).getSubject()).append((char)0x0B).append(((SubjectMessageItem) item).getMessage());
+            }
         }
-
         String text = StringNormalizer.removeAccents(sb.toString());
-
-        int font = getFont();
 
         int ptr = 0;
         String data = "";
@@ -38,9 +42,7 @@ public class SimpleNotificationMessageBuilder extends AbstractNotificationMessag
             data = calculatePageContent(text, font, ptr);
             ptr += data.length();
         }
-        String nextPageData = calculatePageContent(text, font, ptr);
-        boolean hasMore = nextPageData.length() > 0;
-        Log.i("SimpleNotificationMB", "Data to send: " + data);
+        boolean hasMore = ptr < text.length();
         byte[] contentData = data != null ? data.getBytes() : new byte[0];
 
         out.write(simpleNotification.getCategory().getValue());

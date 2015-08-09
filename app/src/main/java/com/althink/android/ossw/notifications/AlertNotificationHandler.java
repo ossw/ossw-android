@@ -7,7 +7,6 @@ import com.althink.android.ossw.notifications.message.NotificationMessageBuilder
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.service.OsswServiceProvider;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,12 +22,6 @@ public class AlertNotificationHandler {
 
     private static Timer timer;
 
-    private OsswServiceProvider provider;
-
-    public AlertNotificationHandler(OsswServiceProvider provider) {
-        this.provider = provider;
-    }
-
     public void handleNotificationStart(Notification notification) {
         Log.i(TAG, "HANDLE notification START: " + notification);
         if (!(notification instanceof SimpleNotification)) {
@@ -42,11 +35,11 @@ public class AlertNotificationHandler {
         }
         lastNotification = notification;
 
-        OsswService osswBleService = provider.getService();
+        OsswService osswBleService = OsswService.getInstance();
         if (osswBleService != null) {
             int vibration_pattern = (6 << 28) | (100 << 16) | (44 << (16 - 6));
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
-            notification.setExternalId(osswBleService.uploadNotification(notification.getType(), builder.build(), vibration_pattern, 5000, new AlertNotificationFunctionHandler(notification, osswBleService)));
+            osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 5000, new AlertNotificationFunctionHandler(notification, osswBleService));
             Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
 
             startNotificationExtender(notification.getExternalId(), osswBleService);
@@ -59,7 +52,7 @@ public class AlertNotificationHandler {
 
             stopNotificationExtender();
 
-            OsswService osswService = provider.getService();
+            OsswService osswService = OsswService.getInstance();
             if (osswService != null) {
                 Log.i(TAG, "Close notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
                 osswService.closeAlertNotification(lastNotification.getExternalId());

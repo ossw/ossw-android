@@ -106,7 +106,7 @@ public class WatchSetImportFragment extends Fragment {
      * other file-based ContentProviders.
      *
      * @param context The context.
-     * @param uri The Uri to query.
+     * @param uri     The Uri to query.
      * @author paulburke
      */
     public static String getPath(final Context context, final Uri uri) {
@@ -152,7 +152,7 @@ public class WatchSetImportFragment extends Fragment {
                 }
 
                 final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
+                final String[] selectionArgs = new String[]{
                         split[1]
                 };
 
@@ -180,9 +180,9 @@ public class WatchSetImportFragment extends Fragment {
      * Get the value of the data column for this Uri. This is useful for
      * MediaStore Uris, and other file-based ContentProviders.
      *
-     * @param context The context.
-     * @param uri The Uri to query.
-     * @param selection (Optional) Filter used in the query.
+     * @param context       The context.
+     * @param uri           The Uri to query.
+     * @param selection     (Optional) Filter used in the query.
      * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
      */
@@ -317,7 +317,10 @@ public class WatchSetImportFragment extends Fragment {
                         break;
                     case R.id.menu_watchset_import:
                         if (watchSet != null) {
-                            ((MainActivity) getActivity()).getOsswBleService().createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
+                            OsswService service = OsswService.getInstance();
+                            if (service != null) {
+                                service.createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
+                            }
                             getFragmentManager().popBackStack();
                         }
                         break;

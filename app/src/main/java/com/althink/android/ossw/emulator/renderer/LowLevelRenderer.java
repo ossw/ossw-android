@@ -4,13 +4,17 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import com.althink.android.ossw.emulator.fonts.BigRegular;
 import com.althink.android.ossw.emulator.fonts.CharInfo;
 import com.althink.android.ossw.emulator.fonts.CharInfoLookup;
 import com.althink.android.ossw.emulator.fonts.FontInfo;
+import com.althink.android.ossw.emulator.fonts.FontUtils;
 import com.althink.android.ossw.emulator.fonts.NormalBold;
 import com.althink.android.ossw.emulator.fonts.NormalRegular;
 import com.althink.android.ossw.emulator.fonts.OptionsBig;
 import com.althink.android.ossw.emulator.fonts.OptionsNormal;
+import com.althink.android.ossw.emulator.fonts.SmallBold;
+import com.althink.android.ossw.emulator.fonts.SmallRegular;
 import com.althink.android.ossw.watch.WatchConstants;
 
 /**
@@ -97,45 +101,66 @@ public class LowLevelRenderer {
         }
     }
 
-    public void drawText(String value, int x, int y, int width, int height, int fontType, int fontAlignment) {
+    public void drawText(String text, int startX, int startY, int width, int height, int fontType, int fontAlignment) {
         paint.setColor(getForegroundColor());
 
-        FontInfo fontInfo = resolveFont(fontType);
+        FontInfo fontInfo = FontUtils.resolveFont(fontType);
+        if (text != null) {
 
-        int maxX = width != 0 ? x + width : WatchConstants.SCREEN_WIDTH;
-        if (height == 0) {
-            height = WatchConstants.SCREEN_HEIGHT - y;
-        }
-        //paint.setTextSize(36);
-        if (value != null) {
-            //canvas.drawText(value, x * scale, y * scale+20, paint);
-
-            if ((fontAlignment & WatchConstants.ALIGN_CENTER) != 0) {
-                x += (width - calcTextWidth(value, fontInfo)) / 2;
-            } else if ((fontAlignment & WatchConstants.ALIGN_RIGHT) != 0) {
-                x += (width - calcTextWidth(value, fontInfo));
+            int ptr = 0;
+            int prevPtr = 0;
+            int x = startX;
+            int y = startY;
+            if (width == 0) {
+                width = WatchConstants.SCREEN_WIDTH - x;
             }
-
-            for (int i = 0; i < value.length() && maxX >= x; i++) {
-                char c = value.charAt(i);
-                x += drawChar(c, x, y, maxX - x, height, fontInfo);
-                x += fontInfo.getCharSpace();
+            if (height == 0) {
+                height = WatchConstants.SCREEN_HEIGHT - y;
             }
-        }
-    }
+            boolean multiline = (fontAlignment & WatchConstants.TEXT_FLAGS_MULTILINE) != 0;
+            boolean splitWord = (fontAlignment & WatchConstants.TEXT_FLAGS_SPLIT_WORD) != 0;
 
-    private FontInfo resolveFont(int fontType) {
-        switch (fontType & 0x1F) {
-            case WatchConstants.FONT_OPTION_NORMAL:
-                return new OptionsNormal().getFontInfo();
-            case WatchConstants.FONT_OPTION_BIG:
-                return new OptionsBig().getFontInfo();
-            case WatchConstants.FONT_SMALL_BOLD:
-                return new NormalBold().getFontInfo();
-            case WatchConstants.FONT_SMALL_REGULAR:
-                return new NormalRegular().getFontInfo();
+            int maxY = y + height;
+            boolean lastLine;
+            do {
+                lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
+
+                int textWidth = FontUtils.calcTextWidth(text, ptr, fontInfo, splitWord || !multiline, width);
+
+                if ((fontAlignment & WatchConstants.HORIZONTAL_ALIGN_CENTER) != 0) {
+                    x += (width - textWidth) / 2;
+                } else if ((fontAlignment & WatchConstants.HORIZONTAL_ALIGN_RIGHT) != 0) {
+                    x += (width - textWidth);
+                }
+                int maxX = x + textWidth;
+
+                boolean firstChar = true;
+                char c = 0;
+                while (ptr < text.length()) {
+                    c = text.charAt(ptr++);
+                    if (firstChar && FontUtils.isWhitespace(c)) {
+                        continue;
+                    }
+                    firstChar = false;
+                    int charWidth = FontUtils.calcCharWidth(c, fontInfo);
+                    if (x + charWidth > maxX) {
+                        //overflow
+                        ptr = prevPtr;
+                        break;
+                    }
+
+                    x += drawChar(c, x, y, maxX - x, maxY - y, fontInfo);
+                    x += fontInfo.getCharSpace();
+                    prevPtr = ptr;
+                }
+                if (ptr == text.length()) {
+                    lastLine = true;
+                }
+
+                x = startX;
+                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
+            } while (!lastLine);
         }
-        return new NormalRegular().getFontInfo();
     }
 
     private int drawChar(char c, int x, int y, int width, int height, FontInfo fontInfo) {
@@ -143,7 +168,7 @@ public class LowLevelRenderer {
             return fontInfo.getSpaceSize();
         }
 
-        CharInfo charInfo = resolveCharInfo(c, fontInfo);
+        CharInfo charInfo = FontUtils.resolveCharInfo(c, fontInfo);
 
         if (charInfo == null) {
             return fontInfo.getSpaceSize();
@@ -171,54 +196,5 @@ public class LowLevelRenderer {
 //                canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
             }
         }
-    }
-
-    private int calcTextWidth(String value, FontInfo fontInfo) {
-        int ptr = 0;
-        int width = 0;
-
-
-        for (int i = 0; i < value.length() && width <= WatchConstants.SCREEN_WIDTH; i++) {
-            char c = value.charAt(i);
-
-            if (c == ' ') {
-                width += fontInfo.getSpaceSize();
-                continue;
-            }
-
-            CharInfo charInfo = resolveCharInfo(c, fontInfo);
-
-            if (charInfo == null) {
-                continue;
-            }
-
-            if (width > 0) {
-                width += fontInfo.getCharSpace();
-            }
-
-            width += charInfo.getWidth();
-        }
-        if (width > WatchConstants.SCREEN_WIDTH) {
-            width = WatchConstants.SCREEN_WIDTH;
-        }
-        return width;
-    }
-
-    private CharInfo resolveCharInfo(char c, FontInfo fontInfo) {
-        if ((c < fontInfo.getMinChar()) || (c > fontInfo.getMaxChar())) {
-            return null;
-        }
-
-        CharInfoLookup lookupTable = null;
-        for (CharInfoLookup lookup : fontInfo.getCharInfoLookup()) {
-            if (c >= lookup.getMinChar() && c <= lookup.getMaxChar()) {
-                lookupTable = lookup;
-            }
-        }
-        if (lookupTable == null) {
-            return null;
-        }
-        int charIndex = c - lookupTable.getMinChar();
-        return lookupTable.getCharTable()[charIndex];
     }
 }
