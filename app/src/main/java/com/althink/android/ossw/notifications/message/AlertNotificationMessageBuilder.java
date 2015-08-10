@@ -20,14 +20,12 @@ public class AlertNotificationMessageBuilder implements NotificationMessageBuild
 
         int operationsNo = operations.size() > 2 ? 2 : operations.size();
 
-        int headerSize = 6 + operationsNo * 2;
+        int headerSize = 4 + operationsNo * 2;
         int offset = headerSize;
-        byte[] titleData = title != null ? StringNormalizer.removeAccents(title).getBytes() : new byte[0];
-        byte[] textData = text != null ? StringNormalizer.removeAccents(text).getBytes() : new byte[0];
+        byte[] textData = title != null ? StringNormalizer.removeAccents(title + "\u000B" + text).getBytes() : new byte[0];
 
         out.write(category.getValue());
 
-        offset = addReferencedParameter(content, offset, titleData);
         offset = addReferencedParameter(content, offset, textData);
 
         out.write(operationsNo);

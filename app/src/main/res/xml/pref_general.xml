@@ -6,13 +6,21 @@
         android:summary="@string/pref_synchronize_time_desc"
         android:title="@string/pref_synchronize_time_title" />
 
-    <ListPreference android:title="@string/pref_notifications_font"
-        android:key="notifications_font"
-        android:entries="@array/notifications_font_keys"
-        android:entryValues="@array/notification_font_values"
+    <PreferenceCategory android:title="Notifications" />
+
+    <ListPreference
         android:defaultValue="normalBold"
         android:dialogTitle="@string/select_font"
-        android:summary="@string/pref_notifications_font_desc">
-    </ListPreference>
+        android:entries="@array/notifications_font_keys"
+        android:entryValues="@array/notification_font_values"
+        android:key="notifications_font"
+        android:summary="@string/pref_notifications_font_desc"
+        android:title="@string/pref_notifications_font"></ListPreference>
+
+    <PreferenceScreen
+        android:summary="@string/pref_notifications_access_desc"
+        android:title="@string/pref_notifications_access_title">
+        <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
+    </PreferenceScreen>
 
 </PreferenceScreen>

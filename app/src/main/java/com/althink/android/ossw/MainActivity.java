@@ -265,11 +265,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             final Intent intent = new Intent(this, DeviceScanActivity.class);
             startActivityForResult(intent, SELECT_WATCH_REQUEST);
             return true;
-        } else if (id == R.id.action_notifications) {
-            Intent intent = new Intent
-                    ("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-            startActivity(intent);
-            return true;
         } else if (id == R.id.action_settings) {
             final Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);

@@ -73,13 +73,26 @@ public class NotificationParserApi19 {
             String[] split = value.split("\\: ", 2);
             SubjectMessageItem subjectMessageItem = new SubjectMessageItem(split[0], split[1]);
             if (existingNotification != null) {
-                ((ListNotification) existingNotification).setTitle(title);
-                ((ListNotification) existingNotification).getItems().add(subjectMessageItem);
-                return existingNotification;
+                LinkedList<SubjectMessageItem> items = new LinkedList<>();
+                items.addAll(((ListNotification) existingNotification).getItems());
+                items.add(subjectMessageItem);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
             } else {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.add(subjectMessageItem);
                 return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
+            }
+        } else if ("com.skype.raider".equals(sbn.getPackageName()) && !extras.containsKey("android.textLines")) {
+            SubjectMessageItem subjectMessageItem = new SubjectMessageItem(title, text);
+            if (existingNotification != null) {
+                LinkedList<SubjectMessageItem> items = new LinkedList<>();
+                items.addAll(((ListNotification) existingNotification).getItems());
+                items.add(subjectMessageItem);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
+            } else {
+                LinkedList<SubjectMessageItem> items = new LinkedList<>();
+                items.add(subjectMessageItem);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
             }
         }
         else if ("com.android.dialer".equals(sbn.getPackageName())) {
@@ -99,7 +112,7 @@ public class NotificationParserApi19 {
             List items = new LinkedList();
             Object[] lines = (Object[]) extras.get("android.textLines");
             for (Object line : lines) {
-                items.add(new SimpleListItem(line.toString()));
+                items.add(0, new SimpleListItem(line.toString()));
             }
             return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
         }
