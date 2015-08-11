@@ -27,6 +27,17 @@ public class AbstractNotification implements Notification {
         this.notificationObject = notificationObject;
     }
 
+    public AbstractNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, Object notificationObject,  Integer externalId) {
+        this.id = id;
+        this.type = type;
+        this.category = category;
+        this.application = application;
+        this.date = date;
+        this.operations = operations;
+        this.notificationObject = notificationObject;
+        this.externalId = externalId;
+    }
+
     @Override
     public String getId() {
         return id;

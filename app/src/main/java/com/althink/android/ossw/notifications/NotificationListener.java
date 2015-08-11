@@ -156,7 +156,7 @@ public class NotificationListener extends NotificationListenerService {
 
             notifications.put(notification.getId(), notification);
 
-            if (NotificationType.ALERT == notification.getType() && !isUpdate) {
+            if (NotificationType.ALERT == notification.getType()) {
                 alertHandler.handleNotificationStart(notification);
             }
             if (NotificationType.INFO == notification.getType()) {
@@ -352,7 +352,12 @@ public class NotificationListener extends NotificationListenerService {
     private void dismissNotification(Notification lastNotification) {
         notifications.remove(lastNotification.getId());
         StatusBarNotification sbn = (StatusBarNotification) lastNotification.getNotificationObject();
-        cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+        } else {
+            cancelNotification(sbn.getKey());
+        }
     }
 
     private List<Notification> getSortedNotificationsList() {

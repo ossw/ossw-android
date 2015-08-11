@@ -47,7 +47,7 @@ public class NotificationParserApi19 {
         String title = getExtrasString(extras, "android.title");
         String text = getExtrasString(extras, "android.text");
         NotificationCategory category = parseCategory(sbn);
-        NotificationType type = sbn.getNotification().priority > 1 ? NotificationType.ALERT : NotificationType.INFO;
+        NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
         if (NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
@@ -58,6 +58,8 @@ public class NotificationParserApi19 {
             Log.i(TAG, "SKIP FAKE ALERT");
             return null;
         }
+
+        Integer externalId = (existingNotification != null && existingNotification.getType() == type) ? existingNotification.getExternalId() : null;
 
         List<Operation> operations = new LinkedList<>();
         android.app.Notification.Action[] actions = sbn.getNotification().actions;
@@ -76,7 +78,7 @@ public class NotificationParserApi19 {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.addAll(((ListNotification) existingNotification).getItems());
                 items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
             } else {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.add(subjectMessageItem);
@@ -88,14 +90,13 @@ public class NotificationParserApi19 {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.addAll(((ListNotification) existingNotification).getItems());
                 items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn, externalId);
             } else {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.add(subjectMessageItem);
                 return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
             }
-        }
-        else if ("com.android.dialer".equals(sbn.getPackageName())) {
+        } else if ("com.android.dialer".equals(sbn.getPackageName())) {
             if (operations.isEmpty()) {
                 try {
                     Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.dialer");
@@ -114,17 +115,27 @@ public class NotificationParserApi19 {
             for (Object line : lines) {
                 items.add(0, new SimpleListItem(line.toString()));
             }
-            return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
+            return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
         }
 
         if (title != null && text != null) {
-            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn);
+            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn, externalId);
         }
 
         return null;
     }
 
+    private NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
+        if ("com.android.dialer".equals(sbn.getPackageName()) && existingNotification != null) {
+            return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
+        }
+        return sbn.getNotification().priority > 1 ? NotificationType.ALERT : NotificationType.INFO;
+    }
+
     private boolean isValidAlert(StatusBarNotification sbn) {
+        if ("com.android.dialer".equals(sbn.getPackageName())) {
+            return true;
+        }
         if (isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_NO_CLEAR) &&
                 isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_FOREGROUND_SERVICE) &&
                 isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {

@@ -29,7 +29,9 @@ public class AlertNotificationHandler {
             return;
         }
 
-        if (lastNotification != null) {
+        boolean update = lastNotification != null && lastNotification.getExternalId() == notification.getExternalId();
+
+        if (lastNotification != null && !update) {
             Log.i(TAG, "SKIP, other alert notification in progress");
             return;
         }
@@ -40,9 +42,13 @@ public class AlertNotificationHandler {
             int vibration_pattern = (6 << 28) | (100 << 16) | (44 << (16 - 6));
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
             osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 5000, new AlertNotificationFunctionHandler(notification, osswBleService));
-            Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
 
-            startNotificationExtender(notification.getExternalId(), osswBleService);
+            if (!update) {
+                Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
+                startNotificationExtender(notification.getExternalId(), osswBleService);
+            } else {
+                Log.i(TAG, "Update notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
+            }
         }
     }
 
@@ -70,8 +76,8 @@ public class AlertNotificationHandler {
     }
 
     private void stopNotificationExtender() {
-        Log.i(TAG, "Stop notification extender");
         if (timer != null) {
+            Log.i(TAG, "Stop notification extender");
             //Log.i(TAG, "Cancel timer");
             timer.cancel();
             timer = null;

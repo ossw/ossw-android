@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by krzysiek on 19/07/15.
  */
-public class AlertNotificationMessageBuilder implements NotificationMessageBuilder {
+public class AlertNotificationMessageBuilder extends AbstractNotificationMessageBuilder {
 
     private ByteArrayOutputStream out;
 
@@ -20,14 +20,16 @@ public class AlertNotificationMessageBuilder implements NotificationMessageBuild
 
         int operationsNo = operations.size() > 2 ? 2 : operations.size();
 
-        int headerSize = 4 + operationsNo * 2;
+        int font = getFont();
+
+        int headerSize = 5 + operationsNo * 2;
         int offset = headerSize;
         byte[] textData = title != null ? StringNormalizer.removeAccents(title + "\u000B" + text).getBytes() : new byte[0];
 
         out.write(category.getValue());
 
         offset = addReferencedParameter(content, offset, textData);
-
+        out.write(font);
         out.write(operationsNo);
 
         for(int i=0; i<operationsNo; i++) {

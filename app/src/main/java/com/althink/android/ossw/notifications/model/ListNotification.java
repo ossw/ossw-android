@@ -16,6 +16,12 @@ public class ListNotification extends AbstractNotification {
         this.items = items;
     }
 
+    public ListNotification(String id, NotificationType type, NotificationCategory category, String application, Date date, List<Operation> operations, String title, List items, Object notificationObject, int externalId) {
+        super(id, type, category, application, date, operations, notificationObject, externalId);
+        this.title = title;
+        this.items = items;
+    }
+
     public String getTitle() {
         return title;
     }
