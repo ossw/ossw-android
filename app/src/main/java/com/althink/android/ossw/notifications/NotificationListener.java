@@ -23,6 +23,7 @@ import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.parser.NotificationIdBuilder;
 import com.althink.android.ossw.notifications.parser.api19.NotificationParserApi19;
+import com.althink.android.ossw.notifications.parser.api21.NotificationParserApi21;
 import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
@@ -142,9 +143,15 @@ public class NotificationListener extends NotificationListenerService {
 
         String notificationId = new NotificationIdBuilder().build(sbn);
         Notification existingNotification = notifications.get(notificationId);
-        boolean isUpdate = existingNotification != null;
 
-        Notification notification = new NotificationParserApi19(getApplicationContext()).parse(notificationId, sbn, existingNotification);
+        Notification notification = parseNotification(sbn, notificationId, existingNotification);
+
+        boolean isUpdate = existingNotification != null && existingNotification.getExternalId() != null && existingNotification.getExternalId().equals(notification.getExternalId());
+
+        if (isUpdate && !hasChanged(notification, existingNotification)) {
+            Log.i(TAG, "Nothing has changed in notification, SKIP IT");
+            return;
+        }
 
         if (notification != null) {
             if (notification.getExternalId() == null) {
@@ -170,6 +177,19 @@ public class NotificationListener extends NotificationListenerService {
         }
         printNotifications();
 
+    }
+
+    private boolean hasChanged(Notification notification, Notification existingNotification) {
+        return !notification.equals(existingNotification);
+    }
+
+    private Notification parseNotification(StatusBarNotification sbn, String notificationId, Notification existingNotification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+            return new NotificationParserApi19(getApplicationContext()).parse(notificationId, sbn, existingNotification);
+        }
+        return null;
     }
 
     private boolean hasNewElements(Notification newNotification, Notification existingNotification) {

@@ -9,6 +9,7 @@ import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 /**
  * Created by krzysiek on 19/07/15.
@@ -38,9 +39,10 @@ public class SimpleNotificationMessageBuilder extends AbstractNotificationMessag
             data = calculatePageContent(text, font, ptr);
             ptr += data.length();
         }
-        String nextPageData = calculatePageContent(text, font, ptr);
+        String nextPageData = calculatePageContent(text, font, ptr).replaceAll("\\s","");
         boolean hasMore = nextPageData.length() > 0;
         Log.i("SimpleNotificationMB", "Data to send: " + data);
+        Log.i("SimpleNotificationMB", "Next page data: " + Arrays.toString(nextPageData.toCharArray()));
         byte[] contentData = data != null ? data.getBytes() : new byte[0];
 
         out.write(simpleNotification.getCategory().getValue());

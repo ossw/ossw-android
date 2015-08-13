@@ -278,17 +278,30 @@ public class OsswService extends Service {
                     break;
                 case EXTEND_ALERT:
                     txCharact.setValue(new byte[]{0x26, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
-                    boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+                    boolean status = writeCharacteristic(txCharact);
                     break;
                 case CLOSE_ALERT:
                     Log.i(TAG, "Close notification");
                     txCharact.setValue(new byte[]{0x27, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF)});
-                    mBluetoothGatt.writeCharacteristic(txCharact);
+                    writeCharacteristic(txCharact);
                     break;
             }
 
             return null;
         }
+    }
+
+    private boolean writeCharacteristic(BluetoothGattCharacteristic txCharact) {
+        int errorLimit = 10;
+        while (!mBluetoothGatt.writeCharacteristic(txCharact) && errorLimit > 0) {
+            Log.w(TAG, "Repeat write because of failure");
+            try {
+                Thread.sleep(11-errorLimit);
+            } catch (InterruptedException e) {
+            }
+            errorLimit--;
+        }
+        return errorLimit > 0;
     }
 
     private enum NotificationOperation {
@@ -329,11 +342,14 @@ public class OsswService extends Service {
         }
         int size = data.length;
 
+        Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
+
         boolean allow;
         do {
             txCharact.setValue(new byte[]{0x23, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
 
-            mBluetoothGatt.writeCharacteristic(txCharact);
+            boolean result = writeCharacteristic(txCharact);
+            Log.i(TAG, "Request upload: " + ", result: " + result);
             //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
 
             try {
@@ -370,14 +386,16 @@ public class OsswService extends Service {
             }
 
             txCharact.setValue(dataCommand);
-            mBluetoothGatt.writeCharacteristic(txCharact);
+            boolean result = writeCharacteristic(txCharact);
+            Log.i(TAG, "Data part: " + Arrays.toString(dataCommand) + ", result: " + result);
 
             //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
             sizeLeft -= 16;
         }
         txCharact.setValue(new byte[]{0x25});
-        mBluetoothGatt.writeCharacteristic(txCharact);
+        boolean result = writeCharacteristic(txCharact);
+        Log.i(TAG, "Commit upload, result: " + result);
 
         Log.i(TAG, "NOTIFICATION UPLOADED");
 
@@ -523,7 +541,7 @@ public class OsswService extends Service {
                 break;
 
             case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
-                Log.i(TAG, "NOTIFICATIONS_NEXT");
+                Log.i(TAG, "NOTIFICATIONS_FIRST");
 
                 if (nl != null) {
                     nl.sendFirstNotification();
@@ -535,7 +553,7 @@ public class OsswService extends Service {
                 if (nl != null) {
                     int notificationId = data[0] << 8 | data[1];
                     int part = data[2] & 0xFF;
-                    nl.sendNotificationPart(notificationId, part+1);
+                    nl.sendNotificationPart(notificationId, part + 1);
                 }
                 break;
             case WatchConstants.NOTIFICATIONS_PREV_PART:
@@ -544,7 +562,7 @@ public class OsswService extends Service {
                 if (nl != null) {
                     int notificationId = data[0] << 8 | data[1];
                     int part = data[2] & 0xFF;
-                    nl.sendNotificationPart(notificationId, part-1);
+                    nl.sendNotificationPart(notificationId, part - 1);
                 }
                 break;
 
@@ -910,7 +928,7 @@ public class OsswService extends Service {
         }
         txCharact.setValue(os.toByteArray());
 
-        boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+        boolean status = writeCharacteristic(txCharact);
         if (status) {
             sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
         }
@@ -976,7 +994,7 @@ public class OsswService extends Service {
 
         int size = data.length;
         txCharact.setValue(new byte[]{0x20, (byte) type.ordinal(), (byte) (size >> 24), (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
-        mBluetoothGatt.writeCharacteristic(txCharact);
+        writeCharacteristic(txCharact);
         //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
 
         int sizeLeft = data.length;
@@ -993,14 +1011,14 @@ public class OsswService extends Service {
 
 
             txCharact.setValue(dataCommand);
-            mBluetoothGatt.writeCharacteristic(txCharact);
+            writeCharacteristic(txCharact);
 
             //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
             sizeLeft -= 16;
         }
         txCharact.setValue(new byte[]{0x22});
-        mBluetoothGatt.writeCharacteristic(txCharact);
+        writeCharacteristic(txCharact);
         //Log.i(TAG, "Upload data done: " + status);
     }
 
@@ -1024,7 +1042,7 @@ public class OsswService extends Service {
             int currentTime = (int) (date.getTime() / 1000);
             txCharact.setValue(new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
             //Log.i(TAG, "Set current time");
-            boolean status = mBluetoothGatt.writeCharacteristic(txCharact);
+            boolean status = writeCharacteristic(txCharact);
         } catch (Exception e) {
             // do nothing
         }

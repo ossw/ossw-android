@@ -20,7 +20,7 @@ public class AlertNotificationMessageBuilder extends AbstractNotificationMessage
 
         int operationsNo = operations.size() > 2 ? 2 : operations.size();
 
-        int font = getFont();
+        int font = getAlertFont();
 
         int headerSize = 5 + operationsNo * 2;
         int offset = headerSize;

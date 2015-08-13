@@ -1,4 +1,4 @@
-package com.althink.android.ossw.notifications.parser.api19;
+package com.althink.android.ossw.notifications.parser.api21;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.text.SpannableString;
 import android.util.Log;
 
 import com.althink.android.ossw.notifications.model.ListNotification;
@@ -26,14 +25,14 @@ import java.util.List;
 /**
  * Created by krzysiek on 24/07/15.
  */
-@TargetApi(Build.VERSION_CODES.KITKAT)
-public class NotificationParserApi19 {
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+public class NotificationParserApi21 {
 
-    private final static String TAG = NotificationParserApi19.class.getName();
+    private final static String TAG = NotificationParserApi21.class.getName();
 
     private Context context;
 
-    public NotificationParserApi19(Context context) {
+    public NotificationParserApi21(Context context) {
         this.context = context;
     }
 
@@ -46,6 +45,7 @@ public class NotificationParserApi19 {
 
         String title = getExtrasString(extras, "android.title");
         String text = getExtrasString(extras, "android.text");
+        String bigText = getExtrasString(extras, "android.bigText");
         NotificationCategory category = parseCategory(sbn);
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
@@ -84,21 +84,7 @@ public class NotificationParserApi19 {
                 items.add(subjectMessageItem);
                 return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
             }
-        }
-     /*   else if ("com.skype.raider".equals(sbn.getPackageName()) && !extras.containsKey("android.textLines")) {
-            SubjectMessageItem subjectMessageItem = new SubjectMessageItem(title, text);
-            if (existingNotification != null) {
-                LinkedList<SubjectMessageItem> items = new LinkedList<>();
-                items.addAll(((ListNotification) existingNotification).getItems());
-                items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn, externalId);
-            } else {
-                LinkedList<SubjectMessageItem> items = new LinkedList<>();
-                items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
-            }
-        } */
-        else if ("com.android.dialer".equals(sbn.getPackageName())) {
+        } else if ("com.android.dialer".equals(sbn.getPackageName())) {
             if (operations.isEmpty()) {
                 try {
                     Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.dialer");
@@ -120,8 +106,8 @@ public class NotificationParserApi19 {
             return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
         }
 
-        if (title != null && text != null) {
-            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn, externalId);
+        if (title != null && (text != null || bigText != null)) {
+            return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, bigText != null ? bigText : text, sbn, externalId);
         }
 
         return null;

@@ -17,6 +17,15 @@
         android:summary="@string/pref_notifications_font_desc"
         android:title="@string/pref_notifications_font"></ListPreference>
 
+    <ListPreference
+        android:defaultValue="optionNormal"
+        android:dialogTitle="@string/select_font"
+        android:entries="@array/notifications_font_keys"
+        android:entryValues="@array/notification_font_values"
+        android:key="alert_notifications_font"
+        android:summary="@string/pref_alert_notification_font_desc"
+        android:title="@string/pref_alert_notification_font"></ListPreference>
+
     <PreferenceScreen
         android:summary="@string/pref_notifications_access_desc"
         android:title="@string/pref_notifications_access_title">

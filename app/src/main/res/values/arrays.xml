@@ -6,6 +6,8 @@
         <item>Medium regular</item>
         <item>Medium bold</item>
         <item>Big regular</item>
+        <item>Menu normal</item>
+        <item>Menu big</item>
     </string-array>
     <string-array name="notification_font_values">
         <item>smallRegular</item>
@@ -13,5 +15,7 @@
         <item>normalRegular</item>
         <item>normalBold</item>
         <item>bigRegular</item>
+        <item>optionNormal</item>
+        <item>optionBig</item>
     </string-array>
 </resources>
