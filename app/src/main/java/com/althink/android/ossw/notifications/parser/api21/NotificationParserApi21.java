@@ -70,7 +70,7 @@ public class NotificationParserApi21 {
         }
 
         //custom processing
-        if ("com.android.mms".equals(sbn.getPackageName())) {
+        if ("com.google.android.apps.messaging".equals(sbn.getPackageName())) {
             String value = sbn.getNotification().tickerText.toString();
             String[] split = value.split("\\: ", 2);
             SubjectMessageItem subjectMessageItem = new SubjectMessageItem(split[0], split[1]);
@@ -78,11 +78,11 @@ public class NotificationParserApi21 {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.addAll(((ListNotification) existingNotification).getItems());
                 items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn, externalId);
             } else {
                 LinkedList<SubjectMessageItem> items = new LinkedList<>();
                 items.add(subjectMessageItem);
-                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn);
+                return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, "", items, sbn);
             }
         } else if ("com.android.dialer".equals(sbn.getPackageName())) {
             if (operations.isEmpty()) {

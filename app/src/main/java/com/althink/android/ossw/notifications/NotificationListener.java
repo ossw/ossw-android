@@ -406,9 +406,11 @@ public class NotificationListener extends NotificationListenerService {
                     NotificationMessageBuilder builder = new ListNotificationMessageBuilder((ListNotification) n, page);
                     osswService.uploadNotification(n.getExternalId(), NotificationType.UPDATE, builder.build(), 0, 0, null);
                 }
-                break;
+                return;
             }
         }
+        // notification not found
+        sendNextNotification(notificationId);
     }
 
     public void sendFirstNotification() {

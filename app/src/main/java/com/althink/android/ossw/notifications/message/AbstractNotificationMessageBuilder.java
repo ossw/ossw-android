@@ -13,7 +13,6 @@ import com.althink.android.ossw.watch.WatchConstants;
 public abstract class AbstractNotificationMessageBuilder implements NotificationMessageBuilder {
 
 
-
     protected int getAlertFont() {
         OsswService service = OsswService.getInstance();
         if (service != null) {
@@ -55,6 +54,6 @@ public abstract class AbstractNotificationMessageBuilder implements Notification
     }
 
     protected String calculatePageContent(String text, int font, int ptr) {
-        return FontUtils.calcTextToDraw(text, ptr, 30, 3, WatchConstants.SCREEN_WIDTH - 6, WatchConstants.SCREEN_HEIGHT - 60, font, WatchConstants.HORIZONTAL_ALIGN_LEFT | WatchConstants.TEXT_FLAGS_MULTILINE);
+        return FontUtils.calcTextToDraw(text, ptr, 3, 3, WatchConstants.SCREEN_WIDTH - 6, WatchConstants.SCREEN_HEIGHT - 6, font, WatchConstants.HORIZONTAL_ALIGN_LEFT | WatchConstants.TEXT_FLAGS_MULTILINE);
     }
 }
