@@ -18,7 +18,7 @@ package com.althink.android.ossw.ble;
 
 import android.os.ParcelUuid;
 import android.support.annotation.Nullable;
-import android.util.ArrayMap;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -183,7 +183,7 @@ public final class ScanRecord {
         int txPowerLevel = Integer.MIN_VALUE;
 
         SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
-        Map<ParcelUuid, byte[]> serviceData = new ArrayMap<ParcelUuid, byte[]>();
+        Map<ParcelUuid, byte[]> serviceData = new ArrayMap<>();
 
         try {
             while (currentPos < scanRecord.length) {
