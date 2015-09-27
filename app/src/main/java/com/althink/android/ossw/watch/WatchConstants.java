@@ -13,6 +13,7 @@ public class WatchConstants {
     public static final int SCR_CONTROL_HORIZONTAL_PROGRESS_BAR = 2;
     public static final int SCR_CONTROL_VERTICAL_PROGRESS_BAR = 3;
     public static final int SCR_CONTROL_TEXT = 4;
+    public static final int SCR_CONTROL_STATIC_IMAGE = 5;
 
 
     public static final int NUMBER_RANGE_0__9 = 0x10;
@@ -65,16 +66,19 @@ public class WatchConstants {
 
     public static final int WATCH_SET_SECTION_SCREENS = 1;
     public static final int WATCH_SET_SECTION_EXTERNAL_PROPERTIES = 2;
-    public static final int WATCH_SET_SECTION_STATIC_CONTENT = 3;
+    public static final int WATCH_SET_SECTION_RESOURCES = 3;
 
     public static final int WATCH_SET_SCREEN_SECTION_CONTROLS = 1;
     public static final int WATCH_SET_SCREEN_SECTION_ACTIONS = 2;
+    public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
     public static final int DATA_SOURCE_INTERNAL = 0;
     public static final int DATA_SOURCE_EXTERNAL = 1;
     public static final int DATA_SOURCE_SENSOR = 2;
+
+    public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
     public static final int INTERNAL_DATA_SOURCE_TIME_HOUR = 0;
     public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 1;
@@ -110,7 +114,10 @@ public class WatchConstants {
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;
     ;
     public static final int OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION = 0x12;
+    public static final int OSSW_RX_COMMAND_UPLOAD_DATA_PERMISSION = 0x20;
+    public static final int OSSW_RX_COMMAND_COMMAND_ACK = 0x40;
     public static final int OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION = 0x23;
+
 
     public static final int FONT_SMALL_REGULAR = 1;
     public static final int FONT_SMALL_BOLD = 2;

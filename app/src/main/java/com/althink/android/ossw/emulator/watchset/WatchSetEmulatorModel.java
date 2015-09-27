@@ -22,6 +22,7 @@ public class WatchSetEmulatorModel {
     List<WatchSetScreenEmulatorModel> screens;
     private int currentScreen;
     private Map<EmulatorEvent, EmulatorAction> eventMapping =  new HashMap<>();
+    private Map<Integer, byte[]> resources;
 
     private WatchOperationContext operationContext;
 
@@ -94,5 +95,13 @@ public class WatchSetEmulatorModel {
             EmulatorEvent event = buildEventForId(action.getEventId());
             eventMapping.put(event, action);
         }
+    }
+
+    public void setResources(Map<Integer, byte[]> resources) {
+        this.resources = resources;
+    }
+
+    public Map<Integer, byte[]> getResources() {
+        return resources;
     }
 }

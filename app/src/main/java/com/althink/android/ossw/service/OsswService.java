@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -103,6 +104,7 @@ public class OsswService extends Service {
             "com.althink.android.ossw.ACTION_WATCH_DISCONNECTED";
 
     private AtomicBoolean uploadNotificationPermission = new AtomicBoolean();
+    private AtomicBoolean commandAck = new AtomicBoolean();
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -164,6 +166,11 @@ public class OsswService extends Service {
                         synchronized (uploadNotificationPermission) {
                             uploadNotificationPermission.set(value[1] != 0);
                             uploadNotificationPermission.notify();
+                        }
+                        break;
+                    case WatchConstants.OSSW_RX_COMMAND_COMMAND_ACK:
+                        synchronized (commandAck) {
+                            commandAck.notify();
                         }
                         break;
                 }
@@ -292,16 +299,16 @@ public class OsswService extends Service {
     }
 
     private boolean writeCharacteristic(BluetoothGattCharacteristic txCharact) {
-        int errorLimit = 10;
-        while (!mBluetoothGatt.writeCharacteristic(txCharact) && errorLimit > 0) {
+        int errNo = 0;
+        while (!mBluetoothGatt.writeCharacteristic(txCharact) && errNo < 5) {
             Log.w(TAG, "Repeat write because of failure");
             try {
-                Thread.sleep(11-errorLimit);
+                Thread.sleep((int) Math.pow(5, errNo));
             } catch (InterruptedException e) {
             }
-            errorLimit--;
+            errNo++;
         }
-        return errorLimit > 0;
+        return errNo < 5;
     }
 
     private enum NotificationOperation {
@@ -993,33 +1000,97 @@ public class OsswService extends Service {
         }
 
         int size = data.length;
-        txCharact.setValue(new byte[]{0x20, (byte) type.ordinal(), (byte) (size >> 24), (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
-        writeCharacteristic(txCharact);
-        //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+        txCharact.setValue(new byte[]{0x43, 0x20});
+        boolean status = writeCharacteristic(txCharact);
+        Log.i(TAG, "Init file upload: " + type + ", " + size + ", " + status);
 
-        int sizeLeft = data.length;
+        if (!waitForCommandAck()) return;
 
-        int dataPtr = 0;
-        byte[] dataCommand = new byte[17];
-        dataCommand[0] = 0x21;
-        while (sizeLeft > 0) {
-            int dataInPacket = sizeLeft > 16 ? 16 : sizeLeft;
+        List<byte[]> chunks = divideArray(data, 255);
 
-            for (int i = 0; i < dataInPacket; i++) {
-                dataCommand[i + 1] = data[dataPtr++];
+        for (byte[] chunk : chunks) {
+            byte[] commandData = concat(new byte[]{0x21}, chunk);
+            int dataPtr = 0;
+            int sizeLeft = commandData.length;
+
+            Log.i(TAG, "Send command: " + Arrays.toString(commandData));
+
+
+            while (sizeLeft > 0) {
+                int dataInPacket = sizeLeft > 19 ? 19 : sizeLeft;
+                byte[] bleData = new byte[dataInPacket + 1];
+
+                if (sizeLeft <= 19) {
+                    if (sizeLeft == commandData.length) {
+                        //only chunk
+                        bleData[0] = 0x43;
+                    } else {
+                        //last chunk
+                        bleData[0] = 0x42;
+                    }
+                } else if (sizeLeft == commandData.length) {
+                    //first chunk
+                    bleData[0] = 0x40;
+                } else {
+                    //central chunk
+                    bleData[0] = 0x41;
+                }
+
+                for (int i = 0; i < dataInPacket; i++) {
+                    bleData[i + 1] = commandData[dataPtr++];
+                }
+
+
+                txCharact.setValue(bleData);
+                status = writeCharacteristic(txCharact);
+
+                if (!status) {
+                    Log.i(TAG, "Failed to upload data: " + status);
+                    return;
+                }
+
+                Log.i(TAG, "Send ble request: " + Arrays.toString(bleData) + ", " + status);
+
+                sizeLeft -= 19;
             }
 
-
-            txCharact.setValue(dataCommand);
-            writeCharacteristic(txCharact);
-
-            //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
-
-            sizeLeft -= 16;
+            if (!waitForCommandAck()) return;
         }
-        txCharact.setValue(new byte[]{0x22});
-        writeCharacteristic(txCharact);
-        //Log.i(TAG, "Upload data done: " + status);
+
+        txCharact.setValue(new byte[]{0x43, 0x22});
+        status = writeCharacteristic(txCharact);
+        Log.i(TAG, "Upload data done: " + status);
+    }
+
+    public static byte[] concat(byte[] first, byte[] second) {
+        byte[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
+    }
+
+    private boolean waitForCommandAck() {
+        try {
+            synchronized (commandAck) {
+                commandAck.wait(10000);
+            }
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Failed to receive command ACK");
+            return false;
+        }
+        return true;
+    }
+
+    private static List<byte[]> divideArray(byte[] source, int chunksize) {
+
+        List<byte[]> result = new ArrayList<>();
+        int start = 0;
+        while (start < source.length) {
+            int end = Math.min(source.length, start + chunksize);
+            result.add(Arrays.copyOfRange(source, start, end));
+            start += chunksize;
+        }
+
+        return result;
     }
 
     private void sendCurrentTime() {

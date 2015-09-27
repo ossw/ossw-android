@@ -3,7 +3,7 @@ package com.althink.android.ossw.watchsets;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import android.util.Base64;
 
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginManager;
@@ -17,7 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,6 +30,8 @@ import java.util.Map;
 public class WatchSetCompiler {
 
     private Map<String, Integer> screenIdToNumber = new HashMap<>();
+
+    private Map<String, Integer> resourceIdToNumber = new HashMap<>();
 
     private final static String TAG = WatchSetCompiler.class.getSimpleName();
 
@@ -69,6 +71,11 @@ public class WatchSetCompiler {
 
             JSONObject data = jsonObject.getJSONObject("data");
 
+            JSONArray resources = data.optJSONArray("resources");
+            if (resources != null) {
+                parseResources(resources);
+            }
+
             JSONArray screens = data.getJSONArray("screens");
 
             if (screens.length() > 255) {
@@ -101,20 +108,23 @@ public class WatchSetCompiler {
 
             // write external properties info
             os.write(WatchConstants.WATCH_SET_SECTION_EXTERNAL_PROPERTIES);
-            //write number of properties
             os.write(extensionPropertiesData.length >> 8);
             os.write(extensionPropertiesData.length & 0xFF);
             os.write(extensionPropertiesData);
+
+            if(resources != null) {
+                byte[] resourcesData = compileResources(resources);
+                os.write(WatchConstants.WATCH_SET_SECTION_RESOURCES);
+                os.write(resourcesData.length >> 8);
+                os.write(resourcesData.length & 0xFF);
+                os.write(resourcesData);
+            }
 
             os.write(WatchConstants.WATCH_SET_END_OF_DATA);
 
             watchset.setName(watchsetName);
             watchset.setWatchContext(new WatchOperationContext(extensionParameters, extensionFunctions));
             watchset.setWatchData(os.toByteArray());
-
-            if (watchset.getWatchData().length + 1 > 0x1000) {
-                throw new KnownParseError("Watchset is too big, this version has 4K bytes limit");
-            }
 
             //Log.i(TAG, "size: " + watchset.getWatchData().length + ", data: " + Arrays.toString(watchset.getWatchData()));
 
@@ -123,7 +133,45 @@ public class WatchSetCompiler {
             throw e;
         } catch (Exception e) {
             //Log.e(TAG, e.getMessage(), e);
-            throw new KnownParseError("JSON format error");
+            throw new KnownParseError("JSON format error", e);
+        }
+    }
+
+    private byte[] compileResources(JSONArray resources) throws JSONException, IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(resources.length());
+
+        LinkedList<byte[]> resourcesData = new LinkedList<>();
+
+        int resourceDataOffset = 1 + (resources.length() * 3);
+        for (int resNo = 0; resNo < resources.length(); resNo++) {
+            JSONObject resource = resources.getJSONObject(resNo);
+
+            byte[] resourceData = Base64.decode(resource.getString("data"), Base64.DEFAULT);
+            resourcesData.add(resourceData);
+
+            // write resource start address
+            os.write((resourceDataOffset >> 16) & 0xFF);
+            os.write((resourceDataOffset >> 8) & 0xFF);
+            os.write(resourceDataOffset & 0xFF);
+            resourceDataOffset += resourceData.length;
+        }
+
+        // write resources data
+        for (byte[] resourceData : resourcesData) {
+            os.write(resourceData);
+        }
+
+        return os.toByteArray();
+    }
+
+    private void parseResources(JSONArray resources) throws JSONException {
+        if (resources.length() > 256) {
+            throw new KnownParseError("Too many resources");
+        }
+        for (int i = 0; i < resources.length(); i++) {
+            JSONObject resource = resources.getJSONObject(i);
+            resourceIdToNumber.put(resource.getString("id"), i);
         }
     }
 
@@ -189,6 +237,21 @@ public class WatchSetCompiler {
         return os.toByteArray();
     }
 
+    private class MemoryAllocator {
+
+        int size = 0;
+
+        public int addBuffer(int size) {
+            int ptr = this.size;
+            this.size += size;
+            return ptr;
+        }
+
+        public int getSize() {
+            return size;
+        }
+    }
+
     private byte[] parseScreen(JSONObject screen) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
@@ -202,13 +265,13 @@ public class WatchSetCompiler {
             throw new KnownParseError("Too many controls, 255 is max");
         }
 
-        os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS);
-        os.write(controls.length());
+        MemoryAllocator allocator = new MemoryAllocator();
 
-        for (int controlNo = 0; controlNo < controls.length(); controlNo++) {
-            byte[] controlData = compileControl(controls.getJSONObject(controlNo));
-            os.write(controlData);
-        }
+        os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS);
+        byte[] screenControlsData = parseScreenControls(controls, allocator);
+        os.write((screenControlsData.length >> 8) & 0xFF);
+        os.write(screenControlsData.length & 0xFF);
+        os.write(screenControlsData);
 
         JSONObject actions = screen.optJSONObject("actions");
 
@@ -229,8 +292,22 @@ public class WatchSetCompiler {
                 os.write(actionData);
             }
         }
+        os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY);
+        os.write((allocator.getSize() >> 8) & 0xFF);
+        os.write(allocator.getSize() & 0xFF);
 
         os.write(WatchConstants.WATCH_SET_END_OF_DATA);
+        return os.toByteArray();
+    }
+
+    private byte[] parseScreenControls(JSONArray controls, MemoryAllocator allocator) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(controls.length());
+
+        for (int controlNo = 0; controlNo < controls.length(); controlNo++) {
+            byte[] controlData = compileControl(controls.getJSONObject(controlNo), allocator);
+            os.write(controlData);
+        }
         return os.toByteArray();
     }
 
@@ -321,22 +398,24 @@ public class WatchSetCompiler {
         throw new KnownParseError("Unknown event key: " + eventKey);
     }
 
-    private byte[] compileControl(JSONObject control) throws Exception {
+    private byte[] compileControl(JSONObject control, MemoryAllocator allocator) throws Exception {
         String controlType = control.getString("type");
 
         switch (controlType) {
             case "number":
-                return compileNumberControl(control);
+                return compileNumberControl(control, allocator);
             case "text":
-                return compileTextControl(control);
+                return compileTextControl(control, allocator);
             case "progress":
-                return compileProgressControl(control);
+                return compileProgressControl(control, allocator);
+            case "image":
+                return compileImageControl(control, allocator);
 
         }
         throw new KnownParseError("Not supported control type: " + controlType);
     }
 
-    private byte[] compileProgressControl(JSONObject control) throws Exception {
+    private byte[] compileProgressControl(JSONObject control, MemoryAllocator allocator) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_HORIZONTAL_PROGRESS_BAR);
@@ -359,7 +438,13 @@ public class WatchSetCompiler {
         os.write(border);
         os.write(0); //RFU
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.NUMBER, buildNumberRangeFromMaxValue(maxValue)));
+        int dataSize = buildNumberRangeFromMaxValue(maxValue);
+        os.write(compileSource(source, DataSourceType.NUMBER, dataSize));
+
+        int dataPtr = allocator.addBuffer(4);
+        os.write((dataPtr >> 8) & 0xFF);
+        os.write(dataPtr & 0xFF);
+
         return os.toByteArray();
     }
 
@@ -372,7 +457,39 @@ public class WatchSetCompiler {
         return bytesNo;
     }
 
-    private byte[] compileNumberControl(JSONObject control) throws Exception {
+
+    private byte[] compileImageControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        os.write(WatchConstants.SCR_CONTROL_STATIC_IMAGE);
+        JSONObject position = control.getJSONObject("position");
+        os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
+        os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
+
+        JSONObject style = control.getJSONObject("style");
+        os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
+        os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+
+        JSONObject image = control.getJSONObject("image");
+        writeResourceType(os, image);
+        return os.toByteArray();
+    }
+
+    private void writeResourceType(ByteArrayOutputStream os, JSONObject image) throws JSONException {
+        String imageType = image.getString("type");
+        switch (imageType) {
+            case "resource":
+                String resourceId = image.getString("id");
+                os.write(WatchConstants.RESOURCE_SOURCE_ATTACHED);
+                os.write(resourceIdToNumber.get(resourceId));
+                break;
+            default:
+                throw new KnownParseError("Invalid image type: " + imageType);
+
+        }
+    }
+
+    private byte[] compileNumberControl(JSONObject control, MemoryAllocator allocator) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_NUMBER);
@@ -387,20 +504,31 @@ public class WatchSetCompiler {
 
         // do not allow left padding for ranges 0-1XXX
         boolean leftPadded = style.optBoolean("leftPadded", false) && (numberRange >> 4) % 2 != 0;
-        os.write((leftPadded ? 0x80 : 0) | (digitSpace >> 2));
+
         switch (style.getString("type")) {
             case "generated":
-                os.write((digitSpace & 0x3) << 6 | getIntegerInRange(style, "thickness", 0, 63));
+                os.write((leftPadded ? 0x20 : 0) | digitSpace);
+                os.write(getIntegerInRange(style, "thickness", 0, 63));
                 os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
                 os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+                break;
+            case "numbersFont":
+                os.write(0x40 | (leftPadded ? 0x20 : 0) | digitSpace);
+                os.write(0);
+                JSONObject font = style.getJSONObject("numbersFont");
+                writeResourceType(os, font);
                 break;
         }
         JSONObject source = control.getJSONObject("source");
         os.write(compileSource(source, DataSourceType.NUMBER, numberRange));
+
+        int dataPtr = allocator.addBuffer(4);
+        os.write((dataPtr >> 8) & 0xFF);
+        os.write(dataPtr & 0xFF);
         return os.toByteArray();
     }
 
-    private byte[] compileTextControl(JSONObject control) throws Exception {
+    private byte[] compileTextControl(JSONObject control, MemoryAllocator allocator) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_TEXT);
@@ -420,8 +548,13 @@ public class WatchSetCompiler {
         os.write(flags);
         os.write(0);
 
+        int stringLength = 20;
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.STRING, 17));
+        os.write(compileSource(source, DataSourceType.STRING, stringLength));
+
+        int dataPtr = allocator.addBuffer(stringLength + 1);
+        os.write((dataPtr >> 8) & 0xFF);
+        os.write(dataPtr & 0xFF);
         return os.toByteArray();
     }
 

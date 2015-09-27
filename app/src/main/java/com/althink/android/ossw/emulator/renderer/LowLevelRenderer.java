@@ -17,6 +17,8 @@ import com.althink.android.ossw.emulator.fonts.SmallBold;
 import com.althink.android.ossw.emulator.fonts.SmallRegular;
 import com.althink.android.ossw.watch.WatchConstants;
 
+import java.util.Arrays;
+
 /**
  * Created by krzysiek on 14/06/15.
  */
@@ -181,7 +183,7 @@ public class LowLevelRenderer {
         return charWidth;
     }
 
-    private void drawBitmap(byte[] bitmap, int offset, int posX, int posY, int width, int height, int bitmapWidth) {
+    public void drawBitmap(byte[] bitmap, int offset, int posX, int posY, int width, int height, int bitmapWidth) {
         int bitmapByteWidth = (bitmapWidth + 7) / 8;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -196,5 +198,9 @@ public class LowLevelRenderer {
 //                canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
             }
         }
+    }
+
+    public void drawImage(byte[] image, int x, int y, int width, int height) {
+        drawBitmap(image, 4, x, y, width, height, (int)image[2]&0xFF);
     }
 }

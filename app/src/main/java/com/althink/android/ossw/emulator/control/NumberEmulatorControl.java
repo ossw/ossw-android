@@ -1,5 +1,6 @@
 package com.althink.android.ossw.emulator.control;
 
+import com.althink.android.ossw.emulator.control.digits.DigitsRenderer;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -12,14 +13,18 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
     private NumberRange range;
     private int x;
     private int y;
-    private int style;
+    private int digitSpace;
+    private boolean zeroPadded;
+    private DigitsRenderer digitsRenderer;
 
-    public NumberEmulatorControl(NumberRange range, int x, int y, int style, EmulatorDataSource dataSource) {
+    public NumberEmulatorControl(NumberRange range, int x, int y, int digitSpace, boolean zeroPadded, DigitsRenderer digitsRenderer, EmulatorDataSource dataSource) {
         super(dataSource);
         this.range = range;
         this.x = x;
         this.y = y;
-        this.style = style;
+        this.digitSpace = digitSpace;
+        this.zeroPadded = zeroPadded;
+        this.digitsRenderer = digitsRenderer;
     }
 
     public int trimToRange(int value, int min, int max) {
@@ -32,32 +37,28 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         return value;
     }
 
-    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness, boolean leftPadded) {
+    private void drawIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y, boolean leftPadded) {
         int currentX = x;
         int div = pow(10, digitsNo - 1);
 
         for (int i = 0; i < digitsNo; i++) {
             if (decimalSize > 0 && digitsNo - i == decimalSize) {
-                renderer.drawRect(currentX, y + digitHeight - digitThickness, digitThickness, digitThickness);
-                currentX += digitThickness + digitSpace;
+                currentX += digitsRenderer.renderDecimalSeparator(renderer, currentX, y) + digitSpace;
             }
             int scaledVal = value / div;
             int digit = scaledVal % 10;
             boolean drawZeroValue = leftPadded || (digitsNo - i - 1 <= decimalSize);
-            if (scaledVal > 0 || drawZeroValue || div == 1) {
-                renderer.drawDigit(digit, currentX, y, digitWidth, digitHeight, digitThickness);
-            }
+            currentX += digitsRenderer.renderDigit(renderer, digit, currentX, y, true, scaledVal > 0 || drawZeroValue || div == 1) + digitSpace;
             div = div / 10;
-            currentX += digitWidth + digitSpace;
         }
     }
 
-    private void drawOneStartingIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y, int digitWidth, int digitHeight, int digitSpace, int digitThickness) {
+    private void drawOneStartingIntDigits(LowLevelRenderer renderer, int value, int digitsNo, int decimalSize, int x, int y) {
         int div = pow(10, digitsNo - 1);
         if (value >= div) {
-            renderer.drawRect(x, y, digitThickness, digitHeight);
+            x += digitsRenderer.renderDigit(renderer, 1, x, y, false, false) + digitSpace;
         }
-        drawIntDigits(renderer, value, digitsNo - 1, decimalSize, x + digitThickness + digitSpace, y, digitWidth, digitHeight, digitSpace, digitThickness, false);
+        drawIntDigits(renderer, value, digitsNo - 1, decimalSize, x, y, false);
     }
 
     static int pow(int x, int n) {
@@ -76,19 +77,13 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         }
         int intValue = (int) value;
 
-        int digitWidth = style >> 8 & 0xFF;
-        int digitHeight = style & 0xFF;
-        int thickness = (style >> 16) & 0x3F;
-        int digitSpace = (style >> 22) & 0x1F;
-        boolean leftPadded = (style & 0x80000000) != 0;
-
         int digit_no = (range.getValue() >> 4) / 2 + 1 + decimalSize;
         boolean is_1X_format = (range.getValue() >> 4) % 2 == 0;
 
         if (is_1X_format) {
-            drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 2 * pow(10, digit_no - 1) - 1), digit_no, decimalSize, x, y, digitWidth, digitHeight, digitSpace, thickness);
+            drawOneStartingIntDigits(renderer, trimToRange(intValue, 0, 2 * pow(10, digit_no - 1) - 1), digit_no, decimalSize, x, y);
         } else {
-            drawIntDigits(renderer, trimToRange(intValue, 0, pow(10, digit_no) - 1), digit_no, decimalSize, x, y, digitWidth, digitHeight, digitSpace, thickness, leftPadded);
+            drawIntDigits(renderer, trimToRange(intValue, 0, pow(10, digit_no) - 1), digit_no, decimalSize, x, y, zeroPadded);
         }
     }
 
