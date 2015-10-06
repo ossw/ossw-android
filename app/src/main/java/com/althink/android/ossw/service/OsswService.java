@@ -25,8 +25,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
 import com.althink.android.ossw.notifications.NotificationHandler;
@@ -999,6 +1002,15 @@ public class OsswService extends Service {
             return;
         }
 
+        int id = 1;
+
+        NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getApplicationContext());
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setContentTitle("Watchset upload")
+                .setContentText("Upload in progress")
+                .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
+        notifyManager.notify(id, builder.build());
+
         int size = data.length;
         txCharact.setValue(new byte[]{0x43, 0x20});
         boolean status = writeCharacteristic(txCharact);
@@ -1008,6 +1020,8 @@ public class OsswService extends Service {
 
         List<byte[]> chunks = divideArray(data, 255);
 
+
+        int chunkNo = 0;
         for (byte[] chunk : chunks) {
             byte[] commandData = concat(new byte[]{0x21}, chunk);
             int dataPtr = 0;
@@ -1015,6 +1029,8 @@ public class OsswService extends Service {
 
             Log.i(TAG, "Send command: " + Arrays.toString(commandData));
 
+            builder.setProgress(100, 100*chunkNo/chunks.size(), false);
+            notifyManager.notify(id, builder.build());
 
             while (sizeLeft > 0) {
                 int dataInPacket = sizeLeft > 19 ? 19 : sizeLeft;
@@ -1055,11 +1071,15 @@ public class OsswService extends Service {
             }
 
             if (!waitForCommandAck()) return;
+            chunkNo++;
         }
 
         txCharact.setValue(new byte[]{0x43, 0x22});
         status = writeCharacteristic(txCharact);
         Log.i(TAG, "Upload data done: " + status);
+
+        builder.setContentText("Upload complete").setProgress(0,0,false);
+        notifyManager.notify(id, builder.build());
     }
 
     public static byte[] concat(byte[] first, byte[] second) {
