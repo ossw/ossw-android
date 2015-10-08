@@ -410,6 +410,8 @@ public class WatchSetCompiler {
                 return compileProgressControl(control, allocator);
             case "image":
                 return compileImageControl(control, allocator);
+            case "imageFromSet":
+                return compileImageFromSetControl(control, allocator);
 
         }
         throw new KnownParseError("Not supported control type: " + controlType);
@@ -457,7 +459,6 @@ public class WatchSetCompiler {
         return bytesNo;
     }
 
-
     private byte[] compileImageControl(JSONObject control, MemoryAllocator allocator) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
@@ -472,6 +473,30 @@ public class WatchSetCompiler {
 
         JSONObject image = control.getJSONObject("image");
         writeResourceType(os, image);
+        return os.toByteArray();
+    }
+
+    private byte[] compileImageFromSetControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        os.write(WatchConstants.SCR_CONTROL_IMAGE_FROM_SET);
+        JSONObject position = control.getJSONObject("position");
+        os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
+        os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
+
+        JSONObject style = control.getJSONObject("style");
+        os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
+        os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+
+        JSONObject image = control.getJSONObject("imageSet");
+        writeResourceType(os, image);
+
+        JSONObject source = control.getJSONObject("source");
+        os.write(compileSource(source, DataSourceType.ENUM, 0));
+
+        int dataPtr = allocator.addBuffer(4);
+        os.write((dataPtr >> 8) & 0xFF);
+        os.write(dataPtr & 0xFF);
         return os.toByteArray();
     }
 
@@ -734,18 +759,26 @@ public class WatchSetCompiler {
     }
 
     private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
-        if (!dataSourceType.equals(DataSourceType.NUMBER)) {
+        if (!dataSourceType.equals(DataSourceType.NUMBER) && !dataSourceType.equals(DataSourceType.ENUM)) {
             throw new IllegalArgumentException("Unknown data source type");
         }
         switch (property) {
             case "hour":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR;
+                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_24;
+            case "hour12":
+                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12;
+            case "hour12designator":
+                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR;
             case "minutes":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_MINUTES;
             case "seconds":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS;
+            case "dayOfWeek":
+                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK;
             case "dayOfMonth":
                 return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH;
+            case "dayOfYear":
+                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR;
             case "month":
                 return WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH;
             case "year":

@@ -14,6 +14,7 @@ public class WatchConstants {
     public static final int SCR_CONTROL_VERTICAL_PROGRESS_BAR = 3;
     public static final int SCR_CONTROL_TEXT = 4;
     public static final int SCR_CONTROL_STATIC_IMAGE = 5;
+    public static final int SCR_CONTROL_IMAGE_FROM_SET = 6;
 
 
     public static final int NUMBER_RANGE_0__9 = 0x10;
@@ -80,13 +81,17 @@ public class WatchConstants {
 
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR = 0;
-    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 1;
-    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 2;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 3;
-    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 4;
-    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 5;
-    public static final int INTERNAL_DATA_SOURCE_BATTERY_LEVEL = 6;
+    public static final int INTERNAL_DATA_SOURCE_BATTERY_LEVEL = 0;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_24 = 1;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12 = 2;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR = 3;
+    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 4;
+    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 5;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK = 6;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 7;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 8;
+    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 9;
+    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 10;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;

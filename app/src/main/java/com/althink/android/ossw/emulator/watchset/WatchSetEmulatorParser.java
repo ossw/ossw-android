@@ -4,6 +4,7 @@ import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.ImageEmulatorControl;
+import com.althink.android.ossw.emulator.control.ImageFromSetEmulatorControl;
 import com.althink.android.ossw.emulator.control.NumberEmulatorControl;
 import com.althink.android.ossw.emulator.control.ProgressEmulatorControl;
 import com.althink.android.ossw.emulator.control.TextEmulatorControl;
@@ -176,6 +177,8 @@ public class WatchSetEmulatorParser {
         switch (controlType) {
             case WatchConstants.SCR_CONTROL_STATIC_IMAGE:
                 return parseImageControl(is, ctx);
+            case WatchConstants.SCR_CONTROL_IMAGE_FROM_SET:
+                return parseImageFromSetControl(is, ctx);
             case WatchConstants.SCR_CONTROL_NUMBER:
                 return parseNumberControl(is, ctx);
             case WatchConstants.SCR_CONTROL_TEXT:
@@ -194,6 +197,18 @@ public class WatchSetEmulatorParser {
         int height = is.read();
         EmulatorResourceSource resource = parseResource(is, ctx);
         return new ImageEmulatorControl(x, y, width, height, resource);
+    }
+
+    private EmulatorControl parseImageFromSetControl(InputStream is, ParseContext ctx) throws Exception {
+        int x = is.read();
+        int y = is.read();
+        int width = is.read();
+        int height = is.read();
+        EmulatorResourceSource resource = parseResource(is, ctx);
+        EmulatorDataSource dataSource = parseDataSource(is);
+        is.read();
+        is.read();
+        return new ImageFromSetEmulatorControl(x, y, width, height, resource, dataSource);
     }
 
     private EmulatorResourceSource parseResource(InputStream is, ParseContext ctx) throws IOException {
