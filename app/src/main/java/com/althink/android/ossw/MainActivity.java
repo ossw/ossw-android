@@ -23,6 +23,7 @@ import com.althink.android.ossw.drawer.NavigationDrawerFragment;
 import com.althink.android.ossw.home.HomeFragment;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
 
 public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
@@ -172,15 +173,14 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
 
     private void refreshConnectionAlert() {
         if (mOsswBleService != null) {
-            int status = mOsswBleService.getStatus();
-            setConnectionAlertBar(status);
+            setConnectionAlertBar(mOsswBleService.getStatus());
         }
     }
 
-    private void setConnectionAlertBar(int status) {
-        if (status == OsswService.STATE_CONNECTED) {
+    private void setConnectionAlertBar(BleConnectionStatus status) {
+        if (status == BleConnectionStatus.CONNECTED) {
             hideConnectionAlertBar();
-        } else if (status == OsswService.STATE_CONNECTING || status == OsswService.STATE_SERVICE_DISCOVERING) {
+        } else if (status == BleConnectionStatus.CONNECTING) {
             showConnectionAlertBar(R.string.connecting_to_watch);
         } else {
             showConnectionAlertBar(R.string.disconnected);
