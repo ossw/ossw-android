@@ -127,6 +127,7 @@ public class OsswService extends Service {
                         break;
                     case WatchConstants.OSSW_RX_COMMAND_COMMAND_ACK:
                         synchronized (commandAck) {
+                            commandAck.set(true);
                             commandAck.notify();
                         }
                         break;
@@ -417,6 +418,7 @@ public class OsswService extends Service {
                 bleService = new BleDeviceService(getApplicationContext(), new BleConnectionStatusHandler() {
                     @Override
                     public void handleConnectionStatusChange(BleConnectionStatus status) {
+                        Log.i(TAG, "handleConnectionStatusChange: " + status);
                         switch (status) {
                             case DISCONNECTED:
                                 broadcastUpdate(ACTION_WATCH_DISCONNECTED);
@@ -430,6 +432,7 @@ public class OsswService extends Service {
                                 broadcastUpdate(ACTION_WATCH_CONNECTED);
 
 //                        // check version
+                                Log.i(TAG, "Check FW version");
                                 BluetoothGattService devInfoSrv = bleService.getService(UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB"));
                                 BluetoothGattCharacteristic fwVerChar = devInfoSrv.getCharacteristic(UUID.fromString("00002A26-0000-1000-8000-00805F9B34FB"));
                                 if (fwVerChar != null) {
@@ -456,12 +459,7 @@ public class OsswService extends Service {
                                 boolean syncTime = sharedPref.getBoolean("synchronize_time", true);
 
                                 if (syncTime) {
-                                    //  new Timer().schedule(new TimerTask() {
-                                    //    @Override
-                                    //    public void run() {
                                     sendCurrentTime();
-                                    //     }
-                                    //  }, 3000);
                                 }
                                 break;
                         }
@@ -503,6 +501,15 @@ public class OsswService extends Service {
 
     private void handleTooOldFirmware() {
         Log.i(TAG, "Firmware is too old!");
+
+        toastHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), getString(R.string.toast_not_supported_firmware), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        disconnect();
     }
 
     private void invokeNotificationFunction(int functionId, byte[] data) {
@@ -642,7 +649,7 @@ public class OsswService extends Service {
     public boolean connect(final String address) {
         Log.i(TAG, "Connect");
 
-        return bleService.connect(address);
+        return bleService.connect(address, true);
     }
 
     /**
@@ -919,7 +926,12 @@ public class OsswService extends Service {
     private boolean waitForCommandAck() {
         try {
             synchronized (commandAck) {
+                commandAck.set(false);
                 commandAck.wait(10000);
+                if (!commandAck.get()) {
+                    Log.e(TAG, "Failed to get ACK");
+                    return false;
+                }
             }
         } catch (InterruptedException e) {
             Log.e(TAG, "Failed to receive command ACK");
