@@ -59,8 +59,8 @@ public class WatchConstants {
     public static final int HORIZONTAL_ALIGN_RIGHT = 0x80;
 
     public static final int VERTICAL_ALIGN_TOP = 0x0;
-    public static final int VERTICAL_ALIGN_CENTER = 0x1;
-    public static final int VERTICAL_ALIGN_BOTTOM = 0x2;
+    public static final int VERTICAL_ALIGN_CENTER = 0x10;
+    public static final int VERTICAL_ALIGN_BOTTOM = 0x20;
 
     public static final int TEXT_FLAGS_MULTILINE = 0x8;
     public static final int TEXT_FLAGS_SPLIT_WORD = 0x4;

@@ -49,8 +49,8 @@ public class WatchView extends View {
         watchEmulator = new WatchEmulator();
 
         List<EmulatorControl> controls = new LinkedList<>();
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 4, 3, false, new GeneratedDigits(20, 20, 8), new Hour24InternalEmulatorDataSource()));
-        controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 85, 3, false, new GeneratedDigits(20, 20, 6), new MinutesInternalEmulatorDataSource()));
+        //controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 4, 3, false, new GeneratedDigits(20, 20, 8), new Hour24InternalEmulatorDataSource()));
+        //controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 85, 3, false, new GeneratedDigits(20, 20, 6), new MinutesInternalEmulatorDataSource()));
         List<WatchSetScreenEmulatorModel> screens = new LinkedList<>();
         screens.add(new WatchSetScreenEmulatorModel(controls, new LinkedList<EmulatorAction>()));
         WatchSetEmulatorModel watchset = new WatchSetEmulatorModel(screens);

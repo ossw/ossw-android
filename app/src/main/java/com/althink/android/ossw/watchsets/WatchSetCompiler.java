@@ -112,7 +112,7 @@ public class WatchSetCompiler {
             os.write(extensionPropertiesData.length & 0xFF);
             os.write(extensionPropertiesData);
 
-            if(resources != null) {
+            if (resources != null) {
                 byte[] resourcesData = compileResources(resources);
                 os.write(WatchConstants.WATCH_SET_SECTION_RESOURCES);
                 os.write(resourcesData.length >> 8);
@@ -432,12 +432,25 @@ public class WatchSetCompiler {
         JSONObject size = control.getJSONObject("size");
         os.write(getIntegerInRange(size, "width", 0, WatchConstants.SCREEN_WIDTH));
         os.write(getIntegerInRange(size, "height", 0, WatchConstants.SCREEN_HEIGHT));
-        JSONObject style = control.optJSONObject("size");
+        JSONObject style = control.optJSONObject("style");
+        int flags = 0;
+        String orientation = style.optString("orientation", "horizontal");
+        switch (orientation) {
+            case "vertical":
+                flags |= 0x20;
+                break;
+            case "horizontal":
+                break;
+            default:
+                throw new KnownParseError("Not supported orientation: " + orientation);
+        }
         int border = 0;
         if (style != null) {
             border = style.optInt("border", 0);
         }
+        os.write(flags); //RFU
         os.write(border);
+        os.write(0); //RFU
         os.write(0); //RFU
         JSONObject source = control.getJSONObject("source");
         int dataSize = buildNumberRangeFromMaxValue(maxValue);
@@ -592,21 +605,31 @@ public class WatchSetCompiler {
 
     private int parseFontAlignment(JSONObject style) {
         int alignment = 0;
-        String horizontalAlign = style.optString("horizontalAlign");
-        if (horizontalAlign != null) {
-            switch (horizontalAlign) {
-                case "center":
-                    alignment |= WatchConstants.HORIZONTAL_ALIGN_CENTER;
-                    break;
-                case "left":
-                    alignment |= WatchConstants.HORIZONTAL_ALIGN_LEFT;
-                    break;
-                case "right":
-                    alignment |= WatchConstants.HORIZONTAL_ALIGN_RIGHT;
-                    break;
-                default:
-                    throw new KnownParseError("Invalid horizontal align: " + horizontalAlign);
-            }
+        String horizontalAlign = style.optString("horizontalAlign", "left");
+        switch (horizontalAlign) {
+            case "center":
+                alignment |= WatchConstants.HORIZONTAL_ALIGN_CENTER;
+                break;
+            case "left":
+                break;
+            case "right":
+                alignment |= WatchConstants.HORIZONTAL_ALIGN_RIGHT;
+                break;
+            default:
+                throw new KnownParseError("Invalid horizontal align: " + horizontalAlign);
+        }
+        String verticalAlign = style.optString("verticalAlign", "top");
+        switch (verticalAlign) {
+            case "top":
+                break;
+            case "center":
+                alignment |= WatchConstants.VERTICAL_ALIGN_CENTER;
+                break;
+            case "bottom":
+                alignment |= WatchConstants.VERTICAL_ALIGN_BOTTOM;
+                break;
+            default:
+                throw new KnownParseError("Invalid vertical align: " + verticalAlign);
         }
         return alignment;
     }

@@ -90,10 +90,10 @@ public class WatchSetImportFragment extends Fragment {
                 return true;
             } catch (KnownParseError e) {
                 Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                //Log.e(TAG, e.getMessage(), e);
+                Log.e(TAG, e.getMessage(), e);
             } catch (Exception e) {
                 Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
-                //Log.e(TAG, e.getMessage(), e);
+                Log.e(TAG, e.getMessage(), e);
             }
         }
         watchSet = null;

@@ -31,10 +31,25 @@ public class ProgressEmulatorControl extends AbstractEmulatorControl {
             return;
         }
         int intValue = (int) value;
-        float percentage = (float) intValue/(float) maxValue;
+        float percentage = (float) intValue / (float) maxValue;
         if (percentage > 1) {
             percentage = 1;
         }
-        renderer.drawRect(x, y, (int) (width * percentage), height);
+
+        int border = style >> 16 & 0xFF;
+        boolean vertical = (style >> 24 & 0x20) != 0;
+        int delta = 0;
+        if (border > 0) {
+            renderer.drawEmptyRect(x, y, width, height, border);
+            delta = border + 1;
+        }
+
+        if (vertical) {
+            int h = height - (2 * delta);
+            int barHeight = (int)(h * percentage);
+            renderer.drawRect(x + delta, y + delta + h - barHeight, width - 2 * delta, barHeight);
+        } else {
+            renderer.drawRect(x + delta, y + delta, (int) ((width - (2 * delta)) * percentage), height - (2 * delta));
+        }
     }
 }

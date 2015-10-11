@@ -47,6 +47,16 @@ public class LowLevelRenderer {
         canvas.drawRect(x * scale, y * scale, (x + width) * scale, (y + height) * scale, paint);
     }
 
+    public void drawEmptyRect(int x, int y, int width, int height, int thickness) {
+        if (thickness <= 0) {
+            return;
+        }
+        drawRect(x, y, width, thickness);
+        drawRect(x, y + height - thickness, width, thickness);
+        drawRect(x, y, thickness, height);
+        drawRect(x + width - thickness, y, thickness, height);
+    }
+
     public void clearRect(int x, int y, int width, int height) {
         paint.setColor(getBackgroundColor());
         canvas.drawRect(x * scale, y * scale, (x + width) * scale, (y + height) * scale, paint);
@@ -201,6 +211,6 @@ public class LowLevelRenderer {
     }
 
     public void drawImage(byte[] image, int x, int y, int width, int height) {
-        drawBitmap(image, 4, x, y, width, height, (int)image[2]&0xFF);
+        drawBitmap(image, 4, x, y, width, height, (int) image[2] & 0xFF);
     }
 }

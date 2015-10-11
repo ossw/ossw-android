@@ -277,7 +277,9 @@ public class WatchSetEmulatorParser {
         int y = is.read();
         int width = is.read();
         int height = is.read();
-        int style = is.read() << 8;
+        int style = is.read() << 24;
+        style |= is.read()<< 16;
+        style |= is.read()<< 8;
         style |= is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
         is.read();
