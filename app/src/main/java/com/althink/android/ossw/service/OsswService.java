@@ -56,12 +56,24 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class OsswService extends Service {
     private final static String TAG = OsswService.class.getSimpleName();
 
     public final static UUID OSSW_SERVICE_UUID = UUID.fromString("58C60001-20B7-4904-96FA-CBA8E1B95702");
+
+    public final static String ACTION_WATCH_CONNECTING =
+            "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
+    public final static String ACTION_WATCH_CONNECTED =
+            "com.althink.android.ossw.ACTION_WATCH_CONNECTED";
+    public final static String ACTION_WATCH_DISCONNECTED =
+            "com.althink.android.ossw.ACTION_WATCH_DISCONNECTED";
+
+    private final static int FILE_UPLOAD_NOTIFICATION_ID = 1;
 
     private static OsswService INSTANCE;
 
@@ -87,15 +99,8 @@ public class OsswService extends Service {
 
     private OsswDB db;
 
-    public final static String ACTION_WATCH_CONNECTING =
-            "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
-    public final static String ACTION_WATCH_CONNECTED =
-            "com.althink.android.ossw.ACTION_WATCH_CONNECTED";
-    public final static String ACTION_WATCH_DISCONNECTED =
-            "com.althink.android.ossw.ACTION_WATCH_DISCONNECTED";
-
     private AtomicBoolean uploadNotificationPermission = new AtomicBoolean();
-    private AtomicBoolean commandAck = new AtomicBoolean();
+    private AtomicInteger commandAck = new AtomicInteger();
 
     private CharacteristicChangeHandler characteristicChangeHandler = new CharacteristicChangeHandler() {
         @Override
@@ -127,7 +132,7 @@ public class OsswService extends Service {
                         break;
                     case WatchConstants.OSSW_RX_COMMAND_COMMAND_ACK:
                         synchronized (commandAck) {
-                            commandAck.set(true);
+                            commandAck.set(value[1]&0xFF);
                             commandAck.notify();
                         }
                         break;
@@ -201,7 +206,7 @@ public class OsswService extends Service {
                     internalUploadNotification(txCharact, (int) params[1], (NotificationType) params[2], (byte[]) params[3], (int) params[4], (int) params[5], (NotificationHandler) params[6]);
                     break;
                 case EXTEND_ALERT:
-                    boolean status = writeCharacteristic(txCharact, new byte[]{0x26, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
+                    writeCharacteristic(txCharact, new byte[]{0x26, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
                     break;
                 case CLOSE_ALERT:
                     Log.i(TAG, "Close notification");
@@ -217,9 +222,8 @@ public class OsswService extends Service {
         bleService.writeDescriptor(descriptor);
     }
 
-    private boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data) {
+    private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data) {
         bleService.writeCharacteristic(characteristic, data);
-        return true;
     }
 
     private enum NotificationOperation {
@@ -264,8 +268,8 @@ public class OsswService extends Service {
 
         boolean allow;
         do {
-            boolean result = writeCharacteristic(txCharact, new byte[]{0x23, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
-            Log.i(TAG, "Request upload: " + ", result: " + result);
+            writeCharacteristic(txCharact, new byte[]{0x23, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
+            Log.i(TAG, "Request upload permission");
             //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
 
             try {
@@ -301,15 +305,14 @@ public class OsswService extends Service {
                 dataCommand[i + 1] = data[dataPtr++];
             }
 
-            boolean result = writeCharacteristic(txCharact, dataCommand);
-            Log.i(TAG, "Data part: " + Arrays.toString(dataCommand) + ", result: " + result);
+            writeCharacteristic(txCharact, dataCommand);
 
             //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
             sizeLeft -= 16;
         }
-        boolean result = writeCharacteristic(txCharact, new byte[]{0x25});
-        Log.i(TAG, "Commit upload, result: " + result);
+        writeCharacteristic(txCharact, new byte[]{0x25});
+        Log.i(TAG, "Commit upload");
 
         Log.i(TAG, "NOTIFICATION UPLOADED");
 
@@ -422,6 +425,7 @@ public class OsswService extends Service {
                         switch (status) {
                             case DISCONNECTED:
                                 broadcastUpdate(ACTION_WATCH_DISCONNECTED);
+                                clearPendingCommands();
                                 break;
                             case CONNECTING:
                                 broadcastUpdate(ACTION_WATCH_CONNECTING);
@@ -489,6 +493,9 @@ public class OsswService extends Service {
             }
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void clearPendingCommands() {
     }
 
     private boolean isFirmwareTooOld(String version) {
@@ -770,10 +777,8 @@ public class OsswService extends Service {
                 }
                 break;
         }
-        boolean status = writeCharacteristic(txCharact, os.toByteArray());
-        if (status) {
-            sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
-        }
+        writeCharacteristic(txCharact, os.toByteArray());
+        sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
         //  Log.i(TAG, "Write: " + value + ", result: " + status);
     }
 
@@ -825,96 +830,116 @@ public class OsswService extends Service {
     private void internalUploadData(UploadDataType type, byte[] data) {
 
         if (!bleService.isConnected()) {
-
+            Log.i(TAG, "BLE is not connected, cancel upload");
+            handleUploadFailed();
             return;
         }
-
-        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
-        if (txCharact == null) {
-            return;
-        }
-
-        int id = 1;
 
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getApplicationContext());
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setContentTitle("Watchset upload")
                 .setContentText("Upload in progress")
                 .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
-        notifyManager.notify(id, builder.build());
+        notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
 
         int size = data.length;
-        boolean status = writeCharacteristic(txCharact, new byte[]{0x43, 0x20});
-        Log.i(TAG, "Init file upload: " + type + ", " + size + ", " + status);
-
-        if (!waitForCommandAck()) return;
+        Log.i(TAG, "Init file upload: " + type + ", size: " + size);
+        if(sendOsswCommand(new byte[]{0x20}) != 0){
+            handleUploadFailed();
+            return;
+        }
 
         List<byte[]> chunks = divideArray(data, 255);
-
 
         int chunkNo = 0;
         for (byte[] chunk : chunks) {
             byte[] commandData = concat(new byte[]{0x21}, chunk);
-            int dataPtr = 0;
-            int sizeLeft = commandData.length;
 
-            Log.i(TAG, "Send command: " + Arrays.toString(commandData));
+            Log.i(TAG, "Send data chunk");
 
             builder.setProgress(100, 100 * chunkNo / chunks.size(), false);
-            notifyManager.notify(id, builder.build());
+            notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
 
-            while (sizeLeft > 0) {
-                int dataInPacket = sizeLeft > 19 ? 19 : sizeLeft;
-                byte[] bleData = new byte[dataInPacket + 1];
-
-                if (sizeLeft <= 19) {
-                    if (sizeLeft == commandData.length) {
-                        //only chunk
-                        bleData[0] = 0x43;
-                    } else {
-                        //last chunk
-                        bleData[0] = 0x42;
-                    }
-                } else if (sizeLeft == commandData.length) {
-                    //first chunk
-                    bleData[0] = 0x40;
-                } else {
-                    //central chunk
-                    bleData[0] = 0x41;
-                }
-
-                for (int i = 0; i < dataInPacket; i++) {
-                    bleData[i + 1] = commandData[dataPtr++];
-                }
-
-                status = writeCharacteristic(txCharact, bleData);
-
-                if (!status) {
-                    Log.i(TAG, "Failed to upload data: " + status);
-                    return;
-                }
-
-                Log.i(TAG, "Send ble request: " + Arrays.toString(bleData) + ", " + status);
-
-                sizeLeft -= 19;
+            if (sendOsswCommand(commandData) != 0) {
+                handleUploadFailed();
+                return;
             }
-
-            if (!waitForCommandAck()) return;
             chunkNo++;
         }
 
-        status = writeCharacteristic(txCharact, new byte[]{0x43, 0x22});
-        Log.i(TAG, "Upload data done: " + status);
+        if (sendOsswCommand(new byte[]{0x22}) == 0) {
+            Log.i(TAG, "Data uploaded successfully");
+            toastHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(), getString(R.string.toast_file_uploaded_successfully), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            notifyManager.cancel(FILE_UPLOAD_NOTIFICATION_ID);
+        } else {
+            handleUploadFailed();
+        }
+
+    }
+
+    private void handleUploadFailed() {
+        Log.e(TAG, "Last command failed, cancel data upload");
+
+        NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getApplicationContext());
+        notifyManager.cancel(FILE_UPLOAD_NOTIFICATION_ID);
 
         toastHandler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getApplicationContext(), getString(R.string.toast_file_uploaded_successfully), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), getString(R.string.toast_file_upload_failed), Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setContentText("Upload complete").setProgress(0, 0, false);
-        notifyManager.notify(id, builder.build());
+    }
+
+    public int sendOsswCommand(byte[] commandData) {
+        Log.i(TAG, "Send command: " + Arrays.toString(commandData));
+
+        int dataPtr = 0;
+        int sizeLeft = commandData.length;
+
+
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return -2;
+        }
+
+        while (sizeLeft > 0) {
+            int dataInPacket = sizeLeft > 19 ? 19 : sizeLeft;
+            byte[] bleData = new byte[dataInPacket + 1];
+
+            if (sizeLeft <= 19) {
+                if (sizeLeft == commandData.length) {
+                    //only chunk (both first and last)
+                    bleData[0] = 0x43;
+                } else {
+                    //last chunk
+                    bleData[0] = 0x42;
+                }
+            } else if (sizeLeft == commandData.length) {
+                //first chunk
+                bleData[0] = 0x40;
+            } else {
+                //central chunk
+                bleData[0] = 0x41;
+            }
+
+            for (int i = 0; i < dataInPacket; i++) {
+                bleData[i + 1] = commandData[dataPtr++];
+            }
+
+            writeCharacteristic(txCharact, bleData);
+
+            sizeLeft -= 19;
+        }
+
+        return waitForCommandAck();
     }
 
     public static byte[] concat(byte[] first, byte[] second) {
@@ -923,21 +948,17 @@ public class OsswService extends Service {
         return result;
     }
 
-    private boolean waitForCommandAck() {
+    private int waitForCommandAck() {
         try {
             synchronized (commandAck) {
-                commandAck.set(false);
+                commandAck.set(-1);
                 commandAck.wait(10000);
-                if (!commandAck.get()) {
-                    Log.e(TAG, "Failed to get ACK");
-                    return false;
-                }
+                return commandAck.get();
             }
         } catch (InterruptedException e) {
             Log.e(TAG, "Failed to receive command ACK");
-            return false;
+            return -1;
         }
-        return true;
     }
 
     private static List<byte[]> divideArray(byte[] source, int chunksize) {
@@ -972,7 +993,7 @@ public class OsswService extends Service {
             Date date = dateFormatGmt.parse(dateFormatLocal.format(new Date()));
             int currentTime = (int) (date.getTime() / 1000);
             //Log.i(TAG, "Set current time");
-            boolean status = writeCharacteristic(txCharact, new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
+            writeCharacteristic(txCharact, new byte[]{0x10, (byte) (currentTime >> 24), (byte) ((currentTime >> 16) & 0xFF), (byte) ((currentTime >> 8) & 0xFF), (byte) (currentTime & 0xFF)});
         } catch (Exception e) {
             // do nothing
         }

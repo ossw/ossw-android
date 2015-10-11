@@ -308,6 +308,7 @@ public class BleDeviceService {
                     return null;
                 }
                 synchronized (bleOperationLock) {
+                    Log.i(TAG, "Write characteristic: " + Arrays.toString(data));
                     characteristic.setValue(data);
                     mBluetoothGatt.writeCharacteristic(characteristic);
                     bleOperationLock.wait();

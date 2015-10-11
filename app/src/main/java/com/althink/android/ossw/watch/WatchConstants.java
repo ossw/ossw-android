@@ -121,6 +121,7 @@ public class WatchConstants {
     public static final int OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION = 0x12;
     public static final int OSSW_RX_COMMAND_UPLOAD_DATA_PERMISSION = 0x20;
     public static final int OSSW_RX_COMMAND_COMMAND_ACK = 0x40;
+    public static final int OSSW_RX_COMMAND_COMMAND_ERROR = 0x41;
     public static final int OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION = 0x23;
 
 
