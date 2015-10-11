@@ -464,12 +464,15 @@ public class WatchSetCompiler {
     }
 
     private int buildNumberRangeFromMaxValue(int maxValue) {
-        int bytesNo = 0;
-        while (maxValue > 0) {
-            maxValue = maxValue / 256;
-            bytesNo++;
+        int v = 0x10;
+        while(maxValue > 10) {
+            maxValue/=10;
+            v+=0x20;
         }
-        return bytesNo;
+        if(maxValue <= 1 && v > 0x10) {
+            v -= 0x10;
+        }
+        return v;
     }
 
     private byte[] compileImageControl(JSONObject control, MemoryAllocator allocator) throws Exception {
