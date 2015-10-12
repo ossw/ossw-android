@@ -16,6 +16,7 @@ public class WatchConstants {
     public static final int SCR_CONTROL_STATIC_IMAGE = 5;
     public static final int SCR_CONTROL_IMAGE_FROM_SET = 6;
 
+    public static final int MAX_TEXT_EXT_PROPERTY_LENGTH = 32;
 
     public static final int NUMBER_RANGE_0__9 = 0x10;
     public static final int NUMBER_RANGE_0__19 = 0x20;

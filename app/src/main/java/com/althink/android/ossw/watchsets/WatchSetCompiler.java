@@ -624,7 +624,7 @@ public class WatchSetCompiler {
         os.write(flags);
         os.write(0);
 
-        int stringLength = 20;
+        int stringLength = WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH;
         JSONObject source = control.getJSONObject("source");
         os.write(compileSource(source, DataSourceType.STRING, stringLength));
 

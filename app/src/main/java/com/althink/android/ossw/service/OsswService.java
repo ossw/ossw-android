@@ -709,11 +709,6 @@ public class OsswService extends Service {
             return;
         }
 
-        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
-        if (txCharact == null) {
-            return;
-        }
-
         //Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
 
         byte commandId = 0x30;
@@ -746,7 +741,7 @@ public class OsswService extends Service {
                 }
                 break;
         }
-        writeCharacteristic(txCharact, os.toByteArray());
+        sendOsswCommand(os.toByteArray());
         sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
         //  Log.i(TAG, "Write: " + value + ", result: " + status);
     }
