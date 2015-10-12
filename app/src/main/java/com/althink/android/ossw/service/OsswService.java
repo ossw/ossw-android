@@ -692,40 +692,7 @@ public class OsswService extends Service {
     private int calcExternalPropertySize(DataSourceType type, int range) {
         switch (type) {
             case NUMBER:
-                if (range == WatchConstants.NUMBER_RANGE_0__9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19 ||
-                        range == WatchConstants.NUMBER_RANGE_0__99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__199 ||
-                        range == WatchConstants.NUMBER_RANGE_0__9_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19_9) {
-                    return 1;
-                } else if (range == WatchConstants.NUMBER_RANGE_0__999 ||
-                        range == WatchConstants.NUMBER_RANGE_0__1999 ||
-                        range == WatchConstants.NUMBER_RANGE_0__9999 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19999 ||
-                        range == WatchConstants.NUMBER_RANGE_0__99_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__199_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__999_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__1999_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__9_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__99_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__199_99) {
-                    return 2;
-                } else if (range == WatchConstants.NUMBER_RANGE_0__99999 ||
-                        range == WatchConstants.NUMBER_RANGE_0__9999_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19999_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__99999_9 ||
-                        range == WatchConstants.NUMBER_RANGE_0__999_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__1999_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__9999_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__19999_99 ||
-                        range == WatchConstants.NUMBER_RANGE_0__99999_99) {
-                    return 3;
-                }
-                return 0;
-            case ENUM:
-                return 1;
+                return range >> 5;
             case STRING:
                 return range + 1;
         }
@@ -757,6 +724,8 @@ public class OsswService extends Service {
             case NUMBER:
                 Integer intValue = buildIntValue(value, property.getRange());
                 switch (calcExternalPropertySize(property.getType(), property.getRange())) {
+                    case 4:
+                        os.write((intValue) >> 24 & 0xFF);
                     case 3:
                         os.write((intValue) >> 16 & 0xFF);
                     case 2:

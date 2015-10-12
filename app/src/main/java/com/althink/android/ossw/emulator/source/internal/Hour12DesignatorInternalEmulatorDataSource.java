@@ -12,7 +12,7 @@ public class Hour12DesignatorInternalEmulatorDataSource implements EmulatorDataS
 
     @Override
     public Object getData(DataSourceType type, int range) {
-        if (!DataSourceType.NUMBER.equals(type) && !DataSourceType.ENUM.equals(type)) {
+        if (!DataSourceType.NUMBER.equals(type)) {
             return null;
         }
         return (int) Calendar.getInstance().get(Calendar.HOUR_OF_DAY) /12;

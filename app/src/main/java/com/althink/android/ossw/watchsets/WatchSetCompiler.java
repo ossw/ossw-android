@@ -464,15 +464,12 @@ public class WatchSetCompiler {
     }
 
     private int buildNumberRangeFromMaxValue(int maxValue) {
-        int v = 0x10;
-        while(maxValue > 10) {
-            maxValue/=10;
-            v+=0x20;
+        int v = 0;
+        while (maxValue > 0) {
+            maxValue /= 256;
+            v++;
         }
-        if(maxValue <= 1 && v > 0x10) {
-            v -= 0x10;
-        }
-        return v;
+        return v << 5;
     }
 
     private byte[] compileImageControl(JSONObject control, MemoryAllocator allocator) throws Exception {
@@ -508,7 +505,7 @@ public class WatchSetCompiler {
         writeResourceType(os, image);
 
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.ENUM, 0));
+        os.write(compileSource(source, DataSourceType.NUMBER, 0x20));
 
         int dataPtr = allocator.addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
@@ -561,12 +558,50 @@ public class WatchSetCompiler {
                 break;
         }
         JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.NUMBER, numberRange));
+        int sourceRange = buildDataSourceRangeFromNumberRange(numberRange);
+        os.write(compileSource(source, DataSourceType.NUMBER, sourceRange));
 
         int dataPtr = allocator.addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
         return os.toByteArray();
+    }
+
+    private int buildDataSourceRangeFromNumberRange(int range) {
+
+        int size = 0;
+        if (range == WatchConstants.NUMBER_RANGE_0__9 ||
+                range == WatchConstants.NUMBER_RANGE_0__19 ||
+                range == WatchConstants.NUMBER_RANGE_0__99 ||
+                range == WatchConstants.NUMBER_RANGE_0__199 ||
+                range == WatchConstants.NUMBER_RANGE_0__9_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__19_9) {
+            size = 1;
+        } else if (range == WatchConstants.NUMBER_RANGE_0__999 ||
+                range == WatchConstants.NUMBER_RANGE_0__1999 ||
+                range == WatchConstants.NUMBER_RANGE_0__9999 ||
+                range == WatchConstants.NUMBER_RANGE_0__19999 ||
+                range == WatchConstants.NUMBER_RANGE_0__99_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__199_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__999_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__1999_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__9_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__19_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__99_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__199_99) {
+            size = 2;
+        } else if (range == WatchConstants.NUMBER_RANGE_0__99999 ||
+                range == WatchConstants.NUMBER_RANGE_0__9999_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__19999_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__99999_9 ||
+                range == WatchConstants.NUMBER_RANGE_0__999_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__1999_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__9999_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__19999_99 ||
+                range == WatchConstants.NUMBER_RANGE_0__99999_99) {
+            size = 3;
+        }
+        return size << 5 | (range&0xF);
     }
 
     private byte[] compileTextControl(JSONObject control, MemoryAllocator allocator) throws Exception {
@@ -779,13 +814,13 @@ public class WatchSetCompiler {
 
     private int mergePropertyRange(DataSourceType type, int range1, int range2) {
         if (DataSourceType.NUMBER == type) {
-            return (Math.max(range1 >> 4, range2 >> 4) << 4) | Math.max(range1 & 0xF, range2 & 0xF);
+            return (Math.max(range1 >> 5, range2 >> 5) << 5) | Math.max(range1 & 0x1F, range2 & 0x1F);
         }
         return Math.max(range1, range2);
     }
 
     private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
-        if (!dataSourceType.equals(DataSourceType.NUMBER) && !dataSourceType.equals(DataSourceType.ENUM)) {
+        if (!dataSourceType.equals(DataSourceType.NUMBER)) {
             throw new IllegalArgumentException("Unknown data source type");
         }
         switch (property) {

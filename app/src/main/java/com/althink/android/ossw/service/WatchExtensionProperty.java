@@ -11,11 +11,6 @@ public class WatchExtensionProperty {
     private DataSourceType type;
     private int range;
 
-    public WatchExtensionProperty(String pluginId, String propertyId) {
-        this.pluginId = pluginId;
-        this.propertyId = propertyId;
-    }
-
     public WatchExtensionProperty(String pluginId, String propertyId, DataSourceType type, int range) {
         this.pluginId = pluginId;
         this.propertyId = propertyId;

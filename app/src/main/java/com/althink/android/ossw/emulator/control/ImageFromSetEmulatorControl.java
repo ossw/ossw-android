@@ -25,7 +25,7 @@ public class ImageFromSetEmulatorControl extends AbstractEmulatorControl {
     }
 
     public void draw(LowLevelRenderer renderer) {
-        Object value = getData(DataSourceType.ENUM, 0);
+        Object value = getData(DataSourceType.NUMBER, 0);
         if (value == null) {
             return;
         }

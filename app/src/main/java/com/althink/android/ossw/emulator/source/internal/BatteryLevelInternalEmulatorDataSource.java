@@ -12,7 +12,7 @@ public class BatteryLevelInternalEmulatorDataSource implements EmulatorDataSourc
 
     @Override
     public Object getData(DataSourceType type, int range) {
-        if(!DataSourceType.NUMBER.equals(type) && !DataSourceType.ENUM.equals(type)) {
+        if(!DataSourceType.NUMBER.equals(type)) {
             return null;
         }
         return 100;
