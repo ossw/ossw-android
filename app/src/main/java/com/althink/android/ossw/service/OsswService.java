@@ -99,7 +99,6 @@ public class OsswService extends Service {
 
     private OsswDB db;
 
-    private AtomicBoolean uploadNotificationPermission = new AtomicBoolean();
     private AtomicInteger commandAck = new AtomicInteger();
 
     private CharacteristicChangeHandler characteristicChangeHandler = new CharacteristicChangeHandler() {
@@ -124,15 +123,9 @@ public class OsswService extends Service {
                     case WatchConstants.OSSW_RX_COMMAND_INVOKE_NOTIFICATION_FUNCTION:
                         invokeNotificationFunction(value[1], Arrays.copyOfRange(value, 2, value.length));
                         break;
-                    case WatchConstants.OSSW_RX_COMMAND_UPLOAD_NOTIFICATION_PERMISSION:
-                        synchronized (uploadNotificationPermission) {
-                            uploadNotificationPermission.set(value[1] != 0);
-                            uploadNotificationPermission.notify();
-                        }
-                        break;
                     case WatchConstants.OSSW_RX_COMMAND_COMMAND_ACK:
                         synchronized (commandAck) {
-                            commandAck.set(value[1]&0xFF);
+                            commandAck.set(value[1] & 0xFF);
                             commandAck.notify();
                         }
                         break;
@@ -196,21 +189,16 @@ public class OsswService extends Service {
                 return null;
             }
 
-            BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
-            if (txCharact == null) {
-                return null;
-            }
-
             switch ((NotificationOperation) params[0]) {
                 case UPLOAD:
-                    internalUploadNotification(txCharact, (int) params[1], (NotificationType) params[2], (byte[]) params[3], (int) params[4], (int) params[5], (NotificationHandler) params[6]);
+                    internalUploadNotification((int) params[1], (NotificationType) params[2], (byte[]) params[3], (int) params[4], (int) params[5], (NotificationHandler) params[6]);
                     break;
                 case EXTEND_ALERT:
-                    writeCharacteristic(txCharact, new byte[]{0x26, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
+                    sendOsswCommand(new byte[]{0x43, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
                     break;
                 case CLOSE_ALERT:
                     Log.i(TAG, "Close notification");
-                    writeCharacteristic(txCharact, new byte[]{0x27, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF)});
+                    sendOsswCommand(new byte[]{0x44, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF)});
                     break;
             }
 
@@ -230,7 +218,7 @@ public class OsswService extends Service {
         UPLOAD, EXTEND_ALERT, CLOSE_ALERT
     }
 
-    private void internalUploadNotification(BluetoothGattCharacteristic txCharact, int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
+    private void internalUploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
         switch (type) {
             case ALERT:
                 data = arrayConcatenate(new byte[]{
@@ -267,54 +255,39 @@ public class OsswService extends Service {
         Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
 
         boolean allow;
-        do {
-            writeCharacteristic(txCharact, new byte[]{0x23, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)});
-            Log.i(TAG, "Request upload permission");
-            //Log.i(TAG, "Upload init: " + type + ", " + size + ", " + status);
+//        do {
 
-            try {
-                synchronized (uploadNotificationPermission) {
-                    uploadNotificationPermission.wait(10000);
-                }
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Failed to receive upload permission");
-                return;
-            }
+            Log.i(TAG, "Request notification upload permission");
 
-            allow = uploadNotificationPermission.get();
+            allow = sendOsswCommand(new byte[]{0x40, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)}) == 0;
             if (!allow) {
-                Log.i(TAG, "Upload NOT allowed");
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                }
+                Log.i(TAG, "Upload NOT allowed, skip notification upload");
+               return;
             } else {
                 Log.i(TAG, "Upload ALLOWED");
             }
-        } while (!allow);
+  //      } while (!allow);
 
         int sizeLeft = data.length;
 
         int dataPtr = 0;
-        byte[] dataCommand = new byte[17];
-        dataCommand[0] = 0x24;
+        byte[] dataCommand = new byte[256];
+        dataCommand[0] = 0x41;
         while (sizeLeft > 0) {
-            int dataInPacket = sizeLeft > 16 ? 16 : sizeLeft;
+            int dataInPacket = sizeLeft > 255 ? 255 : sizeLeft;
 
             for (int i = 0; i < dataInPacket; i++) {
                 dataCommand[i + 1] = data[dataPtr++];
             }
 
-            writeCharacteristic(txCharact, dataCommand);
+            sendOsswCommand(dataCommand, dataInPacket + 1);
 
             //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
-            sizeLeft -= 16;
+            sizeLeft -= 255;
         }
-        writeCharacteristic(txCharact, new byte[]{0x25});
-        Log.i(TAG, "Commit upload");
-
-        Log.i(TAG, "NOTIFICATION UPLOADED");
+        sendOsswCommand(new byte[]{0x42});
+        Log.i(TAG, "Commit notification");
 
         if (NotificationType.ALERT == type) {
             lastNotificationHandler = handler;
@@ -808,7 +781,7 @@ public class OsswService extends Service {
 
         int size = data.length;
         Log.i(TAG, "Init file upload: " + type + ", size: " + size);
-        if(sendOsswCommand(new byte[]{0x20}) != 0){
+        if (sendOsswCommand(new byte[]{0x20}) != 0) {
             handleUploadFailed();
             return;
         }
@@ -863,10 +836,14 @@ public class OsswService extends Service {
     }
 
     public int sendOsswCommand(byte[] commandData) {
+        return sendOsswCommand(commandData, commandData.length);
+    }
+
+    public int sendOsswCommand(byte[] commandData, int length) {
         Log.i(TAG, "Send command: " + Arrays.toString(commandData));
 
         int dataPtr = 0;
-        int sizeLeft = commandData.length;
+        int sizeLeft = length;
 
 
         BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
@@ -879,14 +856,14 @@ public class OsswService extends Service {
             byte[] bleData = new byte[dataInPacket + 1];
 
             if (sizeLeft <= 19) {
-                if (sizeLeft == commandData.length) {
+                if (sizeLeft == length) {
                     //only chunk (both first and last)
                     bleData[0] = 0x43;
                 } else {
                     //last chunk
                     bleData[0] = 0x42;
                 }
-            } else if (sizeLeft == commandData.length) {
+            } else if (sizeLeft == length) {
                 //first chunk
                 bleData[0] = 0x40;
             } else {
