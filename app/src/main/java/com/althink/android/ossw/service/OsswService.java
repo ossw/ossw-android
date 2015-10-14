@@ -53,12 +53,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OsswService extends Service {
@@ -74,6 +74,7 @@ public class OsswService extends Service {
             "com.althink.android.ossw.ACTION_WATCH_DISCONNECTED";
 
     private final static int FILE_UPLOAD_NOTIFICATION_ID = 1;
+    public static final int MAX_COMMAND_SIZE = 256;
 
     private static OsswService INSTANCE;
 
@@ -91,8 +92,6 @@ public class OsswService extends Service {
 
     private Map<String, ContentObserver> contentObservers = new HashMap<>();
 
-    private Map<String, Object> sentValuesCache = new HashMap<>();
-
     private Handler toastHandler = new Handler();
 
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
@@ -100,6 +99,13 @@ public class OsswService extends Service {
     private OsswDB db;
 
     private AtomicInteger commandAck = new AtomicInteger();
+
+    private ConcurrentHashMap<Integer, Object> extParamsToSend = new ConcurrentHashMap<>();
+    private Map<Integer, Object> sentExtParamsCache = new HashMap<>();
+
+    private ExecutorService extParamUploadExecutor = new ThreadPoolExecutor(1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
 
     private CharacteristicChangeHandler characteristicChangeHandler = new CharacteristicChangeHandler() {
         @Override
@@ -136,16 +142,17 @@ public class OsswService extends Service {
 
 
     private void sendAllExternalParamsValues() {
-        byte paramId = 0;
+        int paramId = 0;
         for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
             Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-            sendExternalParamToWatchAsync(paramId, property, value);
+            extParamsToSend.put(paramId, value);
             paramId++;
         }
+        scheduleExtParamUpdate();
     }
 
-    private void resetSentValuesCache() {
-        sentValuesCache.clear();
+    private void resetSentExtParamsCache() {
+        sentExtParamsCache.clear();
     }
 
     private void broadcastUpdate(final String action) {
@@ -160,7 +167,7 @@ public class OsswService extends Service {
 
     public void setWatchOperationContext(WatchOperationContext watchContext) {
         this.watchContext = watchContext;
-        resetSentValuesCache();
+        resetSentExtParamsCache();
     }
 
     public void createOrUpdateWatchSet(String name, String source, WatchOperationContext watchContext, int id) {
@@ -269,7 +276,7 @@ public class OsswService extends Service {
         int sizeLeft = data.length;
 
         int dataPtr = 0;
-        byte[] dataCommand = new byte[256];
+        byte[] dataCommand = new byte[MAX_COMMAND_SIZE];
         dataCommand[0] = 0x41;
         while (sizeLeft > 0) {
             int dataInPacket = sizeLeft > 255 ? 255 : sizeLeft;
@@ -353,15 +360,16 @@ public class OsswService extends Service {
             int propertyId = 0;
             for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
                 if (property.getPluginId().equals(pluginId)) {
-                    handleExternalPropertyChange((byte) propertyId, property);
+                    handleExternalPropertyChange(propertyId, property);
                 }
                 propertyId++;
             }
         }
 
-        private void handleExternalPropertyChange(byte propertyId, WatchExtensionProperty property) {
+        private void handleExternalPropertyChange(int propertyId, WatchExtensionProperty property) {
             Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-            sendExternalParamToWatchAsync((byte) propertyId, property, value);
+            extParamsToSend.put(propertyId, value);
+            scheduleExtParamUpdate();
         }
     }
 
@@ -401,7 +409,7 @@ public class OsswService extends Service {
                                 break;
                             case CONNECTED:
 
-                                resetSentValuesCache();
+                                resetSentExtParamsCache();
                                 broadcastUpdate(ACTION_WATCH_CONNECTED);
 
 //                        // check version
@@ -650,106 +658,6 @@ public class OsswService extends Service {
         return bleService.getConnectionStatus();
     }
 
-    public void sendExternalParamToWatchAsync(byte paramId, WatchExtensionProperty property, Object value) {
-        Object cachedValue = sentValuesCache.get(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()));
-        if ((cachedValue != null && cachedValue.equals(value)) || (value == null && cachedValue == null)) {
-            return;
-        }
-
-        Log.d(TAG, "handle property change: " + property.getPropertyId() + ", value: " + value);
-        new UpdatePropertyInWatchTask().execute(paramId, property, value);
-
-        sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
-    }
-
-    private int calcExternalPropertySize(DataSourceType type, int range) {
-        switch (type) {
-            case NUMBER:
-                return range >> 5;
-            case STRING:
-                return range + 1;
-        }
-        return 0;
-    }
-
-    private void sendExternalParamToWatchInternal(byte paramId, WatchExtensionProperty property, Object value) {
-
-        if (watchContext == null || watchContext.getExternalParameters() == null || watchContext.getExternalParameters().size() <= paramId) {
-            //       return;
-        }
-
-        if (!bleService.isConnected()) {
-            return;
-        }
-
-        //Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
-
-        byte commandId = 0x30;
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        os.write(commandId);
-        os.write(paramId);
-        switch (property.getType()) {
-            case NUMBER:
-                Integer intValue = buildIntValue(value, property.getRange());
-                switch (calcExternalPropertySize(property.getType(), property.getRange())) {
-                    case 4:
-                        os.write((intValue) >> 24 & 0xFF);
-                    case 3:
-                        os.write((intValue) >> 16 & 0xFF);
-                    case 2:
-                        os.write((intValue) >> 8 & 0xFF);
-                    case 1:
-                        os.write((intValue) & 0xFF);
-                }
-                break;
-            case STRING:
-                String v = (String) value;
-                v = StringNormalizer.removeAccents(v);
-                if (v.length() > property.getRange()) {
-                    v = v.substring(0, property.getRange());
-                }
-                try {
-                    os.write(v.getBytes());
-                } catch (IOException e) {
-                }
-                break;
-        }
-        sendOsswCommand(os.toByteArray());
-        //  Log.i(TAG, "Write: " + value + ", result: " + status);
-    }
-
-    private Integer buildIntValue(Object value, int range) {
-        if (value instanceof Integer) {
-            return ((Integer) value) * pow(10, range & 0xF);
-        } else if (value instanceof Float) {
-            BigDecimal decimal = new BigDecimal(((float) value) * pow(10, range & 0xF));
-            return decimal.setScale(0, RoundingMode.HALF_UP).intValue();
-        }
-        return 0;
-    }
-
-    private Integer pow(int x, int n) {
-        int val = 1;
-        for (int i = 0; i < n; i++) {
-            val *= x;
-        }
-        return val;
-    }
-
-    private String buildCachePropertyKey(String pluginId, String propertyId) {
-        return pluginId + ":" + propertyId;
-    }
-
-    private class UpdatePropertyInWatchTask extends AsyncTask<Object, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Object... params) {
-
-            sendExternalParamToWatchInternal((byte) params[0], (WatchExtensionProperty) params[1], params[2]);
-            return null;
-        }
-    }
-
     private class UploadDataToWatch extends AsyncTask<Object, Void, Void> {
 
         @Override
@@ -962,4 +870,148 @@ public class OsswService extends Service {
     public static OsswService getInstance() {
         return INSTANCE;
     }
+
+    public void scheduleExtParamUpdate() {
+        extParamUploadExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                sendExternalParamsToWatch();
+            }
+        });
+    }
+
+    private int calcExternalPropertySize(DataSourceType type, int range) {
+        switch (type) {
+            case NUMBER:
+                return range >> 5;
+            case STRING:
+                return range + 1;
+        }
+        return 0;
+    }
+
+    private void sendExternalParamsToWatch() {
+
+        WatchOperationContext ctx = watchContext;
+        if (ctx == null || ctx.getExternalParameters() == null) {
+            //       return;
+        }
+
+        if (!bleService.isConnected()) {
+            return;
+        }
+
+        //Log.i(TAG, "Update property: " + property.getPropertyId() + " with value " + value);
+
+        HashMap<Integer, Object> paramsCopy = new HashMap<>(extParamsToSend);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(0x30); // command id
+
+        for (Map.Entry<Integer, Object> entry : paramsCopy.entrySet()) {
+
+            byte paramId = entry.getKey().byteValue();
+            Object value = entry.getValue();
+            if (entry.getValue() == null || entry.getValue().equals(sentExtParamsCache.get(entry.getKey())) || paramId >= ctx.getExternalParameters().size()) {
+                extParamsToSend.remove(entry.getKey(), value);
+                Log.i(TAG, "Skip param: " + paramId);
+                continue;
+            }
+            Log.i(TAG, "Send param: " + paramId);
+            WatchExtensionProperty property = ctx.getExternalParameters().get(paramId);
+
+            switch (property.getType()) {
+                case NUMBER:
+                    Integer intValue = buildIntValue(value, property.getRange());
+                    int fieldSize = calcExternalPropertySize(property.getType(), property.getRange());
+
+                    if (os.size() + 2 + fieldSize > MAX_COMMAND_SIZE) {
+                        // no more space in command
+                        break;
+                    }
+
+                    os.write(paramId);
+                    os.write(fieldSize);
+                    switch (fieldSize) {
+                        case 4:
+                            os.write((intValue) >> 24 & 0xFF);
+                        case 3:
+                            os.write((intValue) >> 16 & 0xFF);
+                        case 2:
+                            os.write((intValue) >> 8 & 0xFF);
+                        case 1:
+                            os.write((intValue) & 0xFF);
+                    }
+                    break;
+                case STRING:
+                    String v = (String) value;
+                    v = StringNormalizer.removeAccents(v);
+                    byte[] data = cutToBytes(v, property.getRange());
+
+                    if (os.size() + 2 + data.length > MAX_COMMAND_SIZE) {
+                        // no more space in command
+                        break;
+                    }
+
+                    os.write(paramId);
+                    os.write(data.length);
+                    os.write(data, 0, data.length);
+                    break;
+            }
+            sentExtParamsCache.put(entry.getKey(), value);
+            extParamsToSend.remove(entry.getKey(), value);
+        }
+
+        if (os.size() > 1) {
+            // at least one parameter was set
+            sendOsswCommand(os.toByteArray());
+        }
+
+        //  Log.i(TAG, "Write: " + value + ", result: " + status);
+    }
+
+    private byte[] cutToBytes(String s, int charLimit) {
+        byte[] utf8 = s.getBytes();
+        if (utf8.length <= charLimit) {
+            return utf8;
+        }
+        if ((utf8[charLimit] & 0x80) == 0) {
+            // the limit doesn't cut an UTF-8 sequence
+            return Arrays.copyOf(utf8, charLimit);
+        }
+        int i = 0;
+        while ((utf8[charLimit - i - 1] & 0x80) > 0 && (utf8[charLimit - i - 1] & 0x40) == 0) {
+            ++i;
+        }
+        if ((utf8[charLimit - i - 1] & 0x80) > 0) {
+            // we have to skip the starter UTF-8 byte
+            return Arrays.copyOf(utf8, charLimit - i - 1);
+        } else {
+            // we passed all UTF-8 bytes
+            return Arrays.copyOf(utf8, charLimit - i);
+        }
+    }
+
+    private Integer buildIntValue(Object value, int range) {
+        if (value instanceof Integer) {
+            return ((Integer) value) * pow(10, range & 0xF);
+        } else if (value instanceof Float) {
+            BigDecimal decimal = new BigDecimal(((float) value) * pow(10, range & 0xF));
+            return decimal.setScale(0, RoundingMode.HALF_UP).intValue();
+        }
+        return 0;
+    }
+
+    private Integer pow(int x, int n) {
+        int val = 1;
+        for (int i = 0; i < n; i++) {
+            val *= x;
+        }
+        return val;
+    }
+
+    private String buildCachePropertyKey(String pluginId, String propertyId) {
+        return pluginId + ":" + propertyId;
+    }
+
 }
