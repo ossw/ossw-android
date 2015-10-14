@@ -1,6 +1,7 @@
 package com.althink.android.ossw.emulator.source;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
+import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.math.BigDecimal;
@@ -34,6 +35,8 @@ public class ExternalEmulatorDataSource implements EmulatorDataSource {
                     return decimal.setScale(0, RoundingMode.HALF_UP).intValue();
                 }
                 return (int) value * multi;
+            case STRING:
+                return StringNormalizer.removeAccents((String)value);
         }
         return value;
     }

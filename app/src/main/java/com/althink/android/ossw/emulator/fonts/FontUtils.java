@@ -134,7 +134,7 @@ public class FontUtils {
                 }
 
                 x = startX;
-                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight()/2 : fontInfo.getCharSpace());
+                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
             } while (!lastLine);
             return text.substring(initPtr, ptr);
         }
@@ -160,4 +160,65 @@ public class FontUtils {
         return c == 10 || c == 13 || c == 11 /*vertical tab*/;
     }
 
+    public static int calcTextHeight(String text, int startX, int startY, int width, int height, int fontType, int fontAlignment) {
+        FontInfo fontInfo = FontUtils.resolveFont(fontType);
+        int ptr = 0;
+        int prevPtr = ptr;
+        int x = startX;
+        int y = startY;
+
+        if (width == 0) {
+            width = WatchConstants.SCREEN_WIDTH - x;
+        }
+        if (height == 0) {
+            height = WatchConstants.SCREEN_HEIGHT - y;
+        }
+        boolean multiline = (fontAlignment & WatchConstants.TEXT_FLAGS_MULTILINE) != 0;
+        boolean splitWord = (fontAlignment & WatchConstants.TEXT_FLAGS_SPLIT_WORD) != 0;
+
+        int maxY = y + height;
+        boolean lastLine;
+        do {
+            lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
+            int textWidth = FontUtils.calcTextWidth(text, ptr, fontInfo, splitWord || !multiline, width);
+
+            if ((fontAlignment & WatchConstants.HORIZONTAL_ALIGN_CENTER) != 0) {
+                x += (width - textWidth) / 2;
+            } else if ((fontAlignment & WatchConstants.HORIZONTAL_ALIGN_RIGHT) != 0) {
+                x += (width - textWidth);
+            }
+            int maxX = x + textWidth;
+
+            boolean firstChar = true;
+            char c = 0;
+            while (ptr < text.length()) {
+                c = text.charAt(ptr++);
+                if (firstChar && FontUtils.isWhitespace(c)) {
+                    continue;
+                }
+                firstChar = false;
+                int charWidth = FontUtils.calcCharWidth(c, fontInfo);
+                if (x + charWidth > maxX) {
+                    //overflow
+                    ptr = prevPtr;
+                    break;
+                }
+
+                x += charWidth;
+                x += fontInfo.getCharSpace();
+                prevPtr = ptr;
+            }
+            if (ptr == text.length()){
+                lastLine = true;
+            }
+
+            x = startX;
+            y += fontInfo.getHeight();
+            if (!lastLine) {
+                y += (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
+            }
+        } while (!lastLine);
+
+        return y - startY;
+    }
 }

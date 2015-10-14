@@ -206,7 +206,7 @@ public class OsswService extends Service {
         }
     }
 
-    private void writeDecriptor(BluetoothGattDescriptor descriptor) {
+    private void writeDescriptor(BluetoothGattDescriptor descriptor) {
         bleService.writeDescriptor(descriptor);
     }
 
@@ -255,18 +255,16 @@ public class OsswService extends Service {
         Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
 
         boolean allow;
-//        do {
 
-            Log.i(TAG, "Request notification upload permission");
+        Log.i(TAG, "Request notification upload permission");
 
-            allow = sendOsswCommand(new byte[]{0x40, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)}) == 0;
-            if (!allow) {
-                Log.i(TAG, "Upload NOT allowed, skip notification upload");
-               return;
-            } else {
-                Log.i(TAG, "Upload ALLOWED");
-            }
-  //      } while (!allow);
+        allow = sendOsswCommand(new byte[]{0x40, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)}) == 0;
+        if (!allow) {
+            Log.i(TAG, "Upload NOT allowed, skip notification upload");
+            return;
+        } else {
+            Log.i(TAG, "Upload ALLOWED");
+        }
 
         int sizeLeft = data.length;
 
@@ -281,8 +279,6 @@ public class OsswService extends Service {
             }
 
             sendOsswCommand(dataCommand, dataInPacket + 1);
-
-            //Log.i(TAG, "Upload data pack: " + dataInPacket + ", " + status);
 
             sizeLeft -= 255;
         }
@@ -348,7 +344,7 @@ public class OsswService extends Service {
 
         @Override
         public void onChange(boolean selfChange) {
-            // Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
+            //Log.d(TAG, "onChange: " + selfChange + ", plugin: " + pluginId);
 
             if (watchContext == null || watchContext.getExternalParameters() == null) {
                 return;
@@ -659,7 +655,11 @@ public class OsswService extends Service {
         if ((cachedValue != null && cachedValue.equals(value)) || (value == null && cachedValue == null)) {
             return;
         }
+
+        Log.d(TAG, "handle property change: " + property.getPropertyId() + ", value: " + value);
         new UpdatePropertyInWatchTask().execute(paramId, property, value);
+
+        sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
     }
 
     private int calcExternalPropertySize(DataSourceType type, int range) {
@@ -715,7 +715,6 @@ public class OsswService extends Service {
                 break;
         }
         sendOsswCommand(os.toByteArray());
-        sentValuesCache.put(buildCachePropertyKey(property.getPluginId(), property.getPropertyId()), value);
         //  Log.i(TAG, "Write: " + value + ", result: " + status);
     }
 

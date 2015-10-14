@@ -129,10 +129,22 @@ public class LowLevelRenderer {
             if (height == 0) {
                 height = WatchConstants.SCREEN_HEIGHT - y;
             }
+            int maxY = y + height;
             boolean multiline = (fontAlignment & WatchConstants.TEXT_FLAGS_MULTILINE) != 0;
             boolean splitWord = (fontAlignment & WatchConstants.TEXT_FLAGS_SPLIT_WORD) != 0;
 
-            int maxY = y + height;
+            if ((fontAlignment & WatchConstants.VERTICAL_ALIGN_CENTER) != 0) {
+                int calc_height = FontUtils.calcTextHeight(text, startX, startY, width, height, fontType, fontAlignment);
+                if (calc_height < height) {
+                    y += (height-calc_height)/2;
+                }
+            } else if ((fontAlignment & WatchConstants.VERTICAL_ALIGN_BOTTOM) != 0) {
+                int calc_height = FontUtils.calcTextHeight(text, startX, startY, width, height, fontType, fontAlignment);
+                if (calc_height < height) {
+                    y += height-calc_height;
+                }
+            }
+
             boolean lastLine;
             do {
                 lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
