@@ -279,7 +279,7 @@ public class OsswService extends Service {
         byte[] dataCommand = new byte[MAX_COMMAND_SIZE];
         dataCommand[0] = 0x41;
         while (sizeLeft > 0) {
-            int dataInPacket = sizeLeft > 255 ? 255 : sizeLeft;
+            int dataInPacket = sizeLeft > (MAX_COMMAND_SIZE-1) ? (MAX_COMMAND_SIZE-1) : sizeLeft;
 
             for (int i = 0; i < dataInPacket; i++) {
                 dataCommand[i + 1] = data[dataPtr++];
@@ -287,7 +287,7 @@ public class OsswService extends Service {
 
             sendOsswCommand(dataCommand, dataInPacket + 1);
 
-            sizeLeft -= 255;
+            sizeLeft -= (MAX_COMMAND_SIZE-1);
         }
         sendOsswCommand(new byte[]{0x42});
         Log.i(TAG, "Commit notification");
@@ -747,7 +747,7 @@ public class OsswService extends Service {
     }
 
     public int sendOsswCommand(byte[] commandData, int length) {
-        Log.i(TAG, "Send command: " + Arrays.toString(commandData));
+        Log.i(TAG, "Send command: " + bytesToHex(commandData));
 
         int dataPtr = 0;
         int sizeLeft = length;
@@ -1014,4 +1014,15 @@ public class OsswService extends Service {
         return pluginId + ":" + propertyId;
     }
 
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 3];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 3] = hexArray[v >>> 4];
+            hexChars[j * 3 + 1] = hexArray[v & 0x0F];
+            hexChars[j * 3 + 2] = ' ';
+        }
+        return new String(hexChars);
+    }
 }

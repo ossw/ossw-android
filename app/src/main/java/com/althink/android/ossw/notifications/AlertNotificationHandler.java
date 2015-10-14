@@ -41,7 +41,7 @@ public class AlertNotificationHandler {
         if (osswBleService != null) {
             int vibration_pattern = (6 << 28) | (100 << 16) | (44 << (16 - 6));
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
-            osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 5000, new AlertNotificationFunctionHandler(notification, osswBleService));
+            osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
 
             if (!update) {
                 Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
@@ -72,7 +72,7 @@ public class AlertNotificationHandler {
         Log.i(TAG, "Start notification extender: " + notificationId);
         stopNotificationExtender();
         timer = new Timer();
-        timer.schedule(new NotificationExtenderTimer(notificationId, osswBleService), 1000, 1000);
+        timer.schedule(new NotificationExtenderTimer(notificationId, osswBleService), 1000, 1500);
     }
 
     private void stopNotificationExtender() {
@@ -97,7 +97,7 @@ public class AlertNotificationHandler {
         @Override
         public void run() {
             Log.i(TAG, "Extend notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
-            osswBleService.extendAlertNotification(notificationId, 5000);
+            osswBleService.extendAlertNotification(notificationId, 7000);
         }
     }
 }
