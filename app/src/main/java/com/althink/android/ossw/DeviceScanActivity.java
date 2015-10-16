@@ -157,7 +157,7 @@ public class DeviceScanActivity extends AppCompatListActivity implements Navigat
         if (device == null) return;
 
         if (mScanning) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            stopLeScan();
             mScanning = false;
         }
 
@@ -176,18 +176,26 @@ public class DeviceScanActivity extends AppCompatListActivity implements Navigat
                 @Override
                 public void run() {
                     mScanning = false;
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                    stopLeScan();
                     invalidateOptionsMenu();
                 }
             }, SCAN_PERIOD);
 
             mScanning = true;
-            mBluetoothAdapter.startLeScan(mLeScanCallback);
+            startLeScan();
         } else {
             mScanning = false;
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            stopLeScan();
         }
         invalidateOptionsMenu();
+    }
+
+    private void startLeScan() {
+        mBluetoothAdapter.startLeScan(mLeScanCallback);
+    }
+
+    private void stopLeScan() {
+        mBluetoothAdapter.stopLeScan(mLeScanCallback);
     }
 
     @Override

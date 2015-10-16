@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                 invalidateOptionsMenu();
                 Log.i(TAG, "Connecting to the watch");
             } else if (OsswService.ACTION_WATCH_CONNECTED.equals(action)) {
-                //updateConnectionState(R.string.connected);
                 Toast.makeText(MainActivity.this, getString(R.string.toast_watch_is_connected), Toast.LENGTH_SHORT).show();
                 hideConnectionAlertBar();
                 invalidateOptionsMenu();
@@ -78,9 +77,12 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             } else if (OsswService.ACTION_WATCH_DISCONNECTED.equals(action)) {
                 showConnectionAlertBar(R.string.disconnected);
                 invalidateOptionsMenu();
-                ///clearUI();
                 Log.i(TAG, "Watch is disconnected");
 
+            } else if (OsswService.ACTION_WATCH_AUTO_RECONNECT.equals(action)) {
+                showConnectionAlertBar(R.string.auto_reconnect);
+                invalidateOptionsMenu();
+                Log.i(TAG, "Trying to auto reconnect");
             }
         }
     };
@@ -182,6 +184,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
             hideConnectionAlertBar();
         } else if (status == BleConnectionStatus.CONNECTING) {
             showConnectionAlertBar(R.string.connecting_to_watch);
+        } else if (status == BleConnectionStatus.AUTO_RECONNECT) {
+            showConnectionAlertBar(R.string.auto_reconnect);
         } else {
             showConnectionAlertBar(R.string.disconnected);
         }
@@ -200,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTING);
         intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTED);
         intentFilter.addAction(OsswService.ACTION_WATCH_DISCONNECTED);
+        intentFilter.addAction(OsswService.ACTION_WATCH_AUTO_RECONNECT);
         return intentFilter;
     }
 

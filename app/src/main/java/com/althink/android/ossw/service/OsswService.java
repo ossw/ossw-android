@@ -72,9 +72,12 @@ public class OsswService extends Service {
             "com.althink.android.ossw.ACTION_WATCH_CONNECTED";
     public final static String ACTION_WATCH_DISCONNECTED =
             "com.althink.android.ossw.ACTION_WATCH_DISCONNECTED";
+    public final static String ACTION_WATCH_AUTO_RECONNECT =
+            "com.althink.android.ossw.ACTION_WATCH_AUTO_RECONNECT";
 
     private final static int FILE_UPLOAD_NOTIFICATION_ID = 1;
     public static final int MAX_COMMAND_SIZE = 256;
+    public static final String LAST_WATCH_ADDRESS = "last_watch_address";
 
     private static OsswService INSTANCE;
 
@@ -145,7 +148,9 @@ public class OsswService extends Service {
         int paramId = 0;
         for (WatchExtensionProperty property : watchContext.getExternalParameters()) {
             Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-            extParamsToSend.put(paramId, value);
+            if (value != null) {
+                extParamsToSend.put(paramId, value);
+            }
             paramId++;
         }
         scheduleExtParamUpdate();
@@ -184,6 +189,10 @@ public class OsswService extends Service {
 
     public void uploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
         new NotificationRelatedAsyncTask().execute(NotificationOperation.UPLOAD, notificationId, type, data, vibrationPattern, timeout, handler);
+    }
+
+    public void restoreConnection(String address) {
+        bleService.restoreConnection(address);
     }
 
     private class NotificationRelatedAsyncTask extends AsyncTask<Object, Void, Void> {
@@ -279,7 +288,7 @@ public class OsswService extends Service {
         byte[] dataCommand = new byte[MAX_COMMAND_SIZE];
         dataCommand[0] = 0x41;
         while (sizeLeft > 0) {
-            int dataInPacket = sizeLeft > (MAX_COMMAND_SIZE-1) ? (MAX_COMMAND_SIZE-1) : sizeLeft;
+            int dataInPacket = sizeLeft > (MAX_COMMAND_SIZE - 1) ? (MAX_COMMAND_SIZE - 1) : sizeLeft;
 
             for (int i = 0; i < dataInPacket; i++) {
                 dataCommand[i + 1] = data[dataPtr++];
@@ -287,7 +296,7 @@ public class OsswService extends Service {
 
             sendOsswCommand(dataCommand, dataInPacket + 1);
 
-            sizeLeft -= (MAX_COMMAND_SIZE-1);
+            sizeLeft -= (MAX_COMMAND_SIZE - 1);
         }
         sendOsswCommand(new byte[]{0x42});
         Log.i(TAG, "Commit notification");
@@ -442,6 +451,9 @@ public class OsswService extends Service {
                                 if (syncTime) {
                                     sendCurrentTime();
                                 }
+                                break;
+                            case AUTO_RECONNECT:
+                                broadcastUpdate(ACTION_WATCH_AUTO_RECONNECT);
                                 break;
                         }
                     }
@@ -633,6 +645,8 @@ public class OsswService extends Service {
     public boolean connect(final String address) {
         Log.i(TAG, "Connect");
 
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
+        sharedPref.edit().putString(LAST_WATCH_ADDRESS, address).commit();
         return bleService.connect(address, true);
     }
 
@@ -1015,9 +1029,10 @@ public class OsswService extends Service {
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 3];
-        for ( int j = 0; j < bytes.length; j++ ) {
+        for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 3] = hexArray[v >>> 4];
             hexChars[j * 3 + 1] = hexArray[v & 0x0F];
