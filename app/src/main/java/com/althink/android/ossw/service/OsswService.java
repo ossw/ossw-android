@@ -477,6 +477,9 @@ public class OsswService extends Service {
 
                                             if (isFirmwareTooOld(new String(data))) {
                                                 handleTooOldFirmware();
+                                            } else {
+                                                // supported firmware
+                                                sendConnectionConfirmation();
                                             }
                                         }
                                     });
@@ -529,6 +532,19 @@ public class OsswService extends Service {
         }
 
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void sendConnectionConfirmation() {
+            if (!bleService.isConnected()) {
+                return;
+            }
+
+            BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+            if (txCharact == null) {
+                return;
+            }
+
+            writeCharacteristic(txCharact, new byte[]{0x01});
     }
 
     private void connectToPlugin(PluginDefinition plugin) {
@@ -945,7 +961,6 @@ public class OsswService extends Service {
         }
 
     }
-
 
     private BluetoothGattCharacteristic getOsswTxCharacteristic() {
         BluetoothGattService service = bleService.getService(OSSW_SERVICE_UUID);
