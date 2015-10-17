@@ -58,4 +58,5 @@
     <string name="pref_notifications_access_title">Notification access</string>
     <string name="toast_not_supported_firmware">This firmware version is not supported. Upgrade to at least 0.4.0.</string>
     <string name="toast_file_upload_failed">Data upload failed</string>
+    <string name="action_disconnect">Disconnect</string>
 </resources>

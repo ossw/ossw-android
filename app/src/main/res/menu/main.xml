@@ -6,6 +6,8 @@
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="102" app:showAsAction="never" />
-    <item android:id="@+id/action_close" android:title="@string/action_close"
+    <item android:id="@+id/action_disconnect" android:title="@string/action_disconnect"
         android:orderInCategory="103" app:showAsAction="never" />
+    <item android:id="@+id/action_close" android:title="@string/action_close"
+        android:orderInCategory="104" app:showAsAction="never" />
 </menu>

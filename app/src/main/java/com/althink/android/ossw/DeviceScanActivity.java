@@ -29,7 +29,7 @@ import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
 
-public class DeviceScanActivity extends AppCompatListActivity implements NavigationDrawerCallbacks  {
+public class DeviceScanActivity extends AppCompatListActivity implements NavigationDrawerCallbacks {
     private final static String TAG = DeviceScanActivity.class.getSimpleName();
 
     private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -122,10 +122,8 @@ public class DeviceScanActivity extends AppCompatListActivity implements Navigat
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (!mBluetoothAdapter.isEnabled()) {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
         // Initializes list view adapter.
@@ -276,17 +274,17 @@ public class DeviceScanActivity extends AppCompatListActivity implements Navigat
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback() {
 
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
-            runOnUiThread(new Runnable() {
                 @Override
-                public void run() {
-                    mLeDeviceListAdapter.addDevice(device, ScanRecord.parseFromBytes(scanRecord));
-                    mLeDeviceListAdapter.notifyDataSetChanged();
+                public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mLeDeviceListAdapter.addDevice(device, ScanRecord.parseFromBytes(scanRecord));
+                            mLeDeviceListAdapter.notifyDataSetChanged();
+                        }
+                    });
                 }
-            });
-        }
-    };
+            };
 
     static class ViewHolder {
         TextView deviceName;

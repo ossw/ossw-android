@@ -1,10 +1,13 @@
 package com.althink.android.ossw.service;
 
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
@@ -189,10 +192,6 @@ public class OsswService extends Service {
 
     public void uploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
         new NotificationRelatedAsyncTask().execute(NotificationOperation.UPLOAD, notificationId, type, data, vibrationPattern, timeout, handler);
-    }
-
-    public void restoreConnection(String address) {
-        bleService.restoreConnection(address);
     }
 
     private class NotificationRelatedAsyncTask extends AsyncTask<Object, Void, Void> {
@@ -397,12 +396,12 @@ public class OsswService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Log.i(TAG, "Start service");
+        Log.i(TAG, "Start service");
 
         synchronized (this) {
 
             if (!started) {
-                //Log.i(TAG, "Initialize service");
+                Log.i(TAG, "Initialize service");
                 db = new OsswDB(this);
                 bleService = new BleDeviceService(getApplicationContext(), new BleConnectionStatusHandler() {
                     @Override
@@ -480,7 +479,15 @@ public class OsswService extends Service {
                 started = true;
                 INSTANCE = this;
             }
+
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            String address = sharedPref.getString(OsswService.LAST_WATCH_ADDRESS, null);
+            if (address != null) {
+                Log.i(TAG, "Connect to last known device: " + address);
+                bleService.connect(address, true);
+            }
         }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -614,7 +621,7 @@ public class OsswService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //Log.i(TAG, "Service destroyed");
+        Log.i(TAG, "Service destroyed");
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
@@ -657,6 +664,10 @@ public class OsswService extends Service {
      * callback.
      */
     public void disconnect() {
+        Log.i(TAG, "Disconnect");
+        // we don't want to automatically connect to the watch that was disconnected by the user
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
+        sharedPref.edit().remove(LAST_WATCH_ADDRESS).commit();
         bleService.disconnect();
     }
 
@@ -665,6 +676,7 @@ public class OsswService extends Service {
      * released properly.
      */
     public void close() {
+        Log.i(TAG, "Close ble service");
         bleService.close();
     }
 
