@@ -170,7 +170,7 @@ public class NotificationListener extends NotificationListenerService {
                 if (isUpdate && !hasNewElements(notification, existingNotification)) {
                     updateNotificationList(false, 0);
                 } else {
-                    int vibration_pattern = (6 << 28) | (70 << 16) | (44 << (16 - 6));
+                    int vibration_pattern = (6 << 26) | (70 << 16) | (44 << (16 - 6));
                     updateNotificationList(true, vibration_pattern);
                 }
             }

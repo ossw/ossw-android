@@ -39,7 +39,7 @@ public class AlertNotificationHandler {
 
         OsswService osswBleService = OsswService.getInstance();
         if (osswBleService != null) {
-            int vibration_pattern = (6 << 28) | (100 << 16) | (44 << (16 - 6));
+            int vibration_pattern = (6 << 26) | (100 << 16) | (44 << (16 - 6));
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
             osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
 
