@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -146,6 +148,47 @@ public class OsswService extends Service {
         }
     };
 
+    private final BroadcastReceiver packageChangeReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            try {
+                String action = intent.getAction();
+
+                Uri uri = intent.getData();
+                String pkg = uri != null ? uri.getSchemeSpecificPart() : null;
+                Log.i(TAG, "Package change filter: " + action + ", " + pkg);
+
+                if (pkg == null) {
+                    return;
+                }
+
+                Log.i(TAG, "Remove all plugins from package: " + pkg);
+
+                Iterator<PluginDefinition> i = plugins.iterator();
+                while (i.hasNext()) {
+                    PluginDefinition plugin = i.next();
+
+                    if (pkg.equals(plugin.getPackageName())) {
+                        i.remove();
+                        disconnectFromPlugin(plugin);
+                    }
+                }
+
+                if (!Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
+                    List<PluginDefinition> newPlugins = new PluginManager(context).findPlugins(pkg);
+                    for (PluginDefinition plugin : newPlugins) {
+                        Log.i(TAG, "Found plugin: " + plugin.getPluginId());
+                        connectToPlugin(plugin);
+                    }
+                    plugins.addAll(newPlugins);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+    };
 
     private void sendAllExternalParamsValues() {
         int paramId = 0;
@@ -376,8 +419,10 @@ public class OsswService extends Service {
 
         private void handleExternalPropertyChange(int propertyId, WatchExtensionProperty property) {
             Object value = getPropertyFromExtension(property.getPluginId(), property.getPropertyId());
-            extParamsToSend.put(propertyId, value);
-            scheduleExtParamUpdate();
+            if (value != null) {
+                extParamsToSend.put(propertyId, value);
+                scheduleExtParamUpdate();
+            }
         }
     }
 
@@ -460,22 +505,17 @@ public class OsswService extends Service {
 
                 plugins = new PluginManager(getApplicationContext()).findPlugins();
                 for (PluginDefinition plugin : plugins) {
-                    ExternalServiceConnection connection = new ExternalServiceConnection();
-
-                    // bind plugin service
-                    Intent serviceIntent = new Intent();
-                    serviceIntent.setAction(plugin.getPluginId());
-                    serviceIntent.setPackage(plugin.getPluginId());
-                    bindService(serviceIntent, connection.getConnection(), BIND_AUTO_CREATE);
-                    externalServiceConnections.put(plugin.getPluginId(), connection);
-
-                    // listen on plugin property change
-                    PluginPropertyObserver observer = new PluginPropertyObserver(pluginPropertyHandler, plugin.getPluginId());
-                    Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
-                    //Log.i(TAG, "Register pluginPropertyHandler for uri: " + contentUri);
-                    getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
-                    contentObservers.put(plugin.getPluginId(), observer);
+                    connectToPlugin(plugin);
                 }
+
+                IntentFilter filter = new IntentFilter();
+                filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+                filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+                filter.addAction(Intent.ACTION_PACKAGE_RESTARTED);
+                filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+                filter.addDataScheme("package");
+                registerReceiver(packageChangeReceiver, filter);
+
                 started = true;
                 INSTANCE = this;
             }
@@ -489,6 +529,37 @@ public class OsswService extends Service {
         }
 
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void connectToPlugin(PluginDefinition plugin) {
+        Log.i(TAG, "Connect to plugin: " + plugin.getPluginId());
+        ExternalServiceConnection connection = new ExternalServiceConnection();
+
+        // bind plugin service
+        Intent serviceIntent = new Intent();
+        serviceIntent.setAction(plugin.getPluginId());
+        serviceIntent.setPackage(plugin.getPluginId());
+        bindService(serviceIntent, connection.getConnection(), BIND_AUTO_CREATE);
+        externalServiceConnections.put(plugin.getPluginId(), connection);
+
+        // listen on plugin property change
+        PluginPropertyObserver observer = new PluginPropertyObserver(pluginPropertyHandler, plugin.getPluginId());
+        Uri contentUri = Uri.parse("content://" + plugin.getPluginId() + "/properties");
+        //Log.i(TAG, "Register pluginPropertyHandler for uri: " + contentUri);
+        getApplicationContext().getContentResolver().registerContentObserver(contentUri, false, observer);
+        contentObservers.put(plugin.getPluginId(), observer);
+    }
+
+    private void disconnectFromPlugin(PluginDefinition plugin) {
+        Log.i(TAG, "Disconnect from plugin: " + plugin.getPluginId());
+        ExternalServiceConnection extConn = externalServiceConnections.remove(plugin.getPluginId());
+        if (extConn != null) {
+            unbindService(extConn.getConnection());
+        }
+        ContentObserver contentObserver = contentObservers.remove(plugin.getPluginId());
+        if (contentObserver != null) {
+            getContentResolver().unregisterContentObserver(contentObserver);
+        }
     }
 
     private void clearPendingCommands() {
@@ -576,7 +647,7 @@ public class OsswService extends Service {
     public void invokeExtensionFunction(String extensionId, String functionName, String parameter) {
         ExternalServiceConnection connection = externalServiceConnections.get(extensionId);
         if (connection == null) {
-            //Log.e(TAG, "Service " + extensionId + " is not connected");
+            Log.e(TAG, "Service " + extensionId + " is not connected");
             return;
         }
         try {
@@ -633,6 +704,7 @@ public class OsswService extends Service {
             getContentResolver().unregisterContentObserver(observer);
         }
         contentObservers.clear();
+        unregisterReceiver(packageChangeReceiver);
         close();
         started = false;
         INSTANCE = null;

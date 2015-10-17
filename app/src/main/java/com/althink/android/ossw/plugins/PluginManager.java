@@ -1,6 +1,7 @@
 package com.althink.android.ossw.plugins;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
@@ -28,6 +29,21 @@ public class PluginManager {
         this.context = context;
     }
 
+    public List<PluginDefinition> findPlugins(String packageName) {
+        LinkedList<PluginDefinition> plugins = new LinkedList<>();
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PROVIDERS);
+            for (ProviderInfo provider : packageInfo.providers) {
+                addToListIfPlugin(packageManager, plugins, provider);
+            }
+            return plugins;
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+        return plugins;
+    }
+
     public List<PluginDefinition> findPlugins() {
 
         long start = System.currentTimeMillis();
@@ -37,18 +53,21 @@ public class PluginManager {
         List<PluginDefinition> plugins = new LinkedList<>();
 
         for (ProviderInfo provider : providers) {
-
-            if (provider.metaData != null && provider.metaData.containsKey("com.althink.android.ossw.plugin")) {
-                PluginDefinition plugin = new PluginDefinition(provider.authority, provider.loadLabel(packageManager).toString());
-                fillPluginApi(plugin);
-                plugins.add(plugin);
-            }
+            addToListIfPlugin(packageManager, plugins, provider);
         }
         Collections.sort(plugins);
 
         //Log.d(TAG, "plugin scanning time: " + (System.currentTimeMillis() - start));
 
         return plugins;
+    }
+
+    private void addToListIfPlugin(PackageManager packageManager, List<PluginDefinition> plugins, ProviderInfo provider) {
+        if (provider.metaData != null && provider.metaData.containsKey("com.althink.android.ossw.plugin")) {
+            PluginDefinition plugin = new PluginDefinition(provider.authority, provider.loadLabel(packageManager).toString(), provider.packageName);
+            fillPluginApi(plugin);
+            plugins.add(plugin);
+        }
     }
 
     private void fillPluginApi(PluginDefinition plugin) {

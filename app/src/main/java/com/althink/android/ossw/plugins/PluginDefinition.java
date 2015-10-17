@@ -11,13 +11,15 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
 
     private String pluginId;
     private String label;
+    private String packageName;
 
     private List<PluginFunctionDefinition> functions;
     private List<PluginPropertyDefinition> properties;
 
-    public PluginDefinition(String pluginId, String label) {
+    public PluginDefinition(String pluginId, String label, String packageName) {
         this.pluginId = pluginId;
         this.label = label;
+        this.packageName = packageName;
         this.functions = functions;
         this.properties = properties;
     }
@@ -28,6 +30,10 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getPackageName() {
+        return packageName;
     }
 
     public List<PluginFunctionDefinition> getFunctions() {
