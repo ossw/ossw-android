@@ -136,12 +136,12 @@ public class LowLevelRenderer {
             if ((fontAlignment & WatchConstants.VERTICAL_ALIGN_CENTER) != 0) {
                 int calc_height = FontUtils.calcTextHeight(text, startX, startY, width, height, fontType, fontAlignment);
                 if (calc_height < height) {
-                    y += (height-calc_height)/2;
+                    y += (height - calc_height) / 2;
                 }
             } else if ((fontAlignment & WatchConstants.VERTICAL_ALIGN_BOTTOM) != 0) {
                 int calc_height = FontUtils.calcTextHeight(text, startX, startY, width, height, fontType, fontAlignment);
                 if (calc_height < height) {
-                    y += height-calc_height;
+                    y += height - calc_height;
                 }
             }
 
@@ -210,14 +210,10 @@ public class LowLevelRenderer {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 boolean val = ((bitmap[offset + (bitmapByteWidth * y) + (x / 8)] >> (7 - (x % 8))) & 0x1) != 0;
-                if (val) {
-                    int targetX = (posX + x) * scale;
-                    int targetY = (posY + y) * scale;
-                    paint.setColor(getForegroundColor());
-                    canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
-                }
-//                paint.setColor(val ? getForegroundColor() : getBackgroundColor());
-//                canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
+                int targetX = (posX + x) * scale;
+                int targetY = (posY + y) * scale;
+                paint.setColor(val ? getForegroundColor() : getBackgroundColor());
+                canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
             }
         }
     }
