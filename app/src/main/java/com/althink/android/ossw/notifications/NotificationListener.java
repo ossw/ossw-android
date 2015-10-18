@@ -123,23 +123,23 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationPosted(final StatusBarNotification sbn) {
 
-        Log.i(TAG, "**********  onNotificationPosted");
-        Log.i(TAG, "ID :" + sbn.getId() + " <> " + sbn.getNotification().tickerText + " <> " + sbn.getPackageName() + " <> " + sbn.getNotification().priority + " <> " + sbn.getNotification().flags);
+        //Log.i(TAG, "**********  onNotificationPosted");
+        //Log.i(TAG, "ID :" + sbn.getId() + " <> " + sbn.getNotification().tickerText + " <> " + sbn.getPackageName() + " <> " + sbn.getNotification().priority + " <> " + sbn.getNotification().flags);
 
         RemoteViews bigContentView = sbn.getNotification().bigContentView;
 
 
-        Log.d(TAG, "Incoming notification!");
-        Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
+        //Log.d(TAG, "Incoming notification!");
+       // Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Bundle extras = sbn.getNotification().extras;
-            if (extras != null) {
-                for (String key : extras.keySet()) {
-                    Log.d(TAG, "EXTRA: " + key + ": " + extraToString(extras.get(key)));
-                }
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            Bundle extras = sbn.getNotification().extras;
+//            if (extras != null) {
+//                for (String key : extras.keySet()) {
+//                    Log.d(TAG, "EXTRA: " + key + ": " + extraToString(extras.get(key)));
+//                }
+//            }
+//        }
 
         String notificationId = new NotificationIdBuilder().build(sbn);
         Notification existingNotification = notifications.get(notificationId);
@@ -149,7 +149,7 @@ public class NotificationListener extends NotificationListenerService {
         boolean isUpdate = existingNotification != null && existingNotification.getExternalId() != null && existingNotification.getExternalId().equals(notification.getExternalId());
 
         if (isUpdate && !hasChanged(notification, existingNotification)) {
-            Log.i(TAG, "Nothing has changed in notification, SKIP IT");
+            //Log.i(TAG, "Nothing has changed in notification, SKIP IT");
             return;
         }
 
@@ -158,8 +158,8 @@ public class NotificationListener extends NotificationListenerService {
                 notification.setExternalId(getNextNotificationId());
             }
 
-            Log.i(TAG, "Successfully parsed message:");
-            Log.i(TAG, notification.toString());
+            //Log.i(TAG, "Successfully parsed message:");
+            //Log.i(TAG, notification.toString());
 
             notifications.put(notification.getId(), notification);
 
@@ -175,7 +175,7 @@ public class NotificationListener extends NotificationListenerService {
                 }
             }
         }
-        printNotifications();
+        //printNotifications();
 
     }
 
@@ -203,7 +203,7 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void updateNotificationList(boolean notify, int vibration_pattern) {
-        Log.i(TAG, "UPDATE NOTIFICATIONS");
+        //Log.i(TAG, "UPDATE NOTIFICATIONS");
         NotificationType type = notify ? NotificationType.INFO : NotificationType.UPDATE;
         List<Notification> notifyList = getAllInfoNotifications();
 
@@ -252,10 +252,8 @@ public class NotificationListener extends NotificationListenerService {
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        Log.i(TAG, "********** onNOtificationRemoved");
-        Log.i(TAG, "ID :" + sbn.getId() + "<>" + sbn.getNotification().tickerText + "<>" + sbn.getPackageName());
-        //Intent i = new  Intent("com.kpbird.nlsexample.NOTIFICATION_LISTENER_EXAMPLE");
-        //i.putExtra("notification_event","onNotificationRemoved :" + sbn.getPackageName() + "n");
+        //Log.i(TAG, "********** onNOtificationRemoved");
+        //Log.i(TAG, "ID :" + sbn.getId() + "<>" + sbn.getNotification().tickerText + "<>" + sbn.getPackageName());
 
         String notificationId = new NotificationIdBuilder().build(sbn);
         Notification removedNotification = notifications.remove(notificationId);
@@ -267,9 +265,7 @@ public class NotificationListener extends NotificationListenerService {
                 updateNotificationList(false, 0);
             }
         }
-        printNotifications();
-        //sendBroadcast(i);
-
+        //printNotifications();
     }
 
     private List<Notification> getAllInfoNotifications() {

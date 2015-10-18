@@ -121,7 +121,7 @@ public class OsswService extends Service {
             byte[] value = characteristic.getValue();
             //Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
-                Log.i(TAG, "Handle command: " + Arrays.toString(value));
+                //Log.i(TAG, "Handle command: " + Arrays.toString(value));
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
                         int watchSetId = value[1] << 24 | value[2] << 16 | value[3] << 8 | value[4] & 0xFF;
@@ -158,13 +158,13 @@ public class OsswService extends Service {
 
                 Uri uri = intent.getData();
                 String pkg = uri != null ? uri.getSchemeSpecificPart() : null;
-                Log.i(TAG, "Package change filter: " + action + ", " + pkg);
+                //Log.i(TAG, "Package change filter: " + action + ", " + pkg);
 
                 if (pkg == null) {
                     return;
                 }
 
-                Log.i(TAG, "Remove all plugins from package: " + pkg);
+                //Log.i(TAG, "Remove all plugins from package: " + pkg);
 
                 Iterator<PluginDefinition> i = plugins.iterator();
                 while (i.hasNext()) {
@@ -179,7 +179,7 @@ public class OsswService extends Service {
                 if (!Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
                     List<PluginDefinition> newPlugins = new PluginManager(context).findPlugins(pkg);
                     for (PluginDefinition plugin : newPlugins) {
-                        Log.i(TAG, "Found plugin: " + plugin.getPluginId());
+                        //Log.i(TAG, "Found plugin: " + plugin.getPluginId());
                         connectToPlugin(plugin);
                     }
                     plugins.addAll(newPlugins);
@@ -255,7 +255,7 @@ public class OsswService extends Service {
                     sendOsswCommand(new byte[]{0x43, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF), (byte) (((int) params[2]) >> 8), (byte) (((int) params[2]) & 0xFF)});
                     break;
                 case CLOSE_ALERT:
-                    Log.i(TAG, "Close notification");
+                    //Log.i(TAG, "Close notification");
                     sendOsswCommand(new byte[]{0x44, (byte) (((int) params[1]) >> 8), (byte) (((int) params[1]) & 0xFF)});
                     break;
             }
@@ -310,18 +310,18 @@ public class OsswService extends Service {
         }
         int size = data.length;
 
-        Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
+        //Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
 
         boolean allow;
 
-        Log.i(TAG, "Request notification upload permission");
+        //Log.i(TAG, "Request notification upload permission");
 
         allow = sendOsswCommand(new byte[]{0x40, (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)}) == 0;
         if (!allow) {
-            Log.i(TAG, "Upload NOT allowed, skip notification upload");
+            //Log.i(TAG, "Upload NOT allowed, skip notification upload");
             return;
         } else {
-            Log.i(TAG, "Upload ALLOWED");
+            //Log.i(TAG, "Upload ALLOWED");
         }
 
         int sizeLeft = data.length;
@@ -341,7 +341,7 @@ public class OsswService extends Service {
             sizeLeft -= (MAX_COMMAND_SIZE - 1);
         }
         sendOsswCommand(new byte[]{0x42});
-        Log.i(TAG, "Commit notification");
+        //Log.i(TAG, "Commit notification");
 
         if (NotificationType.ALERT == type) {
             lastNotificationHandler = handler;
@@ -548,7 +548,7 @@ public class OsswService extends Service {
     }
 
     private void connectToPlugin(PluginDefinition plugin) {
-        Log.i(TAG, "Connect to plugin: " + plugin.getPluginId());
+        //Log.i(TAG, "Connect to plugin: " + plugin.getPluginId());
         ExternalServiceConnection connection = new ExternalServiceConnection();
 
         // bind plugin service
@@ -567,7 +567,7 @@ public class OsswService extends Service {
     }
 
     private void disconnectFromPlugin(PluginDefinition plugin) {
-        Log.i(TAG, "Disconnect from plugin: " + plugin.getPluginId());
+        //Log.i(TAG, "Disconnect from plugin: " + plugin.getPluginId());
         ExternalServiceConnection extConn = externalServiceConnections.remove(plugin.getPluginId());
         if (extConn != null) {
             unbindService(extConn.getConnection());
@@ -614,14 +614,14 @@ public class OsswService extends Service {
                 break;
 
             case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
-                Log.i(TAG, "NOTIFICATIONS_FIRST");
+                //Log.i(TAG, "NOTIFICATIONS_FIRST");
 
                 if (nl != null) {
                     nl.sendFirstNotification();
                 }
                 break;
             case WatchConstants.NOTIFICATIONS_NEXT_PART:
-                Log.i(TAG, "NOTIFICATIONS_NEXT_PART");
+                //Log.i(TAG, "NOTIFICATIONS_NEXT_PART");
 
                 if (nl != null) {
                     int notificationId = data[0] << 8 | data[1];
@@ -630,7 +630,7 @@ public class OsswService extends Service {
                 }
                 break;
             case WatchConstants.NOTIFICATIONS_PREV_PART:
-                Log.i(TAG, "NOTIFICATIONS_PREV_PART");
+                //Log.i(TAG, "NOTIFICATIONS_PREV_PART");
 
                 if (nl != null) {
                     int notificationId = data[0] << 8 | data[1];
@@ -640,7 +640,7 @@ public class OsswService extends Service {
                 break;
 
             case WatchConstants.NOTIFICATIONS_NEXT:
-                Log.i(TAG, "NOTIFICATIONS_NEXT");
+                //Log.i(TAG, "NOTIFICATIONS_NEXT");
 
                 if (nl != null) {
                     int notificationId = data[0] << 8 | data[1];
@@ -663,7 +663,7 @@ public class OsswService extends Service {
     public void invokeExtensionFunction(String extensionId, String functionName, String parameter) {
         ExternalServiceConnection connection = externalServiceConnections.get(extensionId);
         if (connection == null) {
-            Log.e(TAG, "Service " + extensionId + " is not connected");
+            //Log.e(TAG, "Service " + extensionId + " is not connected");
             return;
         }
         try {
@@ -813,7 +813,7 @@ public class OsswService extends Service {
         for (byte[] chunk : chunks) {
             byte[] commandData = concat(new byte[]{0x21}, chunk);
 
-            Log.i(TAG, "Send data chunk");
+            //Log.i(TAG, "Send data chunk");
 
             builder.setProgress(100, 100 * chunkNo / chunks.size(), false);
             notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
@@ -826,7 +826,7 @@ public class OsswService extends Service {
         }
 
         if (sendOsswCommand(new byte[]{0x22}) == 0) {
-            Log.i(TAG, "Data uploaded successfully");
+            //Log.i(TAG, "Data uploaded successfully");
             toastHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -861,7 +861,7 @@ public class OsswService extends Service {
     }
 
     public int sendOsswCommand(byte[] commandData, int length) {
-        Log.i(TAG, "Send command: " + bytesToHex(commandData));
+        //Log.i(TAG, "Send command: " + bytesToHex(commandData));
 
         int dataPtr = 0;
         int sizeLeft = length;
@@ -1027,10 +1027,10 @@ public class OsswService extends Service {
             Object value = entry.getValue();
             if (entry.getValue() == null || entry.getValue().equals(sentExtParamsCache.get(entry.getKey())) || paramId >= ctx.getExternalParameters().size()) {
                 extParamsToSend.remove(entry.getKey(), value);
-                Log.i(TAG, "Skip param: " + paramId);
+                //Log.i(TAG, "Skip param: " + paramId);
                 continue;
             }
-            Log.i(TAG, "Send param: " + paramId);
+            //Log.i(TAG, "Send param: " + paramId);
             WatchExtensionProperty property = ctx.getExternalParameters().get(paramId);
 
             switch (property.getType()) {

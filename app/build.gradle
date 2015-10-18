@@ -8,8 +8,8 @@ android {
         applicationId "com.althink.android.ossw"
         minSdkVersion 18
         targetSdkVersion 22
-        versionCode 7
-        versionName "0.3.1"
+        versionCode 8
+        versionName "0.4.0"
     }
     buildTypes {
         release {

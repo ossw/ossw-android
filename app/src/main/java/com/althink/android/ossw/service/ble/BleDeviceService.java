@@ -179,7 +179,7 @@ public class BleDeviceService {
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
 
-            Log.i(TAG, "OnDescriptorWrite: " + descriptor);
+            //Log.i(TAG, "OnDescriptorWrite: " + descriptor);
             synchronized (bleOperationLock) {
                 bleOperationLock.notify();
             }
@@ -189,7 +189,7 @@ public class BleDeviceService {
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorRead(gatt, descriptor, status);
 
-            Log.i(TAG, "onDescriptorRead: " + descriptor);
+            //Log.i(TAG, "onDescriptorRead: " + descriptor);
             synchronized (bleOperationLock) {
                 bleOperationLock.notify();
             }
@@ -199,7 +199,7 @@ public class BleDeviceService {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
 
-            Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid() + ", " + Arrays.toString(characteristic.getValue()));
+            //Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid() + ", " + Arrays.toString(characteristic.getValue()));
             synchronized (bleOperationLock) {
                 bleOperationLock.notify();
             }
@@ -209,7 +209,7 @@ public class BleDeviceService {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
 
-            Log.i(TAG, "onCharacteristicRead: " + characteristic.getUuid() + ", " + characteristic.getStringValue(0));
+            //Log.i(TAG, "onCharacteristicRead: " + characteristic.getUuid() + ", " + characteristic.getStringValue(0));
             synchronized (bleOperationLock) {
                 bleOperationLock.notify();
             }
@@ -253,24 +253,24 @@ public class BleDeviceService {
                 }
 
                 if (autoReconnect == false) {
-                    Log.i(TAG, "Auto reconnect disabled");
+                    //Log.i(TAG, "Auto reconnect disabled");
                     stopAutoReconnectAttempt();
                     return;
                 }
 
                 if (connectionState != STATE_AUTO_RECONNECT) {
-                    Log.i(TAG, "Invalid state, cancel auto reconnect");
+                    //Log.i(TAG, "Invalid state, cancel auto reconnect");
                     stopAutoReconnectAttempt();
                     return;
                 }
 
                 if (!bluetoothAdapter.isEnabled()) {
-                    Log.i(TAG, "Bluetooth is disabled");
+                    //Log.i(TAG, "Bluetooth is disabled");
                     stopAutoReconnectAttempt();
                     return;
                 }
 
-                Log.i(TAG, "Try to connect");
+                //Log.i(TAG, "Try to connect");
                 bluetoothGatt.connect();
             }
         }, 0, 30000);
@@ -278,7 +278,7 @@ public class BleDeviceService {
 
     private void stopAutoReconnectAttempt() {
         if (lastReconnectTimer != null) {
-            Log.i(TAG, "Stop auto reconnect attempt");
+            //Log.i(TAG, "Stop auto reconnect attempt");
             lastReconnectTimer.cancel();
             lastReconnectTimer = null;
         }
@@ -390,7 +390,7 @@ public class BleDeviceService {
                     return null;
                 }
                 synchronized (bleOperationLock) {
-                    Log.i(TAG, "Write characteristic: " + Arrays.toString(data));
+                    //Log.i(TAG, "Write characteristic: " + Arrays.toString(data));
                     characteristic.setValue(data);
                     bluetoothGatt.writeCharacteristic(characteristic);
                     bleOperationLock.wait();

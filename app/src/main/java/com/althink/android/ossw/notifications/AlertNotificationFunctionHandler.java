@@ -27,7 +27,7 @@ public class AlertNotificationFunctionHandler implements NotificationHandler {
 
     @Override
     public void handleFunction(int functionId) {
-        Log.i(TAG, "handleFunction: " + functionId);
+        //Log.i(TAG, "handleFunction: " + functionId);
         switch (functionId) {
             case 0x21:
                 if (notification.getOperations().size() > 0) {

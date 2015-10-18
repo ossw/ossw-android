@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "RESUME");
+        //Log.i(TAG, "RESUME");
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
         refreshConnectionAlert();
