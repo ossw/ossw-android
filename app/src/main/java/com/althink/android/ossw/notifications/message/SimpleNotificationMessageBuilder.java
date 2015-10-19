@@ -41,8 +41,8 @@ public class SimpleNotificationMessageBuilder extends AbstractNotificationMessag
         }
         String nextPageData = calculatePageContent(text, font, ptr).replaceAll("\\s","");
         boolean hasMore = nextPageData.length() > 0;
-        Log.i("SimpleNotificationMB", "Data to send: " + data);
-        Log.i("SimpleNotificationMB", "Next page data: " + Arrays.toString(nextPageData.toCharArray()));
+        //Log.i("SimpleNotificationMB", "Data to send: " + data);
+        //Log.i("SimpleNotificationMB", "Next page data: " + Arrays.toString(nextPageData.toCharArray()));
         byte[] contentData = data != null ? data.getBytes() : new byte[0];
 
         out.write(simpleNotification.getCategory().getValue());

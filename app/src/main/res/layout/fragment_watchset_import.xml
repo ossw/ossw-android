@@ -34,20 +34,27 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/watchset_name">
 
-                <com.althink.android.ossw.emulator.WatchView
-                    android:id="@+id/watch_emulator_screen_view"
-                    android:layout_width="@dimen/watch_emulator_view_width"
-                    android:layout_height="@dimen/watch_emulator_view_height"
+                <LinearLayout
+                    android:id="@+id/watch_emulator_screen_view_wrapper"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentTop="false"
                     android:layout_centerHorizontal="true"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center"
+                    android:background="#888888">
+                    <com.althink.android.ossw.emulator.WatchView
+                        android:id="@+id/watch_emulator_screen_view"
+                        android:layout_width="@dimen/watch_emulator_view_width"
+                        android:layout_height="@dimen/watch_emulator_view_height"
+                        android:layout_margin="1dp"/>
+                </LinearLayout>
 
                 <RelativeLayout
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/watch_emulator_view_height"
                     android:layout_alignParentEnd="true"
-                    android:layout_alignTop="@+id/watch_emulator_screen_view"
-                    android:layout_toEndOf="@+id/watch_emulator_screen_view"
+                    android:layout_alignTop="@+id/watch_emulator_screen_view_wrapper"
+                    android:layout_toEndOf="@+id/watch_emulator_screen_view_wrapper"
                     android:orientation="vertical">
 
                     <ImageButton
@@ -81,8 +88,8 @@
                 <RelativeLayout
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/watch_emulator_view_height"
-                    android:layout_alignBottom="@+id/watch_emulator_screen_view"
-                    android:layout_toStartOf="@+id/watch_emulator_screen_view"
+                    android:layout_alignBottom="@+id/watch_emulator_screen_view_wrapper"
+                    android:layout_toStartOf="@+id/watch_emulator_screen_view_wrapper"
                     android:orientation="vertical">
 
                     <ImageButton

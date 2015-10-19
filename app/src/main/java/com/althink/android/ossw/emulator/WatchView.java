@@ -1,9 +1,11 @@
 package com.althink.android.ossw.emulator;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
@@ -16,6 +18,7 @@ import com.althink.android.ossw.emulator.source.internal.Hour24InternalEmulatorD
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.watchset.WatchSetEmulatorModel;
 import com.althink.android.ossw.emulator.watchset.WatchSetScreenEmulatorModel;
+import com.althink.android.ossw.watch.WatchConstants;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,19 +28,18 @@ import java.util.List;
  */
 public class WatchView extends View {
 
-    private static final int SCR_CONTROL_STATIC_RECT = 0;
-    private static final int SCR_CONTROL_NUMBER = 1;
-    private static final int SCR_CONTROL_HORIZONTAL_PROGRESS_BAR = 2;
-
     private WatchEmulator watchEmulator;
 
-    Handler viewHandler = new Handler();
-    Runnable updateView = new Runnable() {
+    private Handler viewHandler = new Handler();
+    private Runnable updateView = new Runnable() {
         @Override
         public void run() {
             WatchView.this.invalidate();
         }
     };
+
+    private int[] frameBuffer = new int[WatchConstants.SCREEN_WIDTH * WatchConstants.SCREEN_HEIGHT];
+    private Bitmap bitmap = Bitmap.createBitmap(WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT, Bitmap.Config.ARGB_8888);
 
     public WatchView(Context context) {
         super(context);
@@ -59,10 +61,15 @@ public class WatchView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        LowLevelRenderer renderer = new LowLevelRenderer(canvas);
+        //long startTime = System.currentTimeMillis();
+        LowLevelRenderer renderer = new LowLevelRenderer(canvas, frameBuffer, bitmap);
         watchEmulator.render(renderer);
+        renderer.flush();
 
-        viewHandler.postDelayed(updateView, 200);
+        //long endTime = System.currentTimeMillis();
+        //Log.i("RENDER", "Total time: " + (endTime - startTime));
+
+        viewHandler.postDelayed(updateView, 300);
     }
 
     public WatchEmulator getWatchEmulator() {

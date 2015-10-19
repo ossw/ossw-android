@@ -1,23 +1,16 @@
 package com.althink.android.ossw.emulator.renderer;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.util.Log;
 
-import com.althink.android.ossw.emulator.fonts.BigRegular;
 import com.althink.android.ossw.emulator.fonts.CharInfo;
-import com.althink.android.ossw.emulator.fonts.CharInfoLookup;
 import com.althink.android.ossw.emulator.fonts.FontInfo;
 import com.althink.android.ossw.emulator.fonts.FontUtils;
-import com.althink.android.ossw.emulator.fonts.NormalBold;
-import com.althink.android.ossw.emulator.fonts.NormalRegular;
-import com.althink.android.ossw.emulator.fonts.OptionsBig;
-import com.althink.android.ossw.emulator.fonts.OptionsNormal;
-import com.althink.android.ossw.emulator.fonts.SmallBold;
-import com.althink.android.ossw.emulator.fonts.SmallRegular;
 import com.althink.android.ossw.watch.WatchConstants;
-
-import java.util.Arrays;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -26,14 +19,18 @@ public class LowLevelRenderer {
 
     private final static int BACKLIGHT_COLOR = 0xFF00308f;
 
-    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint paint = new Paint();
     private Canvas canvas;
     private int scale;
     private boolean inverted;
     private boolean backlight;
+    private Bitmap bitmap;
+    private int[] frameBuffer;
 
-    public LowLevelRenderer(Canvas canvas) {
+    public LowLevelRenderer(Canvas canvas, int[] frameBuffer, Bitmap bitmap) {
         this.canvas = canvas;
+        this.bitmap = bitmap;
+        this.frameBuffer = frameBuffer;
         scale = canvas.getWidth() / WatchConstants.SCREEN_WIDTH;
     }
 
@@ -42,9 +39,21 @@ public class LowLevelRenderer {
         this.backlight = backlight;
     }
 
-    public void drawRect(int x, int y, int width, int height) {
-        paint.setColor(getForegroundColor());
-        canvas.drawRect(x * scale, y * scale, (x + width) * scale, (y + height) * scale, paint);
+    public void drawRect(int startX, int startY, int width, int height) {
+        if (startX + width >= WatchConstants.SCREEN_WIDTH) {
+            width = WatchConstants.SCREEN_WIDTH - startX;
+        }
+        if (startY + height >= WatchConstants.SCREEN_HEIGHT) {
+            height = WatchConstants.SCREEN_HEIGHT - startY;
+        }
+        int foregroundColor = getForegroundColor();
+        for (int y = 0; y < height; y++) {
+            int p = (startY + y) * WatchConstants.SCREEN_WIDTH + startX;
+            for (int x = 0; x < width; x++) {
+                frameBuffer[p] = foregroundColor;
+                p++;
+            }
+        }
     }
 
     public void drawEmptyRect(int x, int y, int width, int height, int thickness) {
@@ -57,9 +66,21 @@ public class LowLevelRenderer {
         drawRect(x + width - thickness, y, thickness, height);
     }
 
-    public void clearRect(int x, int y, int width, int height) {
-        paint.setColor(getBackgroundColor());
-        canvas.drawRect(x * scale, y * scale, (x + width) * scale, (y + height) * scale, paint);
+    public void clearRect(int startX, int startY, int width, int height) {
+        if (startX + width >= WatchConstants.SCREEN_WIDTH) {
+            width = WatchConstants.SCREEN_WIDTH - startX;
+        }
+        if (startY + height >= WatchConstants.SCREEN_HEIGHT) {
+            height = WatchConstants.SCREEN_HEIGHT - startY;
+        }
+        int backgroundColor = getBackgroundColor();
+        for (int y = 0; y < height; y++) {
+            int p = (startY + y) * WatchConstants.SCREEN_WIDTH + startX;
+            for (int x = 0; x < width; x++) {
+                frameBuffer[p] = backgroundColor;
+                p++;
+            }
+        }
     }
 
     public void drawDigit(int digit, int x, int y, int width, int height, int thickness) {
@@ -114,8 +135,6 @@ public class LowLevelRenderer {
     }
 
     public void drawText(String text, int startX, int startY, int width, int height, int fontType, int fontAlignment) {
-        paint.setColor(getForegroundColor());
-
         FontInfo fontInfo = FontUtils.resolveFont(fontType);
         if (text != null) {
 
@@ -206,19 +225,34 @@ public class LowLevelRenderer {
     }
 
     public void drawBitmap(byte[] bitmap, int offset, int posX, int posY, int width, int height, int bitmapWidth) {
+        if (posX + width >= WatchConstants.SCREEN_WIDTH) {
+            width = WatchConstants.SCREEN_WIDTH - posX;
+        }
+        if (posY + height >= WatchConstants.SCREEN_HEIGHT) {
+            height = WatchConstants.SCREEN_HEIGHT - posY;
+        }
+        int foregroundColor = getForegroundColor();
+        int backgroundColor = getBackgroundColor();
         int bitmapByteWidth = (bitmapWidth + 7) / 8;
         for (int y = 0; y < height; y++) {
+            int p = ((posY + y) * WatchConstants.SCREEN_WIDTH) + posX;
             for (int x = 0; x < width; x++) {
                 boolean val = ((bitmap[offset + (bitmapByteWidth * y) + (x / 8)] >> (7 - (x % 8))) & 0x1) != 0;
-                int targetX = (posX + x) * scale;
-                int targetY = (posY + y) * scale;
-                paint.setColor(val ? getForegroundColor() : getBackgroundColor());
-                canvas.drawRect(targetX, targetY, targetX + scale, targetY + scale, paint);
+                frameBuffer[p] = val ? foregroundColor : backgroundColor;
+                p++;
             }
         }
     }
 
     public void drawImage(byte[] image, int x, int y, int width, int height) {
         drawBitmap(image, 4, x, y, width, height, (int) image[2] & 0xFF);
+    }
+
+    public void flush() {
+        //long startTime = System.currentTimeMillis();
+        bitmap.setPixels(frameBuffer, 0, WatchConstants.SCREEN_WIDTH, 0, 0, WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT);
+        canvas.drawBitmap(bitmap, new Rect(0, 0, WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), paint);
+        //long endTime = System.currentTimeMillis();
+        //Log.i("RENDER", "Flush time: " + (endTime - startTime));
     }
 }
