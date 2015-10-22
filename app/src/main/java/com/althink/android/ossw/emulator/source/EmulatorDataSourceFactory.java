@@ -44,7 +44,7 @@ public class EmulatorDataSourceFactory {
             case WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL:
                 return new BatteryLevelInternalEmulatorDataSource();
             default:
-                throw new IllegalArgumentException("Invalid property: " + property);
+                return new ZeroDataSource();
         }
     }
 

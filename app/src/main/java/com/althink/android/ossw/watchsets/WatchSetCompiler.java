@@ -332,6 +332,26 @@ public class WatchSetCompiler {
                 fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT;
                 fParam = 0;
                 break;
+            case "stopwatchStart":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START;
+                fParam = 0;
+                break;
+            case "stopwatch.stop":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_STOP;
+                fParam = 0;
+                break;
+            case "stopwatch.reset":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RESET;
+                fParam = 0;
+                break;
+            case "stopwatch.startStop":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START_STOP;
+                fParam = 0;
+                break;
+            case "stopwatch.nextLap":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP;
+                fParam = 0;
+                break;
             case "toggleColors":
                 fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS;
                 fParam = 0;
@@ -846,6 +866,41 @@ public class WatchSetCompiler {
                 return WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR;
             case "batteryLevel":
                 return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
+
+            case "stopwatch.total.time.hours":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_H;
+            case "stopwatch.total.time.minutes":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_M;
+            case "stopwatch.total.time.seconds":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_S;
+            case "stopwatch.total.time.cs":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_CS;
+            case "stopwatch.total.time.ms":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_MS;
+
+            case "stopwatch.currentLap.number":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER;
+            case "stopwatch.currentLap.time.hours":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_H;
+            case "stopwatch.currentLap.time.minutes":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_M;
+            case "stopwatch.currentLap.time.seconds":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_S;
+            case "stopwatch.currentLap.time.cs":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_CS;
+            case "stopwatch.currentLap.time.ms":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_MS;
+
+            case "stopwatch.lastLap.time.hours":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_H;
+            case "stopwatch.lastLap.time.minutes":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_M;
+            case "stopwatch.lastLap.time.seconds":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_S;
+            case "stopwatch.lastLap.time.cs":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_CS;
+            case "stopwatch.lastLap.time.ms":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_MS;
         }
         throw new KnownParseError("Unknown internal property: " + property);
     }

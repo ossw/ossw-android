@@ -93,6 +93,22 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 8;
     public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 9;
     public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 10;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_H = 11;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_M = 12;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_S = 13;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_CS = 14;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_MS = 15;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 16;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_H = 17;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_M = 18;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_S = 19;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_CS = 20;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_MS = 21;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_H = 22;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_M = 23;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_S = 24;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_CS = 25;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_MS = 26;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
@@ -100,6 +116,12 @@ public class WatchConstants {
 
     public static final int WATCHSET_FUNCTION_TOGGLE_BACKLIGHT = 1;
     public static final int WATCHSET_FUNCTION_TOGGLE_COLORS = 2;
+
+    public static final int WATCHSET_FUNCTION_STOPWATCH_START = 0x10;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_RESET = 0x11;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_STOP = 0x12;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_START_STOP = 0x13;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP = 0x14;
 
     public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
     public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
