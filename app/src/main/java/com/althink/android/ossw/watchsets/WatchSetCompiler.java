@@ -644,7 +644,10 @@ public class WatchSetCompiler {
         os.write(flags);
         os.write(0);
 
-        int stringLength = WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH;
+        int stringLength = control.optInt("length", WatchConstants.DEFAULT_TEXT_EXT_PROPERTY_LENGTH);
+        if (stringLength < 0 || stringLength > WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH)
+            throw new KnownParseError("Text length is not in range [0, " +
+                    WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH + "]");
         JSONObject source = control.getJSONObject("source");
         os.write(compileSource(source, DataSourceType.STRING, stringLength));
 
