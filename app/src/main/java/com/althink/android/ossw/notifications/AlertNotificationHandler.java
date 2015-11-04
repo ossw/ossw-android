@@ -2,7 +2,6 @@ package com.althink.android.ossw.notifications;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.althink.android.ossw.SettingsActivity;
 import com.althink.android.ossw.notifications.message.AlertNotificationMessageBuilder;
