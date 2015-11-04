@@ -1,35 +1,104 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="true"
         android:key="synchronize_time"
-        android:summary="@string/pref_synchronize_time_desc"
         android:title="@string/pref_synchronize_time_title" />
 
-    <PreferenceCategory android:title="Notifications" />
-
-    <ListPreference
-        android:defaultValue="normalBold"
-        android:dialogTitle="@string/select_font"
-        android:entries="@array/notifications_font_keys"
-        android:entryValues="@array/notification_font_values"
-        android:key="notifications_font"
-        android:summary="@string/pref_notifications_font_desc"
-        android:title="@string/pref_notifications_font"></ListPreference>
-
-    <ListPreference
-        android:defaultValue="optionNormal"
-        android:dialogTitle="@string/select_font"
-        android:entries="@array/notifications_font_keys"
-        android:entryValues="@array/notification_font_values"
-        android:key="alert_notifications_font"
-        android:summary="@string/pref_alert_notification_font_desc"
-        android:title="@string/pref_alert_notification_font"></ListPreference>
+    <PreferenceCategory android:title="Notifications">
 
     <PreferenceScreen
-        android:summary="@string/pref_notifications_access_desc"
+        android:title="@string/pref_notifications_title"
+        android:summary="@string/pref_notifications_desc">
+        <SwitchPreference
+            android:key="notifications"
+            android:defaultValue="true"
+            android:title="@string/pref_notifications_title"/>
+        <ListPreference
+            android:defaultValue="normalBold"
+            android:dialogTitle="@string/select_font"
+            android:entries="@array/notifications_font_keys"
+            android:entryValues="@array/notification_font_values"
+            android:key="notifications_font"
+            android:title="@string/pref_notifications_font"/>
+        <PreferenceCategory android:title="Vibration">
+        <SwitchPreference
+            android:key="notif_vibrate"
+            android:defaultValue="true"
+            android:title="Vibration"/>
+        <EditTextPreference
+            android:key="notif_vibrate_time"
+            android:title="Active time interval"
+            android:inputType="phone"
+            android:digits="0123456789-:"
+            android:defaultValue="8:00-23:00"/>
+        <EditTextPreference
+            android:key="notif_vibrate_repeat"
+            android:title="Vibration repeat number"
+            android:inputType="numberDecimal"
+            android:defaultValue="3"/>
+        <EditTextPreference
+            android:key="notif_vibrate_duration"
+            android:title="Duration in milliseconds"
+            android:inputType="numberDecimal"
+            android:defaultValue="100"/>
+        <EditTextPreference
+            android:key="notif_vibrate_pattern"
+            android:title="Vibration pattern"
+            android:inputType="phone"
+            android:digits="01"
+            android:maxLength="16"/>
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/pref_alert_notifications_title"
+        android:summary="@string/pref_alert_notifications_desc">
+        <SwitchPreference
+            android:key="alert_notifications"
+            android:defaultValue="true"
+            android:title="@string/pref_alert_notifications_title"/>
+        <ListPreference
+            android:defaultValue="optionNormal"
+            android:dialogTitle="@string/select_font"
+            android:entries="@array/notifications_font_keys"
+            android:entryValues="@array/notification_font_values"
+            android:key="alert_notifications_font"
+            android:title="@string/pref_alert_notification_font"/>
+        <PreferenceCategory android:title="Vibration">
+            <SwitchPreference
+                android:key="alert_notif_vibrate"
+                android:defaultValue="true"
+                android:title="Vibration"/>
+            <EditTextPreference
+                android:key="alert_notif_vibrate_time"
+                android:title="Active time interval"
+                android:inputType="phone"
+                android:digits="0123456789-:"
+                android:defaultValue="8:00-23:00"/>
+            <EditTextPreference
+                android:key="alert_notif_vibrate_repeat"
+                android:title="Vibration repeat number"
+                android:inputType="numberDecimal"
+                android:defaultValue="3"/>
+            <EditTextPreference
+                android:key="alert_notif_vibrate_duration"
+                android:title="Duration in milliseconds"
+                android:inputType="numberDecimal"
+                android:defaultValue="100"/>
+            <EditTextPreference
+                android:key="alert_notif_vibrate_pattern"
+                android:title="Vibration pattern"
+                android:inputType="phone"
+                android:digits="01"
+                android:maxLength="16"/>
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:title="@string/pref_notifications_access_title">
         <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
     </PreferenceScreen>
 
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -3,16 +3,19 @@ package com.althink.android.ossw.notifications;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.althink.android.ossw.SettingsActivity;
 import com.althink.android.ossw.notifications.message.ListNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationSummaryMessageBuilder;
@@ -28,6 +31,7 @@ import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -163,16 +167,38 @@ public class NotificationListener extends NotificationListenerService {
 
             notifications.put(notification.getId(), notification);
 
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             if (NotificationType.ALERT == notification.getType()) {
-                alertHandler.handleNotificationStart(notification);
+                if (sharedPref.getBoolean("alert_notifications", true))
+                    alertHandler.handleNotificationStart(notification);
             }
             if (NotificationType.INFO == notification.getType()) {
-                if (isUpdate && !hasNewElements(notification, existingNotification)) {
-                    updateNotificationList(false, 0);
-                } else {
-                    int vibration_pattern = (6 << 26) | (70 << 16) | (44 << (16 - 6));
-                    updateNotificationList(true, vibration_pattern);
-                }
+                if (sharedPref.getBoolean("notifications", true))
+                    if (isUpdate && !hasNewElements(notification, existingNotification)) {
+                        updateNotificationList(false, 0);
+                    } else {
+//                    int vibration_pattern = (6 << 26) | (70 << 16) | (44 << (16 - 6));
+                        boolean vibrate = sharedPref.getBoolean(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX, true);
+                        int vibration_pattern = 0;
+                        if (vibrate) {
+                            Calendar c = Calendar.getInstance();
+                            int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
+                            String active = sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_time", "0:0-24:0");
+                            int dash = active.indexOf('-');
+                            int from_time = getMinutes(active.substring(0, dash));
+                            int till_time = getMinutes(active.substring(dash + 1));
+                            //Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", "+till_time);
+                            if ((from_time <= minutes && minutes <= till_time) ||
+                                    (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
+                                int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_repeat", "1"));
+                                int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_duration", "500"));
+                                int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_pattern", "0"), 2);
+                                Log.i(TAG, "Repeat: "+repeat+ "  duration: "+duration+"  pattern: "+pattern);
+                                vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                            }
+                        }
+                        updateNotificationList(true, vibration_pattern);
+                    }
             }
         }
         //printNotifications();
@@ -203,7 +229,7 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void updateNotificationList(boolean notify, int vibration_pattern) {
-        //Log.i(TAG, "UPDATE NOTIFICATIONS");
+        Log.i(TAG, "UPDATE NOTIFICATIONS: "+vibration_pattern);
         NotificationType type = notify ? NotificationType.INFO : NotificationType.UPDATE;
         List<Notification> notifyList = getAllInfoNotifications();
 
@@ -415,5 +441,10 @@ public class NotificationListener extends NotificationListenerService {
             return;
         }
         sendNotificationPart(notificationList.get(0).getExternalId(), 0);
+    }
+
+    static int getMinutes(String s) {
+        int colon = s.indexOf(':');
+        return 60 * Integer.parseInt(s.substring(0, colon)) + Integer.parseInt(s.substring(colon + 1));
     }
 }

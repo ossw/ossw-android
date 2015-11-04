@@ -1,35 +1,25 @@
 package com.althink.android.ossw;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
+import android.preference.PreferenceScreen;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
-import android.util.TypedValue;
-import android.view.MenuItem;
 import android.view.View;
 
-
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
-
-import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
     private Toolbar mToolbar;
+    public static final String NOTIFICATION_VIBRATION_PREFIX = "notif_vibrate";
+    public static final String ALERT_VIBRATION_PREFIX = "alert_notif_vibrate";
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -94,8 +84,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
-        // Trigger the listener immediately with the preference's
-        // current value.
+        // Trigger the listener immediately with the preference's current value.
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                 PreferenceManager
                         .getDefaultSharedPreferences(preference.getContext())
@@ -115,10 +104,24 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            //bindPreferenceSummaryToValue(findPreference("example_text"));
-            //bindPreferenceSummaryToValue(findPreference("example_list"));
+            // updated to reflect the new value, per the Android Design guidelines.
+            visitPreferenceObject(getPreferenceScreen());
         }
     }
+
+    private static void visitPreferenceObject(Preference p) {
+        if (p instanceof PreferenceCategory) {
+            PreferenceCategory cat = (PreferenceCategory) p;
+            for (int i = 0; i < cat.getPreferenceCount(); i++) {
+                visitPreferenceObject(cat.getPreference(i));
+            }
+        } else if (p instanceof PreferenceScreen) {
+            PreferenceScreen pscr = (PreferenceScreen) p;
+            for (int i = 0; i < pscr.getPreferenceCount(); i++) {
+                visitPreferenceObject(pscr.getPreference(i));
+            }
+        } else if (p instanceof ListPreference || p instanceof EditTextPreference)
+            bindPreferenceSummaryToValue(p);
+    }
+
 }

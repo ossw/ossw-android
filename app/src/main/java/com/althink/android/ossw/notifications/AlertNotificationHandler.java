@@ -1,13 +1,17 @@
 package com.althink.android.ossw.notifications;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.althink.android.ossw.SettingsActivity;
 import com.althink.android.ossw.notifications.message.AlertNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.service.OsswService;
 
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -16,7 +20,7 @@ import java.util.TimerTask;
  */
 public class AlertNotificationHandler {
 
-    private String TAG = this.getClass().getSimpleName();
+    //private String TAG = this.getClass().getSimpleName();
 
     private static Notification lastNotification;
 
@@ -39,7 +43,24 @@ public class AlertNotificationHandler {
 
         OsswService osswBleService = OsswService.getInstance();
         if (osswBleService != null) {
-            int vibration_pattern = (6 << 26) | (100 << 16) | (44 << (16 - 6));
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswBleService);
+            boolean vibrate = sharedPref.getBoolean(SettingsActivity.ALERT_VIBRATION_PREFIX , true);
+            int vibration_pattern = 0;
+            if (vibrate) {
+                Calendar c = Calendar.getInstance();
+                int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
+                String active = sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_time", "0:0-24:0");
+                int dash = active.indexOf('-');
+                int from_time = NotificationListener.getMinutes(active.substring(0, dash));
+                int till_time = NotificationListener.getMinutes(active.substring(dash + 1));
+                if ((from_time <= minutes && minutes <=till_time) ||
+                        (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
+                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_repeat", "1"));
+                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_duration", "500"));
+                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_pattern", "0"), 2);
+                    vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                }
+            }
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
             osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
 
