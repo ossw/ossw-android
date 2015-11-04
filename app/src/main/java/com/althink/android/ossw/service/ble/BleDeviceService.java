@@ -442,7 +442,7 @@ public class BleDeviceService {
      */
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enabled) {
-        if (bluetoothAdapter == null || bluetoothGatt == null) {
+        if (bluetoothAdapter == null || bluetoothGatt == null || characteristic == null) {
             //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }

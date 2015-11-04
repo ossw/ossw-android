@@ -648,6 +648,15 @@ public class OsswService extends Service {
                 }
                 break;
 
+            case WatchConstants.NOTIFICATIONS_OPEN:
+                //Log.i(TAG, "NOTIFICATIONS_NEXT");
+
+                if (nl != null) {
+                    int notificationId = data[0] << 8 | data[1];
+                    nl.openNotification(notificationId);
+                }
+                break;
+
 
         }
     }

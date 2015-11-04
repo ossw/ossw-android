@@ -1,5 +1,6 @@
 package com.althink.android.ossw.notifications;
 
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -130,7 +131,7 @@ public class NotificationListener extends NotificationListenerService {
 
 
         //Log.d(TAG, "Incoming notification!");
-       // Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
+        // Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 //            Bundle extras = sbn.getNotification().extras;
@@ -146,14 +147,16 @@ public class NotificationListener extends NotificationListenerService {
 
         Notification notification = parseNotification(sbn, notificationId, existingNotification);
 
-        boolean isUpdate = existingNotification != null && existingNotification.getExternalId() != null && existingNotification.getExternalId().equals(notification.getExternalId());
-
-        if (isUpdate && !hasChanged(notification, existingNotification)) {
-            //Log.i(TAG, "Nothing has changed in notification, SKIP IT");
-            return;
-        }
 
         if (notification != null) {
+
+            boolean isUpdate = existingNotification != null && existingNotification.getExternalId() != null && existingNotification.getExternalId().equals(notification.getExternalId());
+
+            if (isUpdate && !hasChanged(notification, existingNotification)) {
+                //Log.i(TAG, "Nothing has changed in notification, SKIP IT");
+                return;
+            }
+
             if (notification.getExternalId() == null) {
                 notification.setExternalId(getNextNotificationId());
             }
@@ -369,10 +372,14 @@ public class NotificationListener extends NotificationListenerService {
         notifications.remove(lastNotification.getId());
         StatusBarNotification sbn = (StatusBarNotification) lastNotification.getNotificationObject();
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
-        } else {
-            cancelNotification(sbn.getKey());
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+            } else {
+                cancelNotification(sbn.getKey());
+            }
+        } catch (Exception e) {
+            //do nothing
         }
     }
 
@@ -415,5 +422,32 @@ public class NotificationListener extends NotificationListenerService {
             return;
         }
         sendNotificationPart(notificationList.get(0).getExternalId(), 0);
+    }
+
+    public void openNotification(int notificationId) {
+        Notification notification = null;
+        for (Notification n : notifications.values()) {
+            if (n.getExternalId() == notificationId) {
+                notification = n;
+                break;
+            }
+        }
+
+        if (notification == null) {
+            return;
+        }
+
+        StatusBarNotification sbn = (StatusBarNotification) notification.getNotificationObject();
+
+        PendingIntent intent = ((StatusBarNotification) notification.getNotificationObject()).getNotification().contentIntent;
+
+        if (intent != null) {
+            try {
+                intent.send();
+            } catch (Exception e) {
+            }
+        }
+
+        sendNextNotification(notificationId);
     }
 }
