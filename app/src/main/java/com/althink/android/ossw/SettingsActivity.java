@@ -120,11 +120,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     notifyManager.cancel(OsswService.TEST_NOTIFICATION_ID);
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
                     builder.setContentTitle("Test notification")
-                            .setContentText("Test vibration pattern")
+                            .setContentText("")
                             .setCategory(Notification.CATEGORY_MESSAGE)
-                            .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
+                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
                     notifyManager.notify(OsswService.TEST_NOTIFICATION_ID, builder.build());
-                    notifyManager.cancel(OsswService.TEST_NOTIFICATION_ID);
                     return true;
                 }
             });
@@ -138,12 +137,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     Intent closeIntent = new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION);
                     PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, closeIntent, 0);
                     builder.setContentTitle("Test alert")
-                            .setContentText("Test vibration pattern")
+                            .setContentText("")
                             .setPriority(2)
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setFullScreenIntent(pendingIntent, false)
-                            .addAction(R.drawable.ic_file_upload_black_18dp, "Close", pendingIntent)
-                            .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
+                            .addAction(android.support.v7.appcompat.R.drawable.abc_ic_clear_mtrl_alpha, "Close", pendingIntent)
+                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
                     notifyManager.notify(OsswService.TEST_ALERT_ID, builder.build());
                     return true;
                 }

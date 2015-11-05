@@ -49,7 +49,7 @@
             android:inputType="phone"
             android:digits="01"
             android:maxLength="16"/>
-        <Preference android:title="Test vibration pattern"
+        <Preference android:title="Test notifications"
             android:key="button_test_notif_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
@@ -91,7 +91,7 @@
                 android:inputType="phone"
                 android:digits="01"
                 android:maxLength="16"/>
-            <Preference android:title="Test vibration pattern"
+            <Preference android:title="Test alert notifications"
                 android:key="button_test_alert_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
