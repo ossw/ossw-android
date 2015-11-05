@@ -66,4 +66,10 @@
     <string name="toast_not_supported_firmware">This firmware version is not supported. Upgrade to at least 0.4.0.</string>
     <string name="toast_file_upload_failed">Data upload failed</string>
     <string name="action_disconnect">Disconnect</string>
+
+    <string name="default_notification_vibration_pattern">110010</string>
+    <string name="default_notification_vibration_duration">500</string>
+    <string name="default_notification_vibration_repeat_no">2</string>
+    <string name="default_alert_vibration_pattern">1010000000</string>
+    <string name="default_alert_vibration_duration">1000</string>
 </resources>

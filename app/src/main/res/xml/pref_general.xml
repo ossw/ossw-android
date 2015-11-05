@@ -36,16 +36,16 @@
             android:key="notif_vibrate_repeat"
             android:title="Vibration repeat number"
             android:inputType="numberDecimal"
-            android:defaultValue="3"/>
+            android:defaultValue="@string/default_notification_vibration_repeat_no"/>
         <EditTextPreference
             android:key="notif_vibrate_duration"
             android:title="Duration in milliseconds"
             android:inputType="numberDecimal"
-            android:defaultValue="100"/>
+            android:defaultValue="@string/default_notification_vibration_duration"/>
         <EditTextPreference
             android:key="notif_vibrate_pattern"
             android:title="Vibration pattern"
-            android:defaultValue="1111100000"
+            android:defaultValue="@string/default_notification_vibration_pattern"
             android:inputType="phone"
             android:digits="01"
             android:maxLength="16"/>
@@ -80,19 +80,14 @@
                 android:digits="0123456789-:"
                 android:defaultValue="8:00-23:00"/>
             <EditTextPreference
-                android:key="alert_notif_vibrate_repeat"
-                android:title="Vibration repeat number"
-                android:inputType="numberDecimal"
-                android:defaultValue="3"/>
-            <EditTextPreference
                 android:key="alert_notif_vibrate_duration"
                 android:title="Duration in milliseconds"
                 android:inputType="numberDecimal"
-                android:defaultValue="70"/>
+                android:defaultValue="@string/default_alert_vibration_duration"/>
             <EditTextPreference
                 android:key="alert_notif_vibrate_pattern"
                 android:title="Vibration pattern"
-                android:defaultValue="1111100000"
+                android:defaultValue="@string/default_alert_vibration_pattern"
                 android:inputType="phone"
                 android:digits="01"
                 android:maxLength="16"/>

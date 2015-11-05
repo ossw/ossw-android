@@ -178,11 +178,11 @@ public class NotificationListener extends NotificationListenerService {
             if (NotificationType.INFO == notification.getType()) {
                 if (sharedPref.getBoolean("notifications", true))
                     if (isUpdate && !hasNewElements(notification, existingNotification)) {
-                        updateNotificationList(false, 0);
+                        updateNotificationList(false, 0, 0);
                     } else {
-//                    int vibration_pattern = (6 << 26) | (70 << 16) | (44 << (16 - 6));
                         boolean vibrate = sharedPref.getBoolean(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX, true);
-                        int vibration_pattern = 0;
+                        int vibrationPattern = 0;
+                        int vibrationLength = 0;
                         if (vibrate) {
                             Calendar c = Calendar.getInstance();
                             int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
@@ -193,14 +193,11 @@ public class NotificationListener extends NotificationListenerService {
                             //Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", "+till_time);
                             if ((from_time <= minutes && minutes <= till_time) ||
                                     (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
-                                int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_repeat", "1"));
-                                int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_duration", "500"));
-                                int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_pattern", "0"), 2);
-                                Log.i(TAG, "Repeat: "+repeat+ "  duration: "+duration+"  pattern: "+pattern);
-                                vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                                vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
+                                vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(this);
                             }
                         }
-                        updateNotificationList(true, vibration_pattern);
+                        updateNotificationList(true, vibrationPattern, vibrationLength);
                     }
             }
         }
@@ -230,7 +227,7 @@ public class NotificationListener extends NotificationListenerService {
         return true;
     }
 
-    private void updateNotificationList(boolean notify, int vibration_pattern) {
+    private void updateNotificationList(boolean notify, int vibrationPattern, int vibrationLength) {
         //Log.i(TAG, "UPDATE NOTIFICATIONS");
         NotificationType type = notify ? NotificationType.INFO : NotificationType.UPDATE;
         List<Notification> notifyList = getAllInfoNotifications();
@@ -245,14 +242,14 @@ public class NotificationListener extends NotificationListenerService {
             Notification onlyNotification = notifyList.get(0);
             if (onlyNotification instanceof SimpleNotification) {
                 NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
-                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibration_pattern, 1200, null);
+                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibrationPattern, vibrationLength, null);
             } else if (onlyNotification instanceof ListNotification) {
                 NotificationMessageBuilder builder = new ListNotificationMessageBuilder((ListNotification) onlyNotification, 0);
-                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibration_pattern, 1200, null);
+                osswService.uploadNotification(onlyNotification.getExternalId(), type, builder.build(), vibrationPattern, vibrationLength, null);
             }
         } else if (messagesNo > 0) {
             NotificationMessageBuilder builder = new NotificationSummaryMessageBuilder(messagesNo);
-            osswService.uploadNotification(0, type, builder.build(), vibration_pattern, 1200, null);
+            osswService.uploadNotification(0, type, builder.build(), vibrationPattern, vibrationLength, null);
         } else {
             closeNotifications();
         }
@@ -290,7 +287,7 @@ public class NotificationListener extends NotificationListenerService {
             if (NotificationType.ALERT == removedNotification.getType()) {
                 alertHandler.handleNotificationStop(notificationId);
             } else {
-                updateNotificationList(false, 0);
+                updateNotificationList(false, 0, 0);
             }
         }
         //printNotifications();

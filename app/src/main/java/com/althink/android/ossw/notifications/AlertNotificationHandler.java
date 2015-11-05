@@ -44,7 +44,8 @@ public class AlertNotificationHandler {
         if (osswBleService != null) {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswBleService);
             boolean vibrate = sharedPref.getBoolean(SettingsActivity.ALERT_VIBRATION_PREFIX , true);
-            int vibration_pattern = 0;
+            int vibrationPattern = 0;
+            int vibrationLength = 0;
             if (vibrate) {
                 Calendar c = Calendar.getInstance();
                 int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
@@ -54,14 +55,11 @@ public class AlertNotificationHandler {
                 int till_time = NotificationListener.getMinutes(active.substring(dash + 1));
                 if ((from_time <= minutes && minutes <=till_time) ||
                         (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
-                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_repeat", "1"));
-                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_duration", "500"));
-                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_pattern", "0"), 2);
-                    vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                    vibrationPattern = VibrationPatternBuilder.getAlertVibrationPattern(osswBleService.getApplicationContext());
                 }
             }
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
-            osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibration_pattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
+            osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibrationPattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
 
             if (!update) {
                 //Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());

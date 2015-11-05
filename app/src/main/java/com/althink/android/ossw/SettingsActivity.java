@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
+import com.althink.android.ossw.notifications.VibrationPatternBuilder;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.OsswService;
 
@@ -114,14 +115,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     if (osswService == null) {
                         return false;
                     }
-                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService);
-                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_repeat", "1"));
-                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_duration", "500"));
-                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_pattern", "0"), 2);
-                    int vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
-                    Log.i("Settings - ", "Vibration pattern: " + vibration_pattern);
-                    //NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
-                    osswService.uploadNotification(0, NotificationType.INFO, new byte[0], vibration_pattern, 1200, null);
+                    int pattern = VibrationPatternBuilder.getNotificationVibrationPattern(getActivity());
+                    int vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(getActivity());
+                    osswService.uploadNotification(0, NotificationType.INFO, new byte[0], pattern, vibrationLength, null);
                     return true;
                 }
             });
@@ -133,14 +129,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     if (osswService == null) {
                         return false;
                     }
-                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService);
-                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_repeat", "1"));
-                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_duration", "500"));
-                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_pattern", "0"), 2);
-                    int vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
-                    Log.i("Settings - ", "Vibration pattern: "+vibration_pattern);
+                    int pattern = VibrationPatternBuilder.getAlertVibrationPattern(getActivity());
                     //NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
-                    osswService.uploadNotification(0, NotificationType.ALERT, new byte[0], vibration_pattern, 1200, null);
+                    osswService.uploadNotification(0, NotificationType.ALERT, new byte[0], pattern, 1000, null);
                     return true;
                 }
             });
