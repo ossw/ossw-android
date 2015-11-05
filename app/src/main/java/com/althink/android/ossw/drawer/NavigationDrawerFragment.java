@@ -40,6 +40,8 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public static final int OPTION_HOME_SCREEN = 1;
     public static final int OPTION_WATCHSETS = 2;
     public static final int OPTION_EXTENSIONS = 3;
+    public static final int OPTION_WATCHES = 4;
+    public static final int OPTION_SETTINGS = 5;
 
     /**
      * Remember the position of the selected item.
@@ -125,6 +127,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         //items.add(new NavigationItem(OPTION_HOME_SCREEN, getString(R.string.drawer_home_screen), null));
         items.add(new NavigationItem(OPTION_WATCHSETS, getString(R.string.drawer_watchsets), null));
         items.add(new NavigationItem(OPTION_EXTENSIONS, getString(R.string.drawer_plugins), null));
+        items.add(new NavigationItem(OPTION_SETTINGS, "Settings", null));
         return items;
     }
 

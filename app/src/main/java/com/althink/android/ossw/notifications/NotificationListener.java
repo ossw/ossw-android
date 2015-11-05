@@ -135,7 +135,7 @@ public class NotificationListener extends NotificationListenerService {
 
 
         //Log.d(TAG, "Incoming notification!");
-       // Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
+        // Log.d(TAG, "Ticker: " + sbn.getNotification().tickerText);
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 //            Bundle extras = sbn.getNotification().extras;
@@ -205,7 +205,6 @@ public class NotificationListener extends NotificationListenerService {
             }
         }
         //printNotifications();
-
     }
 
     private boolean hasChanged(Notification notification, Notification existingNotification) {

@@ -50,7 +50,16 @@ public class NotificationParserApi21 {
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
-        if (NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
+        boolean isSpam = android.app.Notification.CATEGORY_SYSTEM.equals(sbn.getNotification().category) ||
+                android.app.Notification.CATEGORY_SERVICE.equals(sbn.getNotification().category) ||
+                android.app.Notification.CATEGORY_STATUS.equals(sbn.getNotification().category) ||
+                android.app.Notification.CATEGORY_TRANSPORT.equals(sbn.getNotification().category) ||
+                android.app.Notification.CATEGORY_PROGRESS.equals(sbn.getNotification().category);
+        isSpam = isSpam || (NotificationType.INFO == type && android.app.Notification.CATEGORY_ALARM.equals(sbn.getNotification().category));
+        if (isSpam) {
+            //Log.i(TAG, "SKIP SPAM NOTIFICATION");
+            return null;
+        } else if (sbn.getNotification().category == null && NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
             //Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
             return null;
         }
@@ -70,7 +79,12 @@ public class NotificationParserApi21 {
         }
 
         //custom processing
-        if ("com.google.android.apps.messaging".equals(sbn.getPackageName())) {
+        if ("com.google.android.gm".equals(sbn.getPackageName())) {
+            // skip summary notification
+            if (sbn.getNotification().number == 0) {
+                return null;
+            }
+        } else if ("com.google.android.apps.messaging".equals(sbn.getPackageName())) {
             String value = sbn.getNotification().tickerText.toString();
             String[] split = value.split("\\: ", 2);
             SubjectMessageItem subjectMessageItem = new SubjectMessageItem(split[0], split[1]);
@@ -101,7 +115,7 @@ public class NotificationParserApi21 {
             List items = new LinkedList();
             Object[] lines = (Object[]) extras.get("android.textLines");
             for (Object line : lines) {
-                items.add(0, new SimpleListItem(line.toString()));
+                items.add(new SimpleListItem(line.toString()));
             }
             return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
         }
@@ -126,6 +140,9 @@ public class NotificationParserApi21 {
     private NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
         if ("com.android.dialer".equals(sbn.getPackageName()) && existingNotification != null) {
             return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
+        }
+        if (sbn.getNotification().fullScreenIntent == null) {
+            return NotificationType.INFO;
         }
         return sbn.getNotification().priority > 1 ? NotificationType.ALERT : NotificationType.INFO;
     }

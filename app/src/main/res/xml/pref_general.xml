@@ -45,9 +45,12 @@
         <EditTextPreference
             android:key="notif_vibrate_pattern"
             android:title="Vibration pattern"
+            android:defaultValue="1111100000"
             android:inputType="phone"
             android:digits="01"
             android:maxLength="16"/>
+        <Preference android:title="Test vibration pattern"
+            android:key="button_test_notif_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
 
@@ -85,13 +88,16 @@
                 android:key="alert_notif_vibrate_duration"
                 android:title="Duration in milliseconds"
                 android:inputType="numberDecimal"
-                android:defaultValue="100"/>
+                android:defaultValue="70"/>
             <EditTextPreference
                 android:key="alert_notif_vibrate_pattern"
                 android:title="Vibration pattern"
+                android:defaultValue="1111100000"
                 android:inputType="phone"
                 android:digits="01"
                 android:maxLength="16"/>
+            <Preference android:title="Test vibration pattern"
+                android:key="button_test_alert_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
 

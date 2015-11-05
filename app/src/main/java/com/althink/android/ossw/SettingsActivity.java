@@ -1,6 +1,7 @@
 package com.althink.android.ossw;
 
 import android.annotation.TargetApi;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -11,9 +12,12 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
+import com.althink.android.ossw.notifications.model.NotificationType;
+import com.althink.android.ossw.service.OsswService;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
@@ -102,6 +106,44 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
 
+            Preference button = findPreference("button_test_notif_vibration");
+            button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    OsswService osswService = OsswService.getInstance();
+                    if (osswService == null) {
+                        return false;
+                    }
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService);
+                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_repeat", "1"));
+                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_duration", "500"));
+                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_pattern", "0"), 2);
+                    int vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                    Log.i("Settings - ", "Vibration pattern: " + vibration_pattern);
+                    //NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
+                    osswService.uploadNotification(0, NotificationType.INFO, new byte[0], vibration_pattern, 1200, null);
+                    return true;
+                }
+            });
+            button = findPreference("button_test_alert_vibration");
+            button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    OsswService osswService = OsswService.getInstance();
+                    if (osswService == null) {
+                        return false;
+                    }
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService);
+                    int repeat = 0x0F & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_repeat", "1"));
+                    int duration = 0x3FF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_duration", "500"));
+                    int pattern = 0xFFFF & Integer.parseInt(sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_pattern", "0"), 2);
+                    int vibration_pattern = (repeat << 26) | (duration << 16) | pattern;
+                    Log.i("Settings - ", "Vibration pattern: "+vibration_pattern);
+                    //NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
+                    osswService.uploadNotification(0, NotificationType.ALERT, new byte[0], vibration_pattern, 1200, null);
+                    return true;
+                }
+            });
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design guidelines.
