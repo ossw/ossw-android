@@ -1,5 +1,7 @@
 package com.althink.android.ossw.service;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
@@ -70,6 +72,10 @@ public class OsswService extends Service {
     private final static String TAG = OsswService.class.getSimpleName();
 
     public final static UUID OSSW_SERVICE_UUID = UUID.fromString("58C60001-20B7-4904-96FA-CBA8E1B95702");
+
+    public static final int TEST_NOTIFICATION_ID = 0x10;
+    public static final int TEST_ALERT_ID = 0x11;
+    public static final String CLOSE_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.close";
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
@@ -145,6 +151,16 @@ public class OsswService extends Service {
                         break;
                 }
             }
+        }
+    };
+
+    private final BroadcastReceiver fakeAlertReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getApplicationContext());
+            notifyManager.cancel(OsswService.TEST_ALERT_ID);
         }
     };
 
@@ -518,6 +534,7 @@ public class OsswService extends Service {
                 filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
                 filter.addDataScheme("package");
                 registerReceiver(packageChangeReceiver, filter);
+                registerReceiver(fakeAlertReceiver, new IntentFilter(CLOSE_FAKE_ALARM_INTENT_ACTION));
 
                 started = true;
                 INSTANCE = this;
@@ -730,6 +747,7 @@ public class OsswService extends Service {
         }
         contentObservers.clear();
         unregisterReceiver(packageChangeReceiver);
+        unregisterReceiver(fakeAlertReceiver);
         close();
         started = false;
         INSTANCE = null;

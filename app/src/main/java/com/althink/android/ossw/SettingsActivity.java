@@ -1,6 +1,9 @@
 package com.althink.android.ossw;
 
 import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +14,8 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -111,13 +116,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    OsswService osswService = OsswService.getInstance();
-                    if (osswService == null) {
-                        return false;
-                    }
-                    int pattern = VibrationPatternBuilder.getNotificationVibrationPattern(getActivity());
-                    int vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(getActivity());
-                    osswService.uploadNotification(0, NotificationType.INFO, new byte[0], pattern, vibrationLength, null);
+                    NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getActivity());
+                    notifyManager.cancel(OsswService.TEST_NOTIFICATION_ID);
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
+                    builder.setContentTitle("Test notification")
+                            .setContentText("Test vibration pattern")
+                            .setCategory(Notification.CATEGORY_MESSAGE)
+                            .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
+                    notifyManager.notify(OsswService.TEST_NOTIFICATION_ID, builder.build());
+                    notifyManager.cancel(OsswService.TEST_NOTIFICATION_ID);
                     return true;
                 }
             });
@@ -125,13 +132,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    OsswService osswService = OsswService.getInstance();
-                    if (osswService == null) {
-                        return false;
-                    }
-                    int pattern = VibrationPatternBuilder.getAlertVibrationPattern(getActivity());
-                    //NotificationMessageBuilder builder = new SimpleNotificationMessageBuilder((SimpleNotification) onlyNotification, 0);
-                    osswService.uploadNotification(0, NotificationType.ALERT, new byte[0], pattern, 1000, null);
+                    NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getActivity());
+                    notifyManager.cancel(OsswService.TEST_ALERT_ID);
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
+                    Intent closeIntent = new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION);
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, closeIntent, 0);
+                    builder.setContentTitle("Test alert")
+                            .setContentText("Test vibration pattern")
+                            .setPriority(2)
+                            .setCategory(Notification.CATEGORY_MESSAGE)
+                            .setFullScreenIntent(pendingIntent, false)
+                            .addAction(R.drawable.ic_file_upload_black_18dp, "Close", pendingIntent)
+                            .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
+                    notifyManager.notify(OsswService.TEST_ALERT_ID, builder.build());
                     return true;
                 }
             });
