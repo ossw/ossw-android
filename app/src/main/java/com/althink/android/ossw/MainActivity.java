@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                         .replace(R.id.fragment_container, mPluginsFragment).commit();
                 break;
             case NavigationDrawerFragment.OPTION_SETTINGS:
-                setTitle("Settings");
                 startActivity(new Intent(this, SettingsActivity.class));
         }
     }
