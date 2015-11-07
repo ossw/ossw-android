@@ -75,7 +75,9 @@ public class OsswService extends Service {
 
     public static final int TEST_NOTIFICATION_ID = 0x10;
     public static final int TEST_ALERT_ID = 0x11;
+    public static final String FULLSCREEN_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.fullScreen";
     public static final String CLOSE_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.close";
+    public static final String CLOSE_FAKE_NOTIFICATION_INTENT_ACTION = "com.althink.android.ossw.test.notification.close";
 
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";

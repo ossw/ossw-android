@@ -122,6 +122,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     builder.setContentTitle("Test notification")
                             .setContentText("")
                             .setCategory(Notification.CATEGORY_MESSAGE)
+                            .setDeleteIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_NOTIFICATION_INTENT_ACTION), 0))
                             .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
                     notifyManager.notify(OsswService.TEST_NOTIFICATION_ID, builder.build());
                     return true;
@@ -132,16 +133,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getActivity());
-                    notifyManager.cancel(OsswService.TEST_ALERT_ID);
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
-                    Intent closeIntent = new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION);
-                    PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, closeIntent, 0);
                     builder.setContentTitle("Test alert")
                             .setContentText("")
                             .setPriority(2)
                             .setCategory(Notification.CATEGORY_MESSAGE)
-                            .setFullScreenIntent(pendingIntent, false)
-                            .addAction(android.support.v7.appcompat.R.drawable.abc_ic_clear_mtrl_alpha, "Close", pendingIntent)
+                            .setFullScreenIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.FULLSCREEN_FAKE_ALARM_INTENT_ACTION), 0), false)
+                            .addAction(android.support.v7.appcompat.R.drawable.abc_ic_clear_mtrl_alpha, "Close", PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION), 0))
                             .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
                     notifyManager.notify(OsswService.TEST_ALERT_ID, builder.build());
                     return true;
