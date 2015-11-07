@@ -17,6 +17,7 @@ import com.althink.android.ossw.notifications.model.Operation;
 import com.althink.android.ossw.notifications.model.SimpleListItem;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.model.SubjectMessageItem;
+import com.althink.android.ossw.notifications.parser.BaseNotificationParser;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -26,14 +27,12 @@ import java.util.List;
  * Created by krzysiek on 24/07/15.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class NotificationParserApi21 {
+public class NotificationParserApi21 extends BaseNotificationParser {
 
     private final static String TAG = NotificationParserApi21.class.getName();
 
-    private Context context;
-
     public NotificationParserApi21(Context context) {
-        this.context = context;
+        super(context);
     }
 
     public Notification parse(String notificationId, StatusBarNotification sbn, Notification existingNotification) {
@@ -57,14 +56,14 @@ public class NotificationParserApi21 {
                 android.app.Notification.CATEGORY_PROGRESS.equals(sbn.getNotification().category);
         isSpam = isSpam || (NotificationType.INFO == type && android.app.Notification.CATEGORY_ALARM.equals(sbn.getNotification().category));
         if (isSpam) {
-            //Log.i(TAG, "SKIP SPAM NOTIFICATION");
+            Log.i(TAG, "SKIP SPAM NOTIFICATION");
             return null;
         } else if (sbn.getNotification().category == null && NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
-            //Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
+            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
             return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
-            //Log.i(TAG, "SKIP FAKE ALERT");
+            Log.i(TAG, "SKIP FAKE ALERT");
             return null;
         }
 
@@ -112,12 +111,7 @@ public class NotificationParserApi21 {
 
         //generic processing
         if (extras.containsKey("android.textLines")) {
-            List items = new LinkedList();
-            Object[] lines = (Object[]) extras.get("android.textLines");
-            for (Object line : lines) {
-                items.add(new SimpleListItem(line.toString()));
-            }
-            return new ListNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, items, sbn, externalId);
+            return buildGenericListNotification(notificationId, sbn, extras, title, category, type, date, externalId, operations);
         }
 
         if (title != null && (text != null || bigText != null)) {
@@ -127,101 +121,7 @@ public class NotificationParserApi21 {
         return null;
     }
 
-    private Integer resolveExternalId(Notification existingNotification, NotificationType type) {
-        if (existingNotification == null) {
-            return null;
-        }
-        if ("com.skype.raider".equals(existingNotification.getApplication())) {
-            return null;
-        }
-        return (existingNotification != null && existingNotification.getType() == type) ? existingNotification.getExternalId() : null;
-    }
-
-    private NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
-        if ("com.android.dialer".equals(sbn.getPackageName()) && existingNotification != null) {
-            return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
-        }
-        if (sbn.getNotification().fullScreenIntent == null) {
-            return NotificationType.INFO;
-        }
-        return sbn.getNotification().priority > 1 ? NotificationType.ALERT : NotificationType.INFO;
-    }
-
-    private boolean isValidAlert(StatusBarNotification sbn) {
-        if ("com.android.dialer".equals(sbn.getPackageName())) {
-            return true;
-        }
-        if (isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_NO_CLEAR) &&
-                isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_FOREGROUND_SERVICE) &&
-                isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
-            return true;
-        }
-        if (sbn.getNotification().fullScreenIntent != null) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isFlagSet(android.app.Notification notification, int flag) {
-        return (notification.flags & flag) != 0;
-    }
-
-    private String getExtrasString(Bundle extras, String key) {
-        Object value = extras.get(key);
-        if (value instanceof String) {
-            return (String) value;
-        }
-        if (value == null) {
-            return null;
-        }
-        return value.toString();
-    }
-
-    private NotificationCategory parseCategory(StatusBarNotification sbn) {
-
-        switch (sbn.getPackageName()) {
-            case "com.android.dialer":
-            case "com.android.server.telecom":
-                return NotificationCategory.INCOMING_CALL;
-            case "com.android.email":
-            case "com.google.android.gm":
-                return NotificationCategory.EMAIL;
-            case "com.android.mms":
-                return NotificationCategory.MESSAGE;
-            case "com.android.deskclock":
-            case "com.google.android.deskclock":
-            case "ch.bitspin.timely":
-                return NotificationCategory.ALARM;
-            case "com.skype.raider":
-                return skypeNotificationType(sbn);
-        }
-
-        return NotificationCategory.OTHER;
-/*
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return NotificationCategory.OTHER;
-        }
-        String category = sbn.getNotification().category;
-        if (category == null) {
-            return NotificationCategory.OTHER;
-        }
-        switch (category) {
-            case android.app.Notification.CATEGORY_EMAIL:
-                return NotificationCategory.EMAIL;
-            case android.app.Notification.CATEGORY_CALL:
-                return NotificationCategory.INCOMING_CALL;
-            case android.app.Notification.CATEGORY_SOCIAL:
-                return NotificationCategory.SOCIAL;
-            case android.app.Notification.CATEGORY_MESSAGE:
-                return NotificationCategory.MESSAGE;
-            case android.app.Notification.CATEGORY_ALARM:
-                return NotificationCategory.ALARM;
-            default:
-                return NotificationCategory.OTHER;
-        }*/
-    }
-
-    private NotificationCategory skypeNotificationType(StatusBarNotification sbn) {
+    protected NotificationCategory skypeNotificationType(StatusBarNotification sbn) {
         if (sbn.getNotification().extras.containsKey("android.support.groupKey")) {
             String key = getExtrasString(sbn.getNotification().extras, "android.support.groupKey");
             if ("CHAT_MESSAGE".equals(key)) {

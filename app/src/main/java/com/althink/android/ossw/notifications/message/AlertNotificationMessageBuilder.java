@@ -33,7 +33,7 @@ public class AlertNotificationMessageBuilder extends AbstractNotificationMessage
         out.write(operationsNo);
 
         for(int i=0; i<operationsNo; i++) {
-            offset = addReferencedParameter(content, offset, operations.get(i).getTitle().getBytes());
+            offset = addReferencedParameter(content, offset, StringNormalizer.removeAccents(operations.get(i).getTitle()).getBytes());
         }
 
         byte[] contentData = content.toByteArray();

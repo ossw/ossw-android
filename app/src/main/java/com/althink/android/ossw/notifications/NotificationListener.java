@@ -57,23 +57,6 @@ public class NotificationListener extends NotificationListenerService {
 
     private static NotificationListener instance;
 
-//    public static int LINE_1;
-//    public static int ICON;
-//    public static int TITLE;
-//    public static int BIG_TEXT;
-//    public static int TEXT;
-//    public static int BIG_PIC;
-//    public static int INBOX_TEXT_0;
-//    public static int INBOX_TEXT_1;
-//    public static int INBOX_TEXT_2;
-//    public static int INBOX_TEXT_3;
-//    public static int INBOX_TEXT_4;
-//    public static int INBOX_TEXT_5;
-//    public static int INBOX_TEXT_6;
-//    public static int INBOX_MORE;
-//    public static int INFO;
-//    public static int TIME;
-
     Handler handler = new Handler(Looper.getMainLooper());
     Map<String, Notification> notifications = new HashMap<>();
 
@@ -86,23 +69,6 @@ public class NotificationListener extends NotificationListenerService {
         notifications = new HashMap<>();
 
         instance = this;
-//        Resources resources = getResources();
-//        LINE_1 = resources.getIdentifier("android:id/line1", null, null);
-//        ICON = resources.getIdentifier("android:id/icon", null, null);
-//        TITLE = resources.getIdentifier("android:id/title", null, null);
-//        BIG_TEXT = resources.getIdentifier("android:id/big_text", null, null);
-//        TEXT = resources.getIdentifier("android:id/text", null, null);
-//        TIME = resources.getIdentifier("android:id/time", null, null);
-//        BIG_PIC = resources.getIdentifier("android:id/big_picture", null, null);
-//        INBOX_TEXT_0 = resources.getIdentifier("android:id/inbox_text0", null, null);
-//        INBOX_TEXT_1 = resources.getIdentifier("android:id/inbox_text1", null, null);
-//        INBOX_TEXT_2 = resources.getIdentifier("android:id/inbox_text2", null, null);
-//        INBOX_TEXT_3 = resources.getIdentifier("android:id/inbox_text3", null, null);
-//        INBOX_TEXT_4 = resources.getIdentifier("android:id/inbox_text4", null, null);
-//        INBOX_TEXT_5 = resources.getIdentifier("android:id/inbox_text5", null, null);
-//        INBOX_TEXT_6 = resources.getIdentifier("android:id/inbox_text6", null, null);
-//        INBOX_MORE = resources.getIdentifier("android:id/inbox_more", null, null);
-//        INFO = getResources().getIdentifier("android:id/info", null, null);
     }
 
     @Override
