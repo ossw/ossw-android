@@ -805,16 +805,16 @@ public class OsswService extends Service {
 
         @Override
         protected Void doInBackground(Object... params) {
-            internalUploadData((UploadDataType) params[0], (byte[]) params[1]);
+            internalUploadData((UploadDataType) params[0], (String)params[1], (byte[]) params[2]);
             return null;
         }
     }
 
-    public void uploadData(UploadDataType type, byte[] data) {
-        new UploadDataToWatch().execute(type, data);
+    public void uploadData(UploadDataType type, String fileName, byte[] data) {
+        new UploadDataToWatch().execute(type, fileName, data);
     }
 
-    private void internalUploadData(UploadDataType type, byte[] data) {
+    private void internalUploadData(UploadDataType type, String fileName, byte[] data) {
 
         if (!bleService.isConnected()) {
             Log.i(TAG, "BLE is not connected, cancel upload");
@@ -829,9 +829,10 @@ public class OsswService extends Service {
                 .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
         notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
 
+        byte[] filePath = cutToBytes("w/"+fileName, 32);
         int size = data.length;
         Log.i(TAG, "Init file upload: " + type + ", size: " + size);
-        if (sendOsswCommand(new byte[]{0x20}) != 0) {
+        if (sendOsswCommand(concat(new byte[]{0x20, (byte)((size>>16)&0xFF), (byte)((size>>8)&0xFF), (byte)(size&0xFF)}, concat(filePath, new byte[]{0}))) != 0) {
             handleUploadFailed();
             return;
         }

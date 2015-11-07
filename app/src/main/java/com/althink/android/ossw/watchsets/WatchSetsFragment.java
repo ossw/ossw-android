@@ -170,7 +170,7 @@ public class WatchSetsFragment extends ListFragment {
                             CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
                             OsswService osswBleService = OsswService.getInstance();
                             if(osswBleService != null) {
-                                osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                                osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getName(), compiledWatchSet.getWatchData());
                             }
                             resetSelection();
                             return true;
