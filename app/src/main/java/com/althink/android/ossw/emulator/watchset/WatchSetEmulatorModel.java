@@ -91,9 +91,11 @@ public class WatchSetEmulatorModel {
 
         eventMapping.clear();
         List<EmulatorAction> currentScreenActions = getCurrentScreenActions();
-        for (EmulatorAction action : currentScreenActions) {
-            EmulatorEvent event = buildEventForId(action.getEventId());
-            eventMapping.put(event, action);
+        if (currentScreenActions != null) {
+            for (EmulatorAction action : currentScreenActions) {
+                EmulatorEvent event = buildEventForId(action.getEventId());
+                eventMapping.put(event, action);
+            }
         }
     }
 

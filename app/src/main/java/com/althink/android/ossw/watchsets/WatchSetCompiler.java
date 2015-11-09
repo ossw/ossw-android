@@ -275,10 +275,8 @@ public class WatchSetCompiler {
 
         JSONObject actions = screen.optJSONObject("actions");
 
-        os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS);
-        if (actions == null) {
-            os.write(0); //no actions
-        } else {
+        if (actions != null) {
+            os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS);
             if (actions.length() > 255) {
                 throw new KnownParseError("Too many actions");
             }
@@ -292,6 +290,19 @@ public class WatchSetCompiler {
                 os.write(actionData);
             }
         }
+
+        String defaultActions = screen.optString("defaultActions", null);
+        if (defaultActions != null) {
+            os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_BASE_ACTIONS);
+            switch(defaultActions) {
+                case "watchface":
+                    os.write(1);
+                break;
+                default:
+                    throw new KnownParseError("Invalid default actions: " + defaultActions);
+            }
+        }
+
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY);
         os.write((allocator.getSize() >> 8) & 0xFF);
         os.write(allocator.getSize() & 0xFF);

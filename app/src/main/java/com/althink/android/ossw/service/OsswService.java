@@ -30,7 +30,7 @@ import android.widget.Toast;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
-import com.althink.android.ossw.db.OsswDB;
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.notifications.NotificationHandler;
 import com.althink.android.ossw.notifications.NotificationListener;
 import com.althink.android.ossw.notifications.model.NotificationType;
@@ -46,6 +46,7 @@ import com.althink.android.ossw.service.ble.ReadCharacteristicHandler;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
+import com.althink.android.ossw.watchsets.WatchSetType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -112,8 +113,6 @@ public class OsswService extends Service {
 
     private final HashMap<String, ExternalServiceConnection> externalServiceConnections = new HashMap<>();
 
-    private OsswDB db;
-
     private AtomicInteger commandAck = new AtomicInteger();
 
     private ConcurrentHashMap<Integer, Object> extParamsToSend = new ConcurrentHashMap<>();
@@ -133,7 +132,7 @@ public class OsswService extends Service {
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
                         int watchSetId = value[1] << 24 | value[2] << 16 | value[3] << 8 | value[4] & 0xFF;
-                        WatchOperationContext ctx = db.getWatchContextByExtWatchSetId(watchSetId);
+                        WatchOperationContext ctx = OsswDatabaseHelper.getInstance(getApplicationContext()).getWatchContextByExtWatchSetId(watchSetId);
                         setWatchOperationContext(ctx);
                         if (ctx != null) {
                             sendAllExternalParamsValues();
@@ -239,8 +238,8 @@ public class OsswService extends Service {
         resetSentExtParamsCache();
     }
 
-    public void createOrUpdateWatchSet(String name, String source, WatchOperationContext watchContext, int id) {
-        db.addWatchSet(name, source, watchContext, id);
+    public void createOrUpdateWatchSet(WatchSetType type, String name, String source, WatchOperationContext watchContext, int id) {
+        OsswDatabaseHelper.getInstance(getApplicationContext()).addWatchSet(type, name, source, watchContext, id);
     }
 
     public void extendAlertNotification(int notificationId, int timeout) {
@@ -465,7 +464,6 @@ public class OsswService extends Service {
 
             if (!started) {
                 Log.i(TAG, "Initialize service");
-                db = new OsswDB(this);
                 bleService = new BleDeviceService(getApplicationContext(), new BleConnectionStatusHandler() {
                     @Override
                     public void handleConnectionStatusChange(BleConnectionStatus status) {
@@ -829,7 +827,19 @@ public class OsswService extends Service {
                 .setSmallIcon(R.drawable.ic_file_upload_black_18dp);
         notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
 
-        byte[] filePath = cutToBytes("w/"+fileName, 32);
+        String path = "";
+        switch(type) {
+            case APPLICATION:
+                path = "a/";
+                break;
+            case WATCH_FACE:
+                path = "f/";
+                break;
+            case UTILITY:
+                path = "u/";
+                break;
+        }
+        byte[] filePath = cutToBytes(path+fileName, 32);
         int size = data.length;
         Log.i(TAG, "Init file upload: " + type + ", size: " + size);
         if (sendOsswCommand(concat(new byte[]{0x20, (byte)((size>>16)&0xFF), (byte)((size>>8)&0xFF), (byte)(size&0xFF)}, concat(filePath, new byte[]{0}))) != 0) {

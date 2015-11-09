@@ -38,10 +38,12 @@ import java.util.List;
 public class NavigationDrawerFragment extends Fragment implements NavigationDrawerCallbacks {
 
     public static final int OPTION_HOME_SCREEN = 1;
-    public static final int OPTION_WATCHSETS = 2;
-    public static final int OPTION_EXTENSIONS = 3;
-    public static final int OPTION_WATCHES = 4;
-    public static final int OPTION_SETTINGS = 5;
+    public static final int OPTION_WATCH_FACES = 2;
+    public static final int OPTION_APPLICATIONS = 3;
+    public static final int OPTION_UTILITIES = 4;
+    public static final int OPTION_EXTENSIONS = 5;
+    public static final int OPTION_WATCHES = 6;
+    public static final int OPTION_SETTINGS = 7;
 
     /**
      * Remember the position of the selected item.
@@ -68,7 +70,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private RecyclerView mDrawerList;
     private View mFragmentContainerView;
 
-    private int mCurrentSelectedItem = OPTION_WATCHSETS;
+    private int mCurrentSelectedItem = OPTION_WATCH_FACES;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 
@@ -125,9 +127,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public List<NavigationItem> getMenu() {
         List<NavigationItem> items = new ArrayList<NavigationItem>();
         //items.add(new NavigationItem(OPTION_HOME_SCREEN, getString(R.string.drawer_home_screen), null));
-        items.add(new NavigationItem(OPTION_WATCHSETS, getString(R.string.drawer_watchsets), null));
+        items.add(new NavigationItem(OPTION_WATCH_FACES, getString(R.string.drawer_watch_faces), null));
+        items.add(new NavigationItem(OPTION_APPLICATIONS, getString(R.string.drawer_applications), null));
+        items.add(new NavigationItem(OPTION_UTILITIES, getString(R.string.drawer_utilities), null));
         items.add(new NavigationItem(OPTION_EXTENSIONS, getString(R.string.drawer_plugins), null));
-        items.add(new NavigationItem(OPTION_SETTINGS, "Settings", null));
+        items.add(new NavigationItem(OPTION_SETTINGS, getString(R.string.drawer_settings), null));
         return items;
     }
 

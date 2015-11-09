@@ -74,6 +74,7 @@ public class WatchConstants {
     public static final int WATCH_SET_SCREEN_SECTION_CONTROLS = 1;
     public static final int WATCH_SET_SCREEN_SECTION_ACTIONS = 2;
     public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
+    public static final int WATCH_SET_SCREEN_SECTION_BASE_ACTIONS = 4;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 

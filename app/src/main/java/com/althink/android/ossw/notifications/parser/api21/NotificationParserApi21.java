@@ -56,14 +56,14 @@ public class NotificationParserApi21 extends BaseNotificationParser {
                 android.app.Notification.CATEGORY_PROGRESS.equals(sbn.getNotification().category);
         isSpam = isSpam || (NotificationType.INFO == type && android.app.Notification.CATEGORY_ALARM.equals(sbn.getNotification().category));
         if (isSpam) {
-            Log.i(TAG, "SKIP SPAM NOTIFICATION");
+            //Log.i(TAG, "SKIP SPAM NOTIFICATION");
             return null;
         } else if (sbn.getNotification().category == null && NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
-            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
+            //Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
             return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
-            Log.i(TAG, "SKIP FAKE ALERT");
+            //Log.i(TAG, "SKIP FAKE ALERT");
             return null;
         }
 

@@ -48,6 +48,7 @@ public class WatchSetImportFragment extends Fragment {
     private CompiledWatchSet watchSet;
     private String source;
     private Uri uri;
+    private WatchSetType type;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -319,7 +320,7 @@ public class WatchSetImportFragment extends Fragment {
                         if (watchSet != null) {
                             OsswService service = OsswService.getInstance();
                             if (service != null) {
-                                service.createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
+                                service.createOrUpdateWatchSet(type, watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
                             }
                             getFragmentManager().popBackStack();
                         }
@@ -339,5 +340,9 @@ public class WatchSetImportFragment extends Fragment {
 
     public void setUri(Uri uri) {
         this.uri = uri;
+    }
+
+    public void setWatchsetType(WatchSetType type) {
+        this.type = type;
     }
 }

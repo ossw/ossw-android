@@ -140,6 +140,10 @@ public class WatchSetEmulatorParser {
                     is.read();
                     is.read();
                     break;
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_BASE_ACTIONS:
+                    //parse base actions
+                    is.read();
+                    break;
                 default:
                     throw new RuntimeException("Unknown key: " + key);
             }

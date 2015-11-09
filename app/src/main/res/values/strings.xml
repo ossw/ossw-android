@@ -33,8 +33,11 @@
     <string name="drawer_open">Menu opened</string>
     <string name="drawer_close">Menu closed</string>
     <string name="drawer_home_screen">Home screen</string>
-    <string name="drawer_watchsets">Watchsets</string>
+    <string name="drawer_watch_faces">Watch faces</string>
+    <string name="drawer_applications">Applications</string>
+    <string name="drawer_utilities">Utilities</string>
     <string name="drawer_plugins">Extensions</string>
+    <string name="drawer_settings">Settings</string>
     <string name="toast_watch_is_connected">Watch is connected</string>
 
     <string name="no_extension_found">No extensions found, you can install them from Play Store.</string>

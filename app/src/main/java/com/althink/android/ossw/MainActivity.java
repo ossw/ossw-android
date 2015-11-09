@@ -6,9 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.*;
-import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -26,7 +24,9 @@ import com.althink.android.ossw.home.HomeFragment;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.ble.BleConnectionStatus;
-import com.althink.android.ossw.watchsets.WatchSetsFragment;
+import com.althink.android.ossw.watchsets.ApplicationsFragment;
+import com.althink.android.ossw.watchsets.UtilitiesFragment;
+import com.althink.android.ossw.watchsets.WatchFacesFragment;
 
 public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -41,7 +41,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     private Toolbar mBottomToolbar;
 
     private HomeFragment mHomeFragment;
-    private WatchSetsFragment mWatchsetsFragment;
+    private WatchFacesFragment mWatchFacesFragment;
+    private ApplicationsFragment mApplicationsFragment;
+    private UtilitiesFragment mUtilitiesFragment;
     private PluginsFragment mPluginsFragment;
 
     static final int SELECT_WATCH_REQUEST = 1;
@@ -108,7 +110,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
 
         mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
-        mWatchsetsFragment = new WatchSetsFragment();
+        mWatchFacesFragment = new WatchFacesFragment();
+        mApplicationsFragment = new ApplicationsFragment();
+        mUtilitiesFragment = new UtilitiesFragment();
 
         setContentView(R.layout.activity_main);
         mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
@@ -154,10 +158,20 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mHomeFragment)
                         .commit();
                 break;
-            case NavigationDrawerFragment.OPTION_WATCHSETS:
-                setTitle(R.string.drawer_watchsets);
+            case NavigationDrawerFragment.OPTION_WATCH_FACES:
+                setTitle(R.string.drawer_watch_faces);
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, mWatchsetsFragment).commit();
+                        .replace(R.id.fragment_container, mWatchFacesFragment).commit();
+                break;
+            case NavigationDrawerFragment.OPTION_APPLICATIONS:
+                setTitle(R.string.drawer_applications);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mApplicationsFragment).commit();
+                break;
+            case NavigationDrawerFragment.OPTION_UTILITIES:
+                setTitle(R.string.drawer_utilities);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mUtilitiesFragment).commit();
                 break;
             case NavigationDrawerFragment.OPTION_EXTENSIONS:
                 setTitle(R.string.drawer_plugins);
@@ -302,4 +316,5 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         bottomToolbar.getMenu().clear();
         bottomToolbar.setNavigationIcon(null);
     }
+
 }

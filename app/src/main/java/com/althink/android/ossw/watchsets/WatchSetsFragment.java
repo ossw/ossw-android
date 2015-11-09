@@ -22,7 +22,7 @@ import android.widget.Toast;
 import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
-import com.althink.android.ossw.db.OsswDB;
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.db.WatchSetInfo;
 import com.althink.android.ossw.service.OsswService;
 
@@ -31,14 +31,18 @@ import java.util.ArrayList;
 /**
  * Created by krzysiek on 13/06/15.
  */
-public class WatchSetsFragment extends ListFragment {
+public abstract class WatchSetsFragment extends ListFragment {
 
     private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
     private Toolbar bottomToolbar;
     private WatchSetsListAdapter listAdaptor;
-    private OsswDB db;
+    private WatchSetType type;
+
+    public WatchSetsFragment(WatchSetType type) {
+        this.type = type;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -52,7 +56,6 @@ public class WatchSetsFragment extends ListFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        db = new OsswDB(getActivity());
         setHasOptionsMenu(true);
 
         listAdaptor = new WatchSetsListAdapter();
@@ -63,7 +66,7 @@ public class WatchSetsFragment extends ListFragment {
 
     private void refreshWatchSetList() {
         listAdaptor.clear();
-        for (WatchSetInfo info : db.listWatchSets()) {
+        for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getActivity()).listWatchSets(type)) {
             listAdaptor.addWatchSet(info);
         }
         listAdaptor.notifyDataSetChanged();
@@ -143,6 +146,7 @@ public class WatchSetsFragment extends ListFragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 int id = item.getItemId();
+                OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
 
                 if (id == R.id.menu_import) {
                     showFileChooser();
@@ -170,7 +174,7 @@ public class WatchSetsFragment extends ListFragment {
                             CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
                             OsswService osswBleService = OsswService.getInstance();
                             if(osswBleService != null) {
-                                osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getName(), compiledWatchSet.getWatchData());
+                                osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
                             }
                             resetSelection();
                             return true;
@@ -183,6 +187,18 @@ public class WatchSetsFragment extends ListFragment {
 
         refreshWatchSetList();
         setMenuOptions(Mode.NONE);
+    }
+
+    protected UploadDataType buildDataType(WatchSetType type) {
+        switch (type) {
+            case WATCH_FACE:
+                return UploadDataType.WATCH_FACE;
+            case APPLICATION:
+                return UploadDataType.APPLICATION;
+            case UTILITY:
+                return UploadDataType.UTILITY;
+        }
+        return null;
     }
 
     private void showFileChooser() {
@@ -213,6 +229,7 @@ public class WatchSetsFragment extends ListFragment {
                     final FragmentTransaction ft = getFragmentManager().beginTransaction();
                     WatchSetImportFragment importFragment = new WatchSetImportFragment();
                     importFragment.setUri(uri);
+                    importFragment.setWatchsetType(type);
                     ft.replace(R.id.fragment_container, importFragment).addToBackStack(null);
                     ft.commit();
                 }
