@@ -1,5 +1,6 @@
 package com.althink.android.ossw.notifications;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -116,7 +117,6 @@ public class NotificationListener extends NotificationListenerService {
         Notification existingNotification = notifications.get(notificationId);
 
         Notification notification = parseNotification(sbn, notificationId, existingNotification);
-
 
         if (notification != null) {
 
@@ -362,13 +362,23 @@ public class NotificationListener extends NotificationListenerService {
 
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+                cancelPreLollipopNotification(sbn);
             } else {
-                cancelNotification(sbn.getKey());
+                cancelPostLollipopNotification(sbn);
             }
         } catch (Exception e) {
             //do nothing
         }
+    }
+
+    @TargetApi(18)
+    private void cancelPreLollipopNotification(StatusBarNotification sbn) {
+        cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+    }
+
+    @TargetApi(21)
+    private void cancelPostLollipopNotification(StatusBarNotification sbn) {
+        cancelNotification(sbn.getKey());
     }
 
     private List<Notification> getSortedNotificationsList() {
