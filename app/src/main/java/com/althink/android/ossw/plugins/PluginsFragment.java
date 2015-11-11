@@ -31,8 +31,10 @@ public class PluginsFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mInflator = inflater;
+        View v = inflater.inflate(R.layout.fragment_plugins, container, false);
+        getActivity().setTitle(R.string.drawer_plugins);
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_plugins, container, false);
+        return v;
     }
 
     @Override
@@ -55,8 +57,8 @@ public class PluginsFragment extends ListFragment {
     public void onResume() {
         super.onResume();
 
-        Toolbar bottomToolbar = ((MainActivity) getActivity()).getBottomToolbar();
-        bottomToolbar.setVisibility(View.GONE);
+//        Toolbar bottomToolbar = ((MainActivity) getActivity()).getToolbar();
+//        bottomToolbar.setVisibility(View.GONE);
     }
 
     @Override

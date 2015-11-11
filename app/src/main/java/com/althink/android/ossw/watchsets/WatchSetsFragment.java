@@ -5,12 +5,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,46 +33,56 @@ import java.util.ArrayList;
 public class WatchSetsFragment extends ListFragment {
 
     private final static String TAG = WatchSetsFragment.class.getSimpleName();
+    private static final int WATCH_FACE_IMPORTED = 1;
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
-    private Toolbar bottomToolbar;
-    private WatchSetsListAdapter listAdaptor;
+    private WatchSetsListAdapter listAdapter;
     private OsswDB db;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mInflater = inflater;
+        View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
+        getActivity().setTitle(R.string.drawer_watchsets);
+        setHasOptionsMenu(true);
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_watchsets, container, false);
+        return v;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         db = new OsswDB(getActivity());
-        setHasOptionsMenu(true);
-
-        listAdaptor = new WatchSetsListAdapter();
-        setListAdapter(listAdaptor);
-
+        listAdapter = new WatchSetsListAdapter();
+        setListAdapter(listAdapter);
         //Log.i(TAG, "On create");
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+//        Toolbar toolbar = ((MainActivity)getActivity()).getToolbar();
+//        toolbar.setNavigationOnClickListener(null);
+//                    toolbar.setNavigationIcon(R);
+        inflater.inflate(R.menu.watchsets, menu);
+        refreshWatchSetList();
+//        setMenuOptions(Mode.NONE);
+    }
+
     private void refreshWatchSetList() {
-        listAdaptor.clear();
+        listAdapter.clear();
         for (WatchSetInfo info : db.listWatchSets()) {
-            listAdaptor.addWatchSet(info);
+            listAdapter.addWatchSet(info);
         }
-        listAdaptor.notifyDataSetChanged();
+        listAdapter.notifyDataSetChanged();
         resetSelection();
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-        int count = getListView().getCount();
+//        int count = getListView().getCount();
 //        SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
 //        for (int i = 0; i < count; i++) {
 //            if (sparseBooleanArray.get(i)) {
@@ -86,40 +95,23 @@ public class WatchSetsFragment extends ListFragment {
     }
 
     private void setMenuOptions(Mode mode) {
-        View uploadAction = bottomToolbar.findViewById(R.id.menu_upload_to_watch);
-        View itemsRemoveAction = bottomToolbar.findViewById(R.id.menu_items_remove);
+        Menu menu = ((MainActivity)getActivity()).getToolbar().getMenu();
+        MenuItem uploadAction = menu.findItem(R.id.menu_upload_to_watch);
+        MenuItem itemsRemoveAction = menu.findItem(R.id.menu_items_remove);
         switch (mode) {
             case MULTI:
-                enableDeselectOption();
-                uploadAction.setVisibility(View.GONE);
-                itemsRemoveAction.setVisibility(View.VISIBLE);
+                uploadAction.setVisible(false);
+                itemsRemoveAction.setVisible(true);
                 break;
             case SINGLE:
-                enableDeselectOption();
-                uploadAction.setVisibility(View.VISIBLE);
-                itemsRemoveAction.setVisibility(View.VISIBLE);
+                uploadAction.setVisible(true);
+                itemsRemoveAction.setVisible(true);
                 break;
             case NONE:
-                disableDeselectOption();
-                uploadAction.setVisibility(View.GONE);
-                itemsRemoveAction.setVisibility(View.GONE);
+                uploadAction.setVisible(false);
+                itemsRemoveAction.setVisible(false);
                 break;
         }
-    }
-
-    private void disableDeselectOption() {
-        bottomToolbar.setNavigationIcon(null);
-        bottomToolbar.setNavigationOnClickListener(null);
-    }
-
-    private void enableDeselectOption() {
-        bottomToolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-        bottomToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resetSelection();
-            }
-        });
     }
 
     private void resetSelection() {
@@ -131,58 +123,53 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
+//        MainActivity activity = ((MainActivity) getActivity());
+//        activity.resetBottomToolbar();
+//        bottomToolbar = activity.getToolbar();
+//        bottomToolbar.getMenu().clear();
+//        bottomToolbar.inflateMenu(R.menu.watchsets);
+//        bottomToolbar.setVisibility(View.VISIBLE);
+//        setMenuOptions(Mode.NONE);
+//        refreshWatchSetList();
+    }
 
-        MainActivity activity = ((MainActivity) getActivity());
-        activity.resetBottomToolbar();
-        bottomToolbar = activity.getBottomToolbar();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.menu_import) {
+            showFileChooser();
+            return true;
+        } else if (id == R.id.menu_items_remove) {
 
-        bottomToolbar.inflateMenu(R.menu.watchsets);
-        bottomToolbar.setVisibility(View.VISIBLE);
-
-        bottomToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int id = item.getItemId();
-
-                if (id == R.id.menu_import) {
-                    showFileChooser();
-                    return true;
-                } else if (id == R.id.menu_items_remove) {
-
-                    SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
-                    int count = getListView().getCount();
-                    for (int i = 0; i < count; i++) {
-                        if (sparseBooleanArray.get(i)) {
-                            WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                            db.deleteWatchSet(info.getId());
-                        }
-                    }
-                    refreshWatchSetList();
-                    return true;
-                } else if (id == R.id.menu_upload_to_watch) {
-                    SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
-                    int count = getListView().getCount();
-                    for (int i = 0; i < count; i++) {
-                        if (sparseBooleanArray.get(i)) {
-                            WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                            String source = db.getWatchSetSourceById(info.getId());
-                            Integer extWatchSetId = db.getExtWatchSetId(info.getId());
-                            CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
-                            OsswService osswBleService = OsswService.getInstance();
-                            if(osswBleService != null) {
-                                osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
-                            }
-                            resetSelection();
-                            return true;
-                        }
-                    }
+            SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+            int count = getListView().getCount();
+            for (int i = 0; i < count; i++) {
+                if (sparseBooleanArray.get(i)) {
+                    WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                    db.deleteWatchSet(info.getId());
                 }
-                return false;
             }
-        });
-
-        refreshWatchSetList();
-        setMenuOptions(Mode.NONE);
+            refreshWatchSetList();
+            return true;
+        } else if (id == R.id.menu_upload_to_watch) {
+            SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+            int count = getListView().getCount();
+            for (int i = 0; i < count; i++) {
+                if (sparseBooleanArray.get(i)) {
+                    WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                    String source = db.getWatchSetSourceById(info.getId());
+                    Integer extWatchSetId = db.getExtWatchSetId(info.getId());
+                    CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
+                    OsswService osswBleService = OsswService.getInstance();
+                    if (osswBleService != null) {
+                        osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                    }
+                    resetSelection();
+                    return true;
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showFileChooser() {
@@ -193,7 +180,7 @@ public class WatchSetsFragment extends ListFragment {
         try {
             startActivityForResult(
                     Intent.createChooser(intent, "Select a File to Upload"),
-                    0);
+                    FILE_SELECT_CODE);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
             Toast.makeText(getActivity(), "Please install a File Manager.",
@@ -210,11 +197,19 @@ public class WatchSetsFragment extends ListFragment {
                     // Get the Uri of the selected file
                     Uri uri = data.getData();
                     //Log.i(TAG, "File Uri: " + uri.toString());
-                    final FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    WatchSetImportFragment importFragment = new WatchSetImportFragment();
-                    importFragment.setUri(uri);
-                    ft.replace(R.id.fragment_container, importFragment).addToBackStack(null);
-                    ft.commit();
+//                    final FragmentTransaction ft = getFragmentManager().beginTransaction();
+//                    WatchSetImportFragment importFragment = new WatchSetImportFragment();
+//                    importFragment.setUri(uri);
+//                    ft.replace(R.id.fragment_container, importFragment).addToBackStack("Preview fragment");
+//                    ft.commit();
+                    Intent i = new Intent(getActivity().getApplicationContext(), WatchSetPreviewActivity.class);
+                    i.putExtra("uri", uri.toString());
+                    startActivityForResult(i, WATCH_FACE_IMPORTED);
+                }
+                break;
+            case WATCH_FACE_IMPORTED:
+                if (resultCode == Activity.RESULT_OK) {
+                    refreshWatchSetList();
                 }
                 break;
         }
@@ -224,7 +219,6 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         //Log.i(TAG, "On destroy");
     }
 

@@ -6,29 +6,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.os.*;
-import android.preference.PreferenceManager;
+import android.content.res.Configuration;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.althink.android.ossw.drawer.NavigationDrawerCallbacks;
-import com.althink.android.ossw.drawer.NavigationDrawerFragment;
-import com.althink.android.ossw.home.HomeFragment;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerCallbacks {
+public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private OsswService mOsswBleService;
@@ -36,13 +36,13 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
-    private NavigationDrawerFragment mNavigationDrawerFragment;
     private Toolbar mToolbar;
-    private Toolbar mBottomToolbar;
+    private DrawerLayout mDrawer;
+    private ActionBarDrawerToggle drawerToggle;
 
-    private HomeFragment mHomeFragment;
     private WatchSetsFragment mWatchsetsFragment;
     private PluginsFragment mPluginsFragment;
+    private DeviceScanFragment mWatchesFragment;
 
     static final int SELECT_WATCH_REQUEST = 1;
 
@@ -73,7 +73,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
                 Log.i(TAG, "Connecting to the watch");
             } else if (OsswService.ACTION_WATCH_CONNECTED.equals(action)) {
                 Toast.makeText(MainActivity.this, getString(R.string.toast_watch_is_connected), Toast.LENGTH_SHORT).show();
-                hideConnectionAlertBar();
+//                hideConnectionAlertBar();
+                showConnectionAlertBar(R.string.connected);
                 invalidateOptionsMenu();
                 Log.i(TAG, "Watch is connected");
             } else if (OsswService.ACTION_WATCH_DISCONNECTED.equals(action)) {
@@ -89,10 +90,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         }
     };
 
-    private void hideConnectionAlertBar() {
-        View view = findViewById(R.id.watch_connection_alert);
-        view.setVisibility(View.GONE);
-    }
+//    private void hideConnectionAlertBar() {
+//        View view = findViewById(R.id.watch_connection_alert);
+//        view.setVisibility(View.GONE);
+//    }
 
     private void showConnectionAlertBar(int messageId) {
         TextView tv1 = (TextView) findViewById(R.id.connectionStatus);
@@ -106,34 +107,46 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         super.onCreate(savedInstanceState);
         //Log.i(TAG, "CREATE");
 
-        mHomeFragment = new HomeFragment();
+//        mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
         mWatchsetsFragment = new WatchSetsFragment();
+        mWatchesFragment = new DeviceScanFragment();
 
         setContentView(R.layout.activity_main);
         mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         setSupportActionBar(mToolbar);
 
-        getBottomToolbar().setVisibility(View.GONE);
+//        getToolbar().setVisibility(View.GONE);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_drawer);
+        mDrawer = (DrawerLayout) findViewById(R.id.drawer);
+        drawerToggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.drawer_open,  R.string.drawer_close);
+        mDrawer.setDrawerListener(drawerToggle);
 
-        // Set up the drawer.
-        mNavigationDrawerFragment.setup(R.id.fragment_drawer, (DrawerLayout) findViewById(R.id.drawer), mToolbar);
-        // populate the navigation drawer
-        // mNavigationDrawerFragment.setUserData("John Doe", "johndoe@doe.com", BitmapFactory.decodeResource(getResources(), R.drawable.avatar));
-
-        final Context ctx = this;
-
-        ImageButton findWatchButton = (ImageButton) findViewById(R.id.find_watch);
-        findWatchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Intent intent = new Intent(ctx, DeviceScanActivity.class);
-                startActivityForResult(intent, SELECT_WATCH_REQUEST);
+        NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
+        view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override public boolean onNavigationItemSelected(MenuItem menuItem) {
+                onDrawerItemSelected(menuItem);
+                return true;
             }
         });
+
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.watch_connection_alert);
+        frameLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mWatchesFragment).commit();
+            }
+        });
+//        final Context ctx = this;
+//        ImageButton findWatchButton = (ImageButton) findViewById(R.id.find_watch);
+//        findWatchButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                final Intent intent = new Intent(ctx, DeviceScanFragment.class);
+//                startActivityForResult(intent, SELECT_WATCH_REQUEST);
+//            }
+//        });
 
         Intent osswServiceIntent = new Intent(this, OsswService.class);
         startService(osswServiceIntent);
@@ -146,27 +159,59 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         // intent.setAction("com.althink.android.ossw.plugins.musicplayer.PluginService");
         // bindService(intent, pluginServiceConnection, BIND_AUTO_CREATE);
     }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // The action bar home/up action should open or close the drawer.
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                mDrawer.openDrawer(GravityCompat.START);
+                return true;
+        }
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    // Make sure this is the method with just `Bundle` as the signature
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        setTitle(R.string.drawer_watchsets);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, mWatchsetsFragment).commit();
+        drawerToggle.syncState();
+    }
 
     @Override
-    public void onNavigationDrawerItemSelected(int itemId) {
-        switch (itemId) {
-            case NavigationDrawerFragment.OPTION_HOME_SCREEN:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mHomeFragment)
-                        .commit();
-                break;
-            case NavigationDrawerFragment.OPTION_WATCHSETS:
-                setTitle(R.string.drawer_watchsets);
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        drawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    public void onDrawerItemSelected(MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+            case R.id.nav_watchface:
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, mWatchsetsFragment).commit();
                 break;
-            case NavigationDrawerFragment.OPTION_EXTENSIONS:
-                setTitle(R.string.drawer_plugins);
+            case R.id.nav_extension:
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, mPluginsFragment).commit();
                 break;
-            case NavigationDrawerFragment.OPTION_SETTINGS:
+            case R.id.nav_watch:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mWatchesFragment).commit();
+                break;
+            case R.id.nav_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                break;
+            case R.id.nav_exit:
+                mOsswBleService.disconnect();
+                mOsswBleService.stopSelf();
+                finish();
         }
+        mDrawer.closeDrawers();
     }
 
     @Override
@@ -186,7 +231,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
 
     private void setConnectionAlertBar(BleConnectionStatus status) {
         if (status == BleConnectionStatus.CONNECTED) {
-            hideConnectionAlertBar();
+//            hideConnectionAlertBar();
+            showConnectionAlertBar(R.string.connected);
         } else if (status == BleConnectionStatus.CONNECTING) {
             showConnectionAlertBar(R.string.connecting_to_watch);
         } else if (status == BleConnectionStatus.AUTO_RECONNECT) {
@@ -194,14 +240,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         } else {
             showConnectionAlertBar(R.string.disconnected);
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (mNavigationDrawerFragment.isDrawerOpen())
-            mNavigationDrawerFragment.closeDrawer();
-        else
-            super.onBackPressed();
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
@@ -225,11 +263,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         super.onDestroy();
         //Log.i(TAG, "DESTROY");
         unbindService(mServiceConnection);
-
 //        unbindService(pluginServiceConnection);
     }
 
-    private void connectToWatch(String address) {
+    void connectToWatch(String address) {
         mOsswBleService.connect(address);
     }
 
@@ -251,55 +288,17 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerC
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.main, menu);
-            return true;
-        }
-        return super.onCreateOptionsMenu(menu);
+    public Toolbar getToolbar() {
+        return mToolbar;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_find_watch) {
-            final Intent intent = new Intent(this, DeviceScanActivity.class);
-            startActivityForResult(intent, SELECT_WATCH_REQUEST);
-            return true;
-        } else if (id == R.id.action_settings) {
-            final Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        } else if (id == R.id.action_disconnect) {
-            mOsswBleService.disconnect();
-            return true;
-        } else if (id == R.id.action_close) {
-            mOsswBleService.stopSelf();
-            finish();
-            return true;
+    public void onBackPressed() {
+        int count = getFragmentManager().getBackStackEntryCount();
+        if (count == 0) {
+            super.onBackPressed();
+        } else {
+            getFragmentManager().popBackStack();
         }
-        return super.onOptionsItemSelected(item);
-    }
-
-    public Toolbar getBottomToolbar() {
-        if (mBottomToolbar == null) {
-            mBottomToolbar = (Toolbar) findViewById(R.id.toolbar_bottom);
-        }
-        return mBottomToolbar;
-    }
-
-    public void resetBottomToolbar() {
-        Toolbar bottomToolbar = this.getBottomToolbar();
-        bottomToolbar.getMenu().clear();
-        bottomToolbar.setNavigationIcon(null);
     }
 }

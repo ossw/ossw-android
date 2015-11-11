@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -17,17 +16,13 @@ import android.preference.PreferenceScreen;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
-import com.althink.android.ossw.notifications.VibrationPatternBuilder;
-import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.OsswService;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    private Toolbar mToolbar;
     public static final String NOTIFICATION_VIBRATION_PREFIX = "notif_vibrate";
     public static final String ALERT_VIBRATION_PREFIX = "alert_notif_vibrate";
 
@@ -37,7 +32,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         setContentView(R.layout.activity_settings);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         mToolbar.setClickable(true);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
