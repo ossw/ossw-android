@@ -94,16 +94,6 @@
 
         </RelativeLayout>
 
-        <!-- android:layout_marginTop="?android:attr/actionBarSize"-->
-        <!--fragment
-            android:id="@+id/fragment_drawer"
-            android:name="com.althink.android.ossw.drawer.NavigationDrawerFragment"
-            android:layout_width="@dimen/navigation_drawer_width"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:layout="@layout/fragment_navigation_drawer"
-            tools:layout="@layout/fragment_navigation_drawer" /-->
-
         <!-- Note that `android:layout_gravity` needs to be set to 'start' -->
         <android.support.design.widget.NavigationView
             android:id="@+id/navigation_view"

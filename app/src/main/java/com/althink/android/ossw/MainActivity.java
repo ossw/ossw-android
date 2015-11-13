@@ -138,26 +138,10 @@ public class MainActivity extends AppCompatActivity {
                         .replace(R.id.fragment_container, mWatchesFragment).commit();
             }
         });
-//        final Context ctx = this;
-//        ImageButton findWatchButton = (ImageButton) findViewById(R.id.find_watch);
-//        findWatchButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                final Intent intent = new Intent(ctx, DeviceScanFragment.class);
-//                startActivityForResult(intent, SELECT_WATCH_REQUEST);
-//            }
-//        });
 
         Intent osswServiceIntent = new Intent(this, OsswService.class);
         startService(osswServiceIntent);
         bindService(osswServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        //    if (savedInstanceState == null) {
-        //       onNavigationDrawerItemSelected(NavigationDrawerFragment.OPTION_WATCHSETS);
-        //   }
-        //Intent intent = new Intent();
-        // intent.setAction("com.althink.android.ossw.plugins.musicplayer.PluginService");
-        // bindService(intent, pluginServiceConnection, BIND_AUTO_CREATE);
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
