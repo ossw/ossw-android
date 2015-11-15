@@ -363,6 +363,22 @@ public class WatchSetCompiler {
                 fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP;
                 fParam = 0;
                 break;
+            case "stopwatch.recall.nextLap":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP;
+                fParam = 0;
+                break;
+            case "stopwatch.recall.prevLap":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP;
+                fParam = 0;
+                break;
+            case "stopwatch.recall.firstLap":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP;
+                fParam = 0;
+                break;
+            case "stopwatch.recall.lastLap":
+                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP;
+                fParam = 0;
+                break;
             case "toggleColors":
                 fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS;
                 fParam = 0;
@@ -425,6 +441,8 @@ public class WatchSetCompiler {
                 return WatchConstants.EVENT_BUTTON_DOWN_LONG;
             case "button_back_long":
                 return WatchConstants.EVENT_BUTTON_BACK_LONG;
+            case "screen_init":
+                return WatchConstants.EVENT_SCREEN_INIT;
         }
         throw new KnownParseError("Unknown event key: " + eventKey);
     }
@@ -801,19 +819,23 @@ public class WatchSetCompiler {
 
     private byte[] compileSource(JSONObject source, DataSourceType dataSourceType, int dataSourceRange) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        int type;
+        int type = 0;
         int value;
+        String converter = source.optString("converter", null);
+        if (converter != null) {
+            type = getConverterKey(converter)<<2;
+        }
         switch (source.getString("type")) {
             case "internal":
-                type = WatchConstants.DATA_SOURCE_INTERNAL;
+                type |= WatchConstants.DATA_SOURCE_INTERNAL;
                 value = getInternalSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
                 break;
             case "sensor":
-                type = WatchConstants.DATA_SOURCE_SENSOR;
+                type |= WatchConstants.DATA_SOURCE_SENSOR;
                 value = getSensorSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
                 break;
             case "extension":
-                type = WatchConstants.DATA_SOURCE_EXTERNAL;
+                type |= WatchConstants.DATA_SOURCE_EXTERNAL;
                 String extensionId = source.getString("extensionId");
                 String property = source.getString("property");
                 value = addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, dataSourceRange));
@@ -881,42 +903,40 @@ public class WatchSetCompiler {
             case "batteryLevel":
                 return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
 
-            case "stopwatch.total.time.hours":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_H;
-            case "stopwatch.total.time.minutes":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_M;
-            case "stopwatch.total.time.seconds":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_S;
-            case "stopwatch.total.time.cs":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_CS;
-            case "stopwatch.total.time.ms":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_MS;
-
+            case "stopwatch.total.time":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME;
             case "stopwatch.currentLap.number":
                 return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER;
-            case "stopwatch.currentLap.time.hours":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_H;
-            case "stopwatch.currentLap.time.minutes":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_M;
-            case "stopwatch.currentLap.time.seconds":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_S;
-            case "stopwatch.currentLap.time.cs":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_CS;
-            case "stopwatch.currentLap.time.ms":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_MS;
-
-            case "stopwatch.lastLap.time.hours":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_H;
-            case "stopwatch.lastLap.time.minutes":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_M;
-            case "stopwatch.lastLap.time.seconds":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_S;
-            case "stopwatch.lastLap.time.cs":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_CS;
-            case "stopwatch.lastLap.time.ms":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_MS;
+            case "stopwatch.currentLap.time":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME;
+            case "stopwatch.currentLap.split":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT;
+            case "stopwatch.recallLap.number":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_NUMBER;
+            case "stopwatch.recallLap.time":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME;
+            case "stopwatch.recallLap.split":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT;
+            case "stopwatch.lastLap.time":
+                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME;
         }
         throw new KnownParseError("Unknown internal property: " + property);
+    }
+
+    private int getConverterKey(String converterName) {
+        switch(converterName) {
+            case "msToHours":
+               return WatchConstants.CONVERTER_MS_TO_HOURS;
+            case "msToMinutesRemainder":
+                return WatchConstants.CONVERTER_MS_TO_MINUTES_REMAINDER;
+            case "msToSecondsRemainder":
+                return WatchConstants.CONVERTER_MS_TO_SECONDS_REMAINDER;
+            case "msToCsRemainder":
+                return WatchConstants.CONVERTER_MS_TO_CS_REMAINDER;
+            case "msRemainder":
+                return WatchConstants.CONVERTER_MS_REMAINDER;
+        }
+        throw new KnownParseError("Unknown converter: " + converterName);
     }
 
     private int getSensorSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {

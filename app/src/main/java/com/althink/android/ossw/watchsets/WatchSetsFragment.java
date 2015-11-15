@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
@@ -39,6 +40,7 @@ public abstract class WatchSetsFragment extends ListFragment {
     private Toolbar bottomToolbar;
     private WatchSetsListAdapter listAdaptor;
     private WatchSetType type;
+    private Handler toastHandler = new Handler();
 
     public WatchSetsFragment(WatchSetType type) {
         this.type = type;
@@ -168,13 +170,22 @@ public abstract class WatchSetsFragment extends ListFragment {
                     int count = getListView().getCount();
                     for (int i = 0; i < count; i++) {
                         if (sparseBooleanArray.get(i)) {
-                            WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                            String source = db.getWatchSetSourceById(info.getId());
-                            Integer extWatchSetId = db.getExtWatchSetId(info.getId());
-                            CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
-                            OsswService osswBleService = OsswService.getInstance();
-                            if(osswBleService != null) {
-                                osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
+                            try {
+                                WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                                String source = db.getWatchSetSourceById(info.getId());
+                                Integer extWatchSetId = db.getExtWatchSetId(info.getId());
+                                CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
+                                OsswService osswBleService = OsswService.getInstance();
+                                if (osswBleService != null) {
+                                    osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
+                                }
+                            } catch(Exception e) {
+                                toastHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             resetSelection();
                             return true;

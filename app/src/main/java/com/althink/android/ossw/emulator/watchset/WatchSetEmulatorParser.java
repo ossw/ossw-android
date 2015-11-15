@@ -294,7 +294,7 @@ public class WatchSetEmulatorParser {
     private EmulatorDataSource parseDataSource(InputStream is) throws Exception {
         int type = is.read();
         int property = is.read();
-        switch (type) {
+        switch (type&0x3) {
             case WatchConstants.DATA_SOURCE_INTERNAL:
                 return EmulatorDataSourceFactory.internalDataSource(property);
             case WatchConstants.DATA_SOURCE_EXTERNAL:
