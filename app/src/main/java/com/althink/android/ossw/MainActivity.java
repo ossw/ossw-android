@@ -1,5 +1,7 @@
 package com.althink.android.ossw;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,6 +29,9 @@ import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -116,15 +121,14 @@ public class MainActivity extends AppCompatActivity {
         mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         setSupportActionBar(mToolbar);
 
-//        getToolbar().setVisibility(View.GONE);
-
         mDrawer = (DrawerLayout) findViewById(R.id.drawer);
         drawerToggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.drawer_open,  R.string.drawer_close);
         mDrawer.setDrawerListener(drawerToggle);
 
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override public boolean onNavigationItemSelected(MenuItem menuItem) {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
                 onDrawerItemSelected(menuItem);
                 return true;
             }
@@ -252,24 +256,6 @@ public class MainActivity extends AppCompatActivity {
 
     void connectToWatch(String address) {
         mOsswBleService.connect(address);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case SELECT_WATCH_REQUEST:
-                if (resultCode == RESULT_OK) {
-                    String address = data.getStringExtra("watch_ble_address");
-                    if (address != null) {
-
-                        //Log.i(TAG, "Connect to: " + address);
-                        connectToWatch(address);
-                    }
-                }
-                break;
-        }
     }
 
     public Toolbar getToolbar() {

@@ -77,7 +77,7 @@
                         android:layout_alignParentStart="true"
                         android:layout_gravity="center_vertical"
                         android:layout_marginLeft="60dp"
-                        android:textSize="20dp"
+                        android:textSize="20sp"
                         android:text="@string/watch_is_disconnected" />
 
                     <ImageButton
@@ -87,7 +87,7 @@
                         android:layout_gravity="right|center_vertical"
                         android:background="@color/myPrimaryAlternativeColor"
                         android:clickable="true"
-                        android:src="@android:drawable/ic_menu_search" />
+                        android:src="@drawable/ic_forward" />
                 </FrameLayout>
 
                 </LinearLayout>

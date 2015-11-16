@@ -13,10 +13,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
 import android.util.Log;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -24,9 +22,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by krzysiek on 10/10/15.
@@ -56,10 +51,10 @@ public class BleDeviceService {
     private BleConnectionStatusHandler connStatusHandler;
     private CharacteristicChangeHandler characteristicChangeHandler;
 
-    private ExecutorService autoReconnectExecutor = new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
-    private Handler handler = new Handler();
+//    private ExecutorService autoReconnectExecutor = new ThreadPoolExecutor(1, 1,
+//            0L, TimeUnit.MILLISECONDS,
+//            new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
+//    private Handler handler = new Handler();
     private boolean autoReconnect = false;
     private Timer lastReconnectTimer;
     private String lastBleAddress;
@@ -81,7 +76,6 @@ public class BleDeviceService {
                             Log.i(TAG, "Restore last connection");
                             restoreConnection(lastBleAddress);
                         }
-                        return;
                     } else if (bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF) {
                         stopAutoReconnectAttempt();
                     }
@@ -503,5 +497,9 @@ public class BleDeviceService {
             return false;
         }
         return true;
+    }
+
+    public BluetoothAdapter getBluetoothAdapter() {
+        return bluetoothAdapter;
     }
 }

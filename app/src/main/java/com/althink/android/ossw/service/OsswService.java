@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -59,6 +60,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -756,6 +758,57 @@ public class OsswService extends Service {
     }
 
     private final IBinder mBinder = new LocalBinder();
+
+    public static class BluetoothDeviceSummary {
+        String name = "Unknown";
+        String address = "";
+        boolean sync = false;
+        int rssi = 0;
+        public BluetoothDeviceSummary(String name, String address, boolean sync, int rssi) {
+            this.name = name;
+            this.address = address;
+            this.sync = sync;
+            this.rssi = rssi;
+        }
+        public String getAddress() {
+            return address;
+        }
+        public String getName() {
+            return name;
+        }
+        public boolean isSynced() {
+            return sync;
+        }
+        public int getRSSI() {
+            return rssi;
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof BluetoothDeviceSummary) {
+                if (address.equals(((BluetoothDeviceSummary) o).address))
+                    return true;
+            }
+            return false;
+        }
+        @Override
+        public int hashCode() {
+            return address.hashCode();
+        }
+    }
+
+    // Get the list of synchronized devices
+    // TODO: add support for multiple simultaneous devices (for now the last one is returned)
+    public List<BluetoothDeviceSummary> getBondedDevices() {
+        List<BluetoothDeviceSummary> bleDevices = new ArrayList<>();
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
+        String address = sharedPref.getString(LAST_WATCH_ADDRESS, "");
+        if (address.isEmpty())
+            return bleDevices;
+        BluetoothDeviceSummary bd = new BluetoothDeviceSummary(
+                bleService.getBluetoothAdapter().getName(), address,bleService.isConnected(), 0);
+        bleDevices.add(bd);
+        return bleDevices;
+    }
 
     /**
      * Connects to the GATT server hosted on the Bluetooth LE device.
