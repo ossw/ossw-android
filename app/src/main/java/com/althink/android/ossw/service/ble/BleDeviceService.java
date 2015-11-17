@@ -499,7 +499,7 @@ public class BleDeviceService {
         return true;
     }
 
-    public BluetoothAdapter getBluetoothAdapter() {
-        return bluetoothAdapter;
+    public BluetoothDevice getBluetoothDevice() {
+        return bluetoothGatt.getDevice();
     }
 }

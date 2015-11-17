@@ -1,5 +1,4 @@
 <resources>
-
     <color name="myPrimaryColor">#15CAB1</color>
     <color name="myPrimaryDarkColor">#424242</color>
     <color name="myPrimaryAlternativeColor">#f39c12</color>
@@ -8,6 +7,8 @@
     <color name="myWindowBackground">#FFF</color>
     <color name="myTextPrimaryColor">#212121</color>
     <color name="myNavigationColor">#000</color>
+    <color name="myConnectedColor">#3A3</color>
+    <color name="myDisconnectedColor">#777</color>
 
     <drawable name="pressed_gray">#a0f5e9</drawable>
     <drawable name="selected_gray">#d5fbf5</drawable>

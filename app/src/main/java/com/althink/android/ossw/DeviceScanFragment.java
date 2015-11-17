@@ -38,7 +38,7 @@ public class DeviceScanFragment extends ListFragment {
     private LayoutInflater mInflater;
 
     private static final int REQUEST_ENABLE_BT = 1;
-    // Stops scanning after 10 seconds.
+    // Stops scanning after 5 seconds.
     private static final long SCAN_PERIOD = 5000;
 
     @Override
@@ -120,6 +120,8 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onPause() {
         super.onPause();
+        mHandler.removeCallbacks(stopScanningAfterDelay);
+        mHandler.removeCallbacks(rescanAfterDelay);
         scanLeDevice(false);
         mLeDeviceListAdapter.clear();
     }
@@ -130,16 +132,36 @@ public class DeviceScanFragment extends ListFragment {
         if (device == null) return;
 
         if (mScanning) {
+            mHandler.removeCallbacks(stopScanningAfterDelay);
             stopLeScan();
             mScanning = false;
         }
-        if (device.isSynced())
+        if (device.getSync().equals("CONNECTED")) {
             OsswService.getInstance().disconnect();
-        else
+            scanLeDevice(true);
+        } else {
             OsswService.getInstance().connect(device.getAddress());
-        scanLeDevice(true);
+            mLeDeviceListAdapter.moveToTop(position);
+        }
         //Log.i(TAG, "Return ble address: " +  device.getAddress());
     }
+
+    private Runnable stopScanningAfterDelay = new Runnable() {
+        @Override
+        public void run() {
+            mScanning = false;
+            stopLeScan();
+            if (getActivity() != null)
+                getActivity().invalidateOptionsMenu();
+        }
+    };
+
+    private Runnable rescanAfterDelay = new Runnable() {
+        @Override
+        public void run() {
+            scanLeDevice(true);
+        }
+    };
 
     private void scanLeDevice(final boolean enable) {
         if (enable) {
@@ -151,15 +173,7 @@ public class DeviceScanFragment extends ListFragment {
             if (!activeDevices.isEmpty())
                 mLeDeviceListAdapter.notifyDataSetChanged();
             // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mScanning = false;
-                    stopLeScan();
-                    getActivity().invalidateOptionsMenu();
-                }
-            }, SCAN_PERIOD);
-
+            mHandler.postDelayed(stopScanningAfterDelay, SCAN_PERIOD);
             mScanning = true;
             startLeScan();
         } else {
@@ -198,7 +212,7 @@ public class DeviceScanFragment extends ListFragment {
                 return;
             }
             OsswService.BluetoothDeviceSummary bd =
-                    new OsswService.BluetoothDeviceSummary(device.getName(), device.getAddress(), false, rssi);
+                    new OsswService.BluetoothDeviceSummary(device.getName(), device.getAddress(), "DISCONNECTED", rssi);
             if (!mLeDevices.contains(bd)) {
                 mLeDevices.add(bd);
             }
@@ -250,11 +264,24 @@ public class DeviceScanFragment extends ListFragment {
             else
                 viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
-            viewHolder.deviceState.setText(device.isSynced()?"ACTIVE":"INACTIVE");
+            viewHolder.deviceState.setText(device.getSync());
+            if (device.getSync().equals("CONNECTED"))
+                viewHolder.deviceState.setTextColor(getResources().getColor(R.color.myConnectedColor));
+            else
+                viewHolder.deviceState.setTextColor(getResources().getColor(R.color.myDisconnectedColor));
             if (device.getRSSI() != 0)
                 viewHolder.deviceRSSI.setText(device.getRSSI() + "dBm");
 
             return view;
+        }
+
+        public void moveToTop(int i) {
+            OsswService.BluetoothDeviceSummary bd = mLeDevices.get(i);
+            bd.setSync("CONNECTING");
+            mLeDevices.remove(i);
+            mLeDevices.add(0, bd);
+            mLeDeviceListAdapter.notifyDataSetChanged();
+            mHandler.postDelayed(rescanAfterDelay, 3000);
         }
     }
 

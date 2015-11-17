@@ -1,10 +1,6 @@
 package com.althink.android.ossw.service;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -49,7 +45,6 @@ import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -60,7 +55,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -762,9 +756,9 @@ public class OsswService extends Service {
     public static class BluetoothDeviceSummary {
         String name = "Unknown";
         String address = "";
-        boolean sync = false;
+        String sync = "DISCONNECTED";
         int rssi = 0;
-        public BluetoothDeviceSummary(String name, String address, boolean sync, int rssi) {
+        public BluetoothDeviceSummary(String name, String address, String sync, int rssi) {
             this.name = name;
             this.address = address;
             this.sync = sync;
@@ -776,8 +770,11 @@ public class OsswService extends Service {
         public String getName() {
             return name;
         }
-        public boolean isSynced() {
+        public String getSync() {
             return sync;
+        }
+        public void setSync(String s) {
+            sync = s;
         }
         public int getRSSI() {
             return rssi;
@@ -804,8 +801,9 @@ public class OsswService extends Service {
         String address = sharedPref.getString(LAST_WATCH_ADDRESS, "");
         if (address.isEmpty())
             return bleDevices;
+        String sync = bleService.isConnected() ? "CONNECTED":"DISCONNECTED";
         BluetoothDeviceSummary bd = new BluetoothDeviceSummary(
-                bleService.getBluetoothAdapter().getName(), address,bleService.isConnected(), 0);
+                bleService.getBluetoothDevice().getName(), address, sync, 0);
         bleDevices.add(bd);
         return bleDevices;
     }

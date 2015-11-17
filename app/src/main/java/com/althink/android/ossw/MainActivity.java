@@ -1,7 +1,5 @@
 package com.althink.android.ossw;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,7 +19,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,9 +26,6 @@ import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.watchsets.WatchSetsFragment;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -49,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private PluginsFragment mPluginsFragment;
     private DeviceScanFragment mWatchesFragment;
 
-    static final int SELECT_WATCH_REQUEST = 1;
+//    static final int SELECT_WATCH_REQUEST = 1;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -125,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         drawerToggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.drawer_open,  R.string.drawer_close);
         mDrawer.setDrawerListener(drawerToggle);
 
-        NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
+        final NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -140,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, mWatchesFragment).commit();
+                view.getMenu().getItem(2).setChecked(true);
             }
         });
 
@@ -254,9 +249,9 @@ public class MainActivity extends AppCompatActivity {
 //        unbindService(pluginServiceConnection);
     }
 
-    void connectToWatch(String address) {
-        mOsswBleService.connect(address);
-    }
+//    void connectToWatch(String address) {
+//        mOsswBleService.connect(address);
+//    }
 
     public Toolbar getToolbar() {
         return mToolbar;
