@@ -153,7 +153,8 @@ public class BleDeviceService {
                 //broadcastUpdate(intentAction);
                 //Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
-                bluetoothGatt.discoverServices();
+                if (bluetoothGatt != null)
+                    bluetoothGatt.discoverServices();
 
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {

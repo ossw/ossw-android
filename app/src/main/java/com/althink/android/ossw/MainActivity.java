@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.nav_exit:
                 mOsswBleService.disconnect();
+                mOsswBleService.stopForeground(true);
                 mOsswBleService.stopSelf();
                 finish();
         }
@@ -217,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
 //            hideConnectionAlertBar();
             showConnectionAlertBar(R.string.connected);
         } else if (status == BleConnectionStatus.CONNECTING) {
-            showConnectionAlertBar(R.string.connecting_to_watch);
+            showConnectionAlertBar(R.string.connecting);
         } else if (status == BleConnectionStatus.AUTO_RECONNECT) {
             showConnectionAlertBar(R.string.auto_reconnect);
         } else {

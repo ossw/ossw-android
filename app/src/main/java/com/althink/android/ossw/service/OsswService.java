@@ -1,5 +1,8 @@
 package com.althink.android.ossw.service;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -26,6 +29,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDB;
@@ -69,6 +73,7 @@ public class OsswService extends Service {
     private final static String TAG = OsswService.class.getSimpleName();
 
     public final static UUID OSSW_SERVICE_UUID = UUID.fromString("58C60001-20B7-4904-96FA-CBA8E1B95702");
+    public final static int NOTIFICATION_ID = 777;
 
     public static final int TEST_NOTIFICATION_ID = 0x10;
     public static final int TEST_ALERT_ID = 0x11;
@@ -456,23 +461,37 @@ public class OsswService extends Service {
         return null;
     }
 
+    private Notification getCompatNotification(String message) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                new Intent(getApplicationContext(), MainActivity.class), 0);
+        builder.setSmallIcon(R.drawable.ic_watch_dial)
+                .setContentTitle(getString(R.string.title_main))
+                .setContentText(message)
+                .setContentIntent(pendingIntent);
+        return builder.build();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Start service");
+        Log.i(TAG, " *** Start service");
 
         synchronized (this) {
 
             if (!started) {
+                startForeground(NOTIFICATION_ID, getCompatNotification("Starting"));
                 Log.i(TAG, "Initialize service");
                 db = new OsswDB(this);
                 bleService = new BleDeviceService(getApplicationContext(), new BleConnectionStatusHandler() {
                     @Override
                     public void handleConnectionStatusChange(BleConnectionStatus status) {
                         Log.i(TAG, "handleConnectionStatusChange: " + status);
+                        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         switch (status) {
                             case DISCONNECTED:
                                 broadcastUpdate(ACTION_WATCH_DISCONNECTED);
                                 clearPendingCommands();
+                                mNotificationManager.notify(NOTIFICATION_ID, getCompatNotification(getString(R.string.disconnected)));
                                 SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
                                 boolean disconnectAlert = shPref.getBoolean("disconnect_alert", true);
                                 if (disconnectAlert && !manualDisconnect) {
@@ -482,11 +501,13 @@ public class OsswService extends Service {
                                 break;
                             case CONNECTING:
                                 broadcastUpdate(ACTION_WATCH_CONNECTING);
+                                mNotificationManager.notify(NOTIFICATION_ID, getCompatNotification(getString(R.string.connecting)));
                                 break;
                             case CONNECTED:
                                 manualDisconnect = false;
                                 resetSentExtParamsCache();
                                 broadcastUpdate(ACTION_WATCH_CONNECTED);
+                                mNotificationManager.notify(NOTIFICATION_ID, getCompatNotification(getString(R.string.connected)));
 
 //                        // check version
                                 Log.i(TAG, "Check FW version");
@@ -549,7 +570,7 @@ public class OsswService extends Service {
 
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             String address = sharedPref.getString(OsswService.LAST_WATCH_ADDRESS, null);
-            if (address != null) {
+            if (address != null && !bleService.isConnected()) {
                 Log.i(TAG, "Connect to last known device: " + address);
                 bleService.connect(address, true);
             }
@@ -740,7 +761,6 @@ public class OsswService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         Log.i(TAG, "Service destroyed");
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
@@ -758,6 +778,7 @@ public class OsswService extends Service {
         close();
         started = false;
         INSTANCE = null;
+        super.onDestroy();
     }
 
     private final IBinder mBinder = new LocalBinder();

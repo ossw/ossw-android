@@ -4,9 +4,9 @@
     <string name="label_device_address">Device address:</string>
     <string name="label_state">State:</string>
     <string name="no_data">No data</string>
-    <string name="connecting">Connecting...</string>
+    <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
-    <string name="disconnected">Watch disconnected</string>
+    <string name="disconnected">Disconnected</string>
     <string name="auto_reconnect">Trying to reconnect</string>
     <string name="title_devices">BLE Devices</string>
     <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
@@ -22,8 +22,6 @@
     <string name="menu_stop">Stop</string>
     <string name="title_main">OSSW</string>
 
-    <string name="watch_is_disconnected">Watch is not connected</string>
-    <string name="connecting_to_watch">Connecting</string>
     <string name="action_find_watch">Connect to watch</string>
 
     <string name="action_run_ipantman">Run ipSensorMan</string>

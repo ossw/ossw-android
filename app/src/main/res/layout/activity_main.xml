@@ -78,7 +78,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginLeft="60dp"
                         android:textSize="20sp"
-                        android:text="@string/watch_is_disconnected" />
+                        android:text="@string/disconnected" />
 
                     <ImageButton
                         android:id="@+id/find_watch"
