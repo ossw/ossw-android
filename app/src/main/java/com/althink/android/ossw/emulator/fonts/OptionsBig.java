@@ -2497,7 +2497,63 @@ public class OptionsBig implements EmulatorFont {
                     (byte) 0xE0, // ###
                     (byte) 0x00, //
                     (byte) 0x00, //
-                    (byte) 0x00, //
+                    (byte) 0x00, // 
+                    
+                    // @4368 '&' (15 pixels wide)
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x3F, (byte)0xF0, //   ##########
+                    (byte)0x3F, (byte)0xF0, //   ##########
+                    (byte)0x3F, (byte)0xF0, //   ##########
+                    (byte)0x38, (byte)0x70, //   ###    ###
+                    (byte)0x38, (byte)0x70, //   ###    ###
+                    (byte)0x38, (byte)0x70, //   ###    ###
+                    (byte)0x38, (byte)0x70, //   ###    ###
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xE0, (byte)0x70, // ###      ###
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0xFF, (byte)0xFE, // ###############
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+
+                    // @4420 '%' (12 pixels wide)
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xE0, (byte)0x00, // ###
+                    (byte)0xE0, (byte)0x00, // ###
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0x00, (byte)0x70, //          ###
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0xFF, (byte)0xF0, // ############
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0x1C, (byte)0x00, //    ###
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
+                    (byte)0x00, (byte)0x00, //
             };
 
     private static final CharInfo[] optionBigFontDescriptors =
@@ -2505,9 +2561,9 @@ public class OptionsBig implements EmulatorFont {
                     new CharInfo(3, 0),        // !
                     new CharInfo(9, 26),        // "
                     new CharInfo(15, 78),        // #
-                    new CharInfo(0, 0),        // $
+                    new CharInfo(12, 4420),        // $
                     new CharInfo(26, 130),        // %
-                    new CharInfo(0, 0),        // &
+                    new CharInfo(15, 4368),        // &
                     new CharInfo(3, 234),        // '
                     new CharInfo(6, 260),        // (
                     new CharInfo(6, 286),        // )
