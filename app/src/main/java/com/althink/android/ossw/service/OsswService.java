@@ -786,7 +786,7 @@ public class OsswService extends Service {
     public static class BluetoothDeviceSummary {
         String name = "Unknown";
         String address = "";
-        String sync = "DISCONNECTED";
+        String sync = "";
         int rssi = 0;
         public BluetoothDeviceSummary(String name, String address, String sync, int rssi) {
             this.name = name;
@@ -831,7 +831,8 @@ public class OsswService extends Service {
         String address = sharedPref.getString(LAST_WATCH_ADDRESS, "");
         if (address.isEmpty())
             return bleDevices;
-        String sync = bleService.isConnected() ? "CONNECTED":"DISCONNECTED";
+        String sync = bleService.isConnected() ?
+                getString(R.string.connected) : getString(R.string.disconnected);
         BluetoothDeviceSummary bd = new BluetoothDeviceSummary(
                 bleService.getBluetoothDevice().getName(), address, sync, 0);
         bleDevices.add(bd);

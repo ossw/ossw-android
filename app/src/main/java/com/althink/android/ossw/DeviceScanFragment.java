@@ -136,7 +136,7 @@ public class DeviceScanFragment extends ListFragment {
             stopLeScan();
             mScanning = false;
         }
-        if (device.getSync().equals("CONNECTED")) {
+        if (device.getSync().equals(getString(R.string.connected))) {
             OsswService.getInstance().disconnect();
             scanLeDevice(true);
         } else {
@@ -211,8 +211,8 @@ public class DeviceScanFragment extends ListFragment {
                     !scanRecord.getServiceUuids().contains(new ParcelUuid(OsswService.OSSW_SERVICE_UUID)) ) {
                 return;
             }
-            OsswService.BluetoothDeviceSummary bd =
-                    new OsswService.BluetoothDeviceSummary(device.getName(), device.getAddress(), "DISCONNECTED", rssi);
+            OsswService.BluetoothDeviceSummary bd = new OsswService.BluetoothDeviceSummary(
+                    device.getName(), device.getAddress(), getString(R.string.disconnected), rssi);
             if (!mLeDevices.contains(bd)) {
                 mLeDevices.add(bd);
             }
@@ -265,7 +265,7 @@ public class DeviceScanFragment extends ListFragment {
                 viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
             viewHolder.deviceState.setText(device.getSync());
-            if (device.getSync().equals("CONNECTED"))
+            if (device.getSync().equals(getString(R.string.connected)))
                 viewHolder.deviceState.setTextColor(getResources().getColor(R.color.myConnectedColor));
             else
                 viewHolder.deviceState.setTextColor(getResources().getColor(R.color.myDisconnectedColor));
@@ -277,7 +277,7 @@ public class DeviceScanFragment extends ListFragment {
 
         public void moveToTop(int i) {
             OsswService.BluetoothDeviceSummary bd = mLeDevices.get(i);
-            bd.setSync("CONNECTING");
+            bd.setSync(getString(R.string.connecting));
             mLeDevices.remove(i);
             mLeDevices.add(0, bd);
             mLeDeviceListAdapter.notifyDataSetChanged();
