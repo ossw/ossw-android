@@ -484,6 +484,9 @@ public class OsswService extends Service {
 //                        // check version
                                 Log.i(TAG, "Check FW version");
                                 BluetoothGattService devInfoSrv = bleService.getService(UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB"));
+                                if (devInfoSrv == null) {
+                                    disconnect();
+                                }
                                 BluetoothGattCharacteristic fwVerChar = devInfoSrv.getCharacteristic(UUID.fromString("00002A26-0000-1000-8000-00805F9B34FB"));
                                 if (fwVerChar != null) {
                                     bleService.readCharacteristic(fwVerChar, new ReadCharacteristicHandler() {

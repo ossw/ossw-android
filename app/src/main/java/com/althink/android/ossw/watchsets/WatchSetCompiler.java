@@ -501,13 +501,17 @@ public class WatchSetCompiler {
         os.write(border);
         os.write(0); //RFU
         os.write(0); //RFU
-        JSONObject source = control.getJSONObject("source");
-        int dataSize = buildNumberRangeFromMaxValue(maxValue);
-        os.write(compileSource(source, DataSourceType.NUMBER, dataSize));
 
         int dataPtr = allocator.addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
+
+        JSONObject source = control.getJSONObject("source");
+        int dataSize = buildNumberRangeFromMaxValue(maxValue);
+        ControlInfo info = new ControlInfo();
+        info.dataRange = dataSize;
+
+        os.write(compileSource(source, DataSourceType.NUMBER, info));
 
         return os.toByteArray();
     }
@@ -553,12 +557,15 @@ public class WatchSetCompiler {
         JSONObject image = control.getJSONObject("imageSet");
         writeResourceType(os, image);
 
-        JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.NUMBER, 0x20));
-
         int dataPtr = allocator.addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
+
+        JSONObject source = control.getJSONObject("source");
+        ControlInfo info = new ControlInfo();
+        info.dataRange = 0x40;
+        os.write(compileSource(source, DataSourceType.NUMBER, info));
+
         return os.toByteArray();
     }
 
@@ -606,13 +613,15 @@ public class WatchSetCompiler {
                 writeResourceType(os, font);
                 break;
         }
-        JSONObject source = control.getJSONObject("source");
-        int sourceRange = buildDataSourceRangeFromNumberRange(numberRange);
-        os.write(compileSource(source, DataSourceType.NUMBER, sourceRange));
-
         int dataPtr = allocator.addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
+
+        JSONObject source = control.getJSONObject("source");
+        ControlInfo info = new ControlInfo();
+        info.dataRange = buildDataSourceRangeFromNumberRange(numberRange);
+        os.write(compileSource(source, DataSourceType.NUMBER, info));
+
         return os.toByteArray();
     }
 
@@ -677,12 +686,19 @@ public class WatchSetCompiler {
         if (stringLength < 0 || stringLength > WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH)
             throw new KnownParseError("Text length is not in range [0, " +
                     WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH + "]");
-        JSONObject source = control.getJSONObject("source");
-        os.write(compileSource(source, DataSourceType.STRING, stringLength));
 
-        int dataPtr = allocator.addBuffer(stringLength + 1);
+        ControlInfo info = new ControlInfo();
+        info.dataRange = stringLength;
+
+        JSONObject source = control.getJSONObject("source");
+        byte[] dataSourceData = compileSource(source, DataSourceType.STRING, info);
+
+        int dataPtr = allocator.addBuffer(info.dataRange + 1);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
+
+        os.write(dataSourceData);
+
         return os.toByteArray();
     }
 
@@ -817,35 +833,46 @@ public class WatchSetCompiler {
         }
     }
 
-    private byte[] compileSource(JSONObject source, DataSourceType dataSourceType, int dataSourceRange) throws Exception {
+    private byte[] compileSource(JSONObject source, DataSourceType dataSourceType, ControlInfo info) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        int type = 0;
-        int value;
+        int flags = 0;
         String converter = source.optString("converter", null);
         if (converter != null) {
-            type = getConverterKey(converter)<<2;
+            flags |= 0x80;
         }
         switch (source.getString("type")) {
+            case "static":
+                os.write(flags | WatchConstants.DATA_SOURCE_STATIC);
+                if (dataSourceType == DataSourceType.STRING) {
+                    byte[] value = source.getString("value").getBytes();
+                    os.write(value.length);
+                    os.write(value);
+                    info.dataRange = value.length;
+                } else {
+                    throw new KnownParseError("Static data source not supported for type: " + source.getString("type"));
+                }
+                break;
             case "internal":
-                type |= WatchConstants.DATA_SOURCE_INTERNAL;
-                value = getInternalSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
+                os.write(flags | WatchConstants.DATA_SOURCE_INTERNAL);
+                os.write(getInternalSourceKey(source.getString("property"), dataSourceType, info.dataRange));
                 break;
             case "sensor":
-                type |= WatchConstants.DATA_SOURCE_SENSOR;
-                value = getSensorSourceKey(source.getString("property"), dataSourceType, dataSourceRange);
+                os.write(flags | WatchConstants.DATA_SOURCE_SENSOR);
+                os.write(getSensorSourceKey(source.getString("property"), dataSourceType, info.dataRange));
                 break;
             case "extension":
-                type |= WatchConstants.DATA_SOURCE_EXTERNAL;
+                os.write(flags | WatchConstants.DATA_SOURCE_EXTERNAL);
                 String extensionId = source.getString("extensionId");
                 String property = source.getString("property");
-                value = addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, dataSourceRange));
+                os.write(addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, info.dataRange)));
                 break;
             default:
                 throw new KnownParseError("Unknown type: " + source.getString("type"));
         }
 
-        os.write(type);
-        os.write(value);
+        if (converter != null) {
+            os.write(getConverterKey(converter));
+        }
         return os.toByteArray();
     }
 

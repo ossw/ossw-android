@@ -209,9 +209,9 @@ public class WatchSetEmulatorParser {
         int width = is.read();
         int height = is.read();
         EmulatorResourceSource resource = parseResource(is, ctx);
+        is.read();
+        is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
-        is.read();
-        is.read();
         return new ImageFromSetEmulatorControl(x, y, width, height, resource, dataSource);
     }
 
@@ -249,10 +249,9 @@ public class WatchSetEmulatorParser {
             default:
                 throw new KnownParseError("Invalid digit type");
         }
-
+        is.read();
+        is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
-        is.read();
-        is.read();
         return new NumberEmulatorControl(numberRange, x, y, digitSpace, zeroPadded, renderer, dataSource);
     }
 
@@ -265,9 +264,9 @@ public class WatchSetEmulatorParser {
         int style2 = is.read();
         int style3 = is.read();
         int style4 = is.read();
+        is.read();
+        is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
-        is.read();
-        is.read();
 
         return new TextEmulatorControl(x, y, width, height, style1 << 24 | style2 << 16 | style3 << 8 | style4, dataSource);
     }
@@ -285,22 +284,27 @@ public class WatchSetEmulatorParser {
         style |= is.read()<< 16;
         style |= is.read()<< 8;
         style |= is.read();
+        is.read();
+        is.read();
         EmulatorDataSource dataSource = parseDataSource(is);
-        is.read();
-        is.read();
         return new ProgressEmulatorControl(maxValue, x, y, width, height, style, dataSource);
     }
 
     private EmulatorDataSource parseDataSource(InputStream is) throws Exception {
         int type = is.read();
         int property = is.read();
-        switch (type&0x3) {
+        if ((type & 0x80) != 0) {
+            is.read();
+        }
+        switch (type&0x3F) {
             case WatchConstants.DATA_SOURCE_INTERNAL:
                 return EmulatorDataSourceFactory.internalDataSource(property);
             case WatchConstants.DATA_SOURCE_EXTERNAL:
                 return EmulatorDataSourceFactory.externalDataSource(property, emulator);
             case WatchConstants.DATA_SOURCE_SENSOR:
                 return EmulatorDataSourceFactory.sensorDataSource(property);
+            case WatchConstants.DATA_SOURCE_STATIC:
+                return EmulatorDataSourceFactory.staticDataSource(property, is);
             default:
                 throw new RuntimeException("unknown data source type: " + type);
         }

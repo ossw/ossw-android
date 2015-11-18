@@ -81,6 +81,7 @@ public class WatchConstants {
     public static final int DATA_SOURCE_INTERNAL = 0;
     public static final int DATA_SOURCE_EXTERNAL = 1;
     public static final int DATA_SOURCE_SENSOR = 2;
+    public static final int DATA_SOURCE_STATIC = 3;
 
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 

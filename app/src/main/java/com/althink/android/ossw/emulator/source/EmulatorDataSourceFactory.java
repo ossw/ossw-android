@@ -11,9 +11,13 @@ import com.althink.android.ossw.emulator.source.internal.Hour24InternalEmulatorD
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.StaticTextDataSource;
 import com.althink.android.ossw.emulator.source.internal.YearInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.ZeroDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -54,5 +58,16 @@ public class EmulatorDataSourceFactory {
 
     public static EmulatorDataSource sensorDataSource(int property) {
         return new ZeroDataSource();
+    }
+
+    public static EmulatorDataSource staticDataSource(int property, InputStream is) {
+        byte[] bytes = new byte[property];
+        try {
+            is.read(bytes, 0, property);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+        return new StaticTextDataSource(new String(bytes));
     }
 }
