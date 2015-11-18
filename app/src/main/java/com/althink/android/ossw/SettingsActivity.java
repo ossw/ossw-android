@@ -4,10 +4,14 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
@@ -20,6 +24,10 @@ import android.view.View;
 
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
 import com.althink.android.ossw.service.OsswService;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
@@ -140,6 +148,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
+
+            // Application list for choosing notification sources
+            MultiSelectListPreference notificationApps = (MultiSelectListPreference) findPreference("notification_applications");
+            PackageManager pm = getActivity().getPackageManager();
+            Intent intentFilter = new Intent(Intent.ACTION_MAIN, null);
+            intentFilter.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> appList = pm.queryIntentActivities(intentFilter, PackageManager.PERMISSION_GRANTED);
+            Collections.sort(appList, new ResolveInfo.DisplayNameComparator(pm));
+            List<CharSequence> entries = new ArrayList<CharSequence>();
+            List<CharSequence> entryValues = new ArrayList<CharSequence>();
+            for (ResolveInfo info : appList) {
+                int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+                int flags = info.activityInfo.applicationInfo.flags & mask;
+                if (flags == mask || flags == 0) {
+                    entryValues.add(info.activityInfo.packageName);
+                    entries.add(info.loadLabel(pm).toString());
+                }
+            }
+            notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
+            notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design guidelines.

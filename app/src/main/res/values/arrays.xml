@@ -18,4 +18,5 @@
         <item>optionNormal</item>
         <item>optionBig</item>
     </string-array>
+    <string-array name="empty_array" />
 </resources>

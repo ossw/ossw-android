@@ -14,6 +14,13 @@
             android:key="notifications"
             android:defaultValue="true"
             android:title="@string/pref_notifications_title"/>
+        <MultiSelectListPreference
+            android:key="notification_applications"
+            android:title="@string/pref_notification_filter"
+            android:dialogTitle="@string/pref_notification_filter"
+            android:entries="@array/empty_array"
+            android:entryValues="@array/empty_array"
+            android:defaultValue="@array/empty_array"/>
         <ListPreference
             android:defaultValue="normalBold"
             android:dialogTitle="@string/select_font"
