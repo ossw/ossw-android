@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -75,6 +76,8 @@ public class OsswService extends Service {
     public static final String CLOSE_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.close";
     public static final String CLOSE_FAKE_NOTIFICATION_INTENT_ACTION = "com.althink.android.ossw.test.notification.close";
 
+    private static final long[] disconnectPattern = {0, 100, 50, 100, 50, 100, 50, 200, 50, 200};
+    private static boolean manualDisconnect = false;
     public final static String ACTION_WATCH_CONNECTING =
             "com.althink.android.ossw.ACTION_WATCH_CONNECTING";
     public final static String ACTION_WATCH_CONNECTED =
@@ -470,12 +473,18 @@ public class OsswService extends Service {
                             case DISCONNECTED:
                                 broadcastUpdate(ACTION_WATCH_DISCONNECTED);
                                 clearPendingCommands();
+                                SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
+                                boolean disconnectAlert = shPref.getBoolean("disconnect_alert", true);
+                                if (disconnectAlert && !manualDisconnect) {
+                                    Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                                    v.vibrate(disconnectPattern, -1);
+                                }
                                 break;
                             case CONNECTING:
                                 broadcastUpdate(ACTION_WATCH_CONNECTING);
                                 break;
                             case CONNECTED:
-
+                                manualDisconnect = false;
                                 resetSentExtParamsCache();
                                 broadcastUpdate(ACTION_WATCH_CONNECTED);
 
@@ -833,6 +842,7 @@ public class OsswService extends Service {
      */
     public void disconnect() {
         Log.i(TAG, "Disconnect");
+        manualDisconnect = true;
         // we don't want to automatically connect to the watch that was disconnected by the user
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
         sharedPref.edit().remove(LAST_WATCH_ADDRESS).commit();

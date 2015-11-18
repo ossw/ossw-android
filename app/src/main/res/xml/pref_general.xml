@@ -95,7 +95,10 @@
                 android:key="button_test_alert_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
-
+    <SwitchPreference
+        android:key="disconnect_alert"
+        android:defaultValue="true"
+        android:title="@string/pref_disconnect_notif_title"/>
     <PreferenceScreen
         android:title="@string/pref_notifications_access_title">
         <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
