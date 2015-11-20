@@ -86,7 +86,7 @@
                         android:layout_height="50dp"
                         android:layout_gravity="right|center_vertical"
                         android:background="@color/myPrimaryColor"
-                        android:clickable="true"
+                        android:clickable="false"
                         android:src="@drawable/ic_forward" />
                 </FrameLayout>
 

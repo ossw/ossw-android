@@ -1,13 +1,13 @@
 <resources>
     <color name="myPrimaryColor">#15CAB1</color>
     <color name="myPrimaryDarkColor">#424242</color>
-    <color name="myPrimaryAlternativeColor">#f39c12</color>
-    <color name="myAccentColor">#15CAB1</color>
+    <color name="myPrimaryAlternativeColor">#C58000</color>
+    <color name="myAccentColor">#EAEA11</color>
     <color name="myDrawerBackground">#FFF</color>
     <color name="myWindowBackground">#FFF</color>
     <color name="myTextPrimaryColor">#212121</color>
     <color name="myNavigationColor">#000</color>
-    <color name="myConnectedColor">#3A3</color>
+    <color name="myConnectedColor">#15CAB1</color>
     <color name="myDisconnectedColor">#777</color>
 
     <drawable name="pressed_gray">#a0f5e9</drawable>

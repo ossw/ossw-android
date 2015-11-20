@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v4.app.ListFragment;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceScanFragment extends ListFragment {
-//    private final static String TAG = DeviceScanFragment.class.getSimpleName();
+    private final static String TAG = DeviceScanFragment.class.getSimpleName();
 
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -121,7 +122,7 @@ public class DeviceScanFragment extends ListFragment {
     public void onPause() {
         super.onPause();
         mHandler.removeCallbacks(stopScanningAfterDelay);
-        mHandler.removeCallbacks(rescanAfterDelay);
+//        mHandler.removeCallbacks(rescanAfterDelay);
         scanLeDevice(false);
         mLeDeviceListAdapter.clear();
     }
@@ -129,12 +130,13 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         final OsswService.BluetoothDeviceSummary device = mLeDeviceListAdapter.getDevice(position);
-        if (device == null) return;
+        if (device == null)
+            return;
+        Log.i(TAG, "List item clicked. Scanning = " + mScanning + ", device.sync = " + device.getSync());
 
         if (mScanning) {
             mHandler.removeCallbacks(stopScanningAfterDelay);
-            stopLeScan();
-            mScanning = false;
+            scanLeDevice(false);
         }
         if (device.getSync().equals(getString(R.string.connected))) {
             OsswService.getInstance().disconnect();
@@ -149,22 +151,23 @@ public class DeviceScanFragment extends ListFragment {
     private Runnable stopScanningAfterDelay = new Runnable() {
         @Override
         public void run() {
-            mScanning = false;
-            stopLeScan();
+            scanLeDevice(false);
             if (getActivity() != null)
                 getActivity().invalidateOptionsMenu();
         }
     };
 
-    private Runnable rescanAfterDelay = new Runnable() {
-        @Override
-        public void run() {
-            scanLeDevice(true);
-        }
-    };
+//    private Runnable rescanAfterDelay = new Runnable() {
+//        @Override
+//        public void run() {
+//            scanLeDevice(true);
+//        }
+//    };
 
     private void scanLeDevice(final boolean enable) {
         if (enable) {
+            Log.i(TAG, "Enable scanning ");
+            mScanning = true;
             mLeDeviceListAdapter.clear();
             // Now fill the top of the list with "paired" devices
             List<OsswService.BluetoothDeviceSummary> activeDevices = OsswService.getInstance().getBondedDevices();
@@ -174,11 +177,11 @@ public class DeviceScanFragment extends ListFragment {
                 mLeDeviceListAdapter.notifyDataSetChanged();
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(stopScanningAfterDelay, SCAN_PERIOD);
-            mScanning = true;
             startLeScan();
         } else {
-            mScanning = false;
+            Log.i(TAG, "Disable scanning ");
             stopLeScan();
+            mScanning = false;
         }
         getActivity().invalidateOptionsMenu();
     }
@@ -224,6 +227,7 @@ public class DeviceScanFragment extends ListFragment {
 
         public void clear() {
             mLeDevices.clear();
+            notifyDataSetChanged();
         }
 
         @Override
@@ -281,7 +285,7 @@ public class DeviceScanFragment extends ListFragment {
             mLeDevices.remove(i);
             mLeDevices.add(0, bd);
             mLeDeviceListAdapter.notifyDataSetChanged();
-            mHandler.postDelayed(rescanAfterDelay, 3000);
+//            mHandler.postDelayed(rescanAfterDelay, 3000);
         }
     }
 

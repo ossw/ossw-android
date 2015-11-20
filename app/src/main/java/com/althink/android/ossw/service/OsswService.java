@@ -474,7 +474,7 @@ public class OsswService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, " *** Start service");
+        Log.i(TAG, "StartCommand called");
 
         synchronized (this) {
 
@@ -570,6 +570,8 @@ public class OsswService extends Service {
 
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             String address = sharedPref.getString(OsswService.LAST_WATCH_ADDRESS, null);
+            Log.i(TAG, "Last known device: " + address);
+            Log.i(TAG, "Connected: " + bleService.isConnected());
             if (address != null && !bleService.isConnected()) {
                 Log.i(TAG, "Connect to last known device: " + address);
                 bleService.connect(address, true);
@@ -852,7 +854,7 @@ public class OsswService extends Service {
         Log.i(TAG, "Connect");
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
-        sharedPref.edit().putString(LAST_WATCH_ADDRESS, address).commit();
+        sharedPref.edit().putString(LAST_WATCH_ADDRESS, address).apply();
         return bleService.connect(address, true);
     }
 
@@ -867,7 +869,7 @@ public class OsswService extends Service {
         manualDisconnect = true;
         // we don't want to automatically connect to the watch that was disconnected by the user
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
-        sharedPref.edit().remove(LAST_WATCH_ADDRESS).commit();
+        sharedPref.edit().remove(LAST_WATCH_ADDRESS).apply();
         bleService.disconnect();
     }
 
