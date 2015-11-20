@@ -21,7 +21,6 @@ public class LowLevelRenderer {
 
     private Paint paint = new Paint();
     private Canvas canvas;
-    private int scale;
     private boolean inverted;
     private boolean backlight;
     private Bitmap bitmap;
@@ -31,7 +30,6 @@ public class LowLevelRenderer {
         this.canvas = canvas;
         this.bitmap = bitmap;
         this.frameBuffer = frameBuffer;
-        scale = canvas.getWidth() / WatchConstants.SCREEN_WIDTH;
     }
 
     public void setMode(boolean inverted, boolean backlight) {
@@ -251,7 +249,7 @@ public class LowLevelRenderer {
     public void flush() {
         //long startTime = System.currentTimeMillis();
         bitmap.setPixels(frameBuffer, 0, WatchConstants.SCREEN_WIDTH, 0, 0, WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT);
-        canvas.drawBitmap(bitmap, new Rect(0, 0, WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), paint);
+        canvas.drawBitmap(bitmap, new Rect(0, 0, WatchConstants.SCREEN_WIDTH, WatchConstants.SCREEN_HEIGHT), new Rect(0, 0, canvas.getClipBounds().right, canvas.getClipBounds().bottom), paint);
         //long endTime = System.currentTimeMillis();
         //Log.i("RENDER", "Flush time: " + (endTime - startTime));
     }
