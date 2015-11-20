@@ -140,9 +140,6 @@ public class WatchSetImportFragment extends Fragment {
             return null;
         }
 
-        if (DocumentsContract.isDocumentUri(context, uri)) {
-            return null;
-        }
         if (isExternalStorageDocument(uri)) {
             final String docId = DocumentsContract.getDocumentId(uri);
             final String[] split = docId.split(":");
