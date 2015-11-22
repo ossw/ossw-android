@@ -465,7 +465,10 @@ public class OsswService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
                 new Intent(getApplicationContext(), MainActivity.class), 0);
-        builder.setSmallIcon(R.drawable.ic_watch_dial)
+        int image =  R.drawable.ic_watch_off;
+        if (bleService != null && bleService.getConnectionStatus() == BleConnectionStatus.CONNECTED)
+                image = R.drawable.ic_watch_dial;
+        builder.setSmallIcon(image)
                 .setContentTitle(getString(R.string.title_main))
                 .setContentText(message)
                 .setContentIntent(pendingIntent);
@@ -474,7 +477,7 @@ public class OsswService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "StartCommand called");
+//        Log.i(TAG, "StartCommand called");
 
         synchronized (this) {
 
@@ -570,8 +573,8 @@ public class OsswService extends Service {
 
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             String address = sharedPref.getString(OsswService.LAST_WATCH_ADDRESS, null);
-            Log.i(TAG, "Last known device: " + address);
-            Log.i(TAG, "Connected: " + bleService.isConnected());
+//            Log.i(TAG, "Last known device: " + address);
+//            Log.i(TAG, "Connected: " + bleService.isConnected());
             if (address != null && !bleService.isConnected()) {
                 Log.i(TAG, "Connect to last known device: " + address);
                 bleService.connect(address, true);

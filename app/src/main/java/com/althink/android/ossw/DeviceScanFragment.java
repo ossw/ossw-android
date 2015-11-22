@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceScanFragment extends ListFragment {
-    private final static String TAG = DeviceScanFragment.class.getSimpleName();
+//    private final static String TAG = DeviceScanFragment.class.getSimpleName();
 
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -46,7 +46,7 @@ public class DeviceScanFragment extends ListFragment {
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(TAG, "Intent received: " + intent);
+//            Log.i(TAG, "Intent received: " + intent);
             mLeDeviceListAdapter.notifyDataSetChanged();
         }
     };
@@ -54,7 +54,7 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "onCreate called");
+//        Log.i(TAG, "onCreate called");
         // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         setListAdapter(mLeDeviceListAdapter);
@@ -62,7 +62,7 @@ public class DeviceScanFragment extends ListFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.i(TAG, "onCreateView called");
+//        Log.i(TAG, "onCreateView called");
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watches, container, false);
         setHasOptionsMenu(true);
@@ -131,7 +131,7 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.i(TAG, "onPause called");
+//        Log.i(TAG, "onPause called");
         getActivity().unregisterReceiver(mGattUpdateReceiver);
         scanLeDevice(false);
     }
@@ -139,7 +139,7 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume called");
+//        Log.i(TAG, "onResume called");
         getActivity().registerReceiver(mGattUpdateReceiver, ((MainActivity) getActivity()).makeGattUpdateIntentFilter());
     }
 
@@ -148,7 +148,7 @@ public class DeviceScanFragment extends ListFragment {
         final OsswService.BluetoothDeviceSummary device = mLeDeviceListAdapter.getDevice(position);
         if (device == null)
             return;
-        Log.i(TAG, "List item clicked. Scanning = " + mScanning + ", device.sync = " + device.getSync());
+//        Log.i(TAG, "List item clicked. Scanning = " + mScanning + ", device.sync = " + device.getSync());
 
         if (device.getSync().equals(BleConnectionStatus.CONNECTING))
             return;
@@ -172,7 +172,7 @@ public class DeviceScanFragment extends ListFragment {
         if (enable) {
             if (mScanning)
                 return;
-            Log.i(TAG, "Enable scanning ");
+//            Log.i(TAG, "Enable scanning ");
             mScanning = true;
             mLeDeviceListAdapter.clear();
             // Now fill the top of the list with "paired" devices
@@ -187,7 +187,7 @@ public class DeviceScanFragment extends ListFragment {
         } else {
             if (!mScanning)
                 return;
-            Log.i(TAG, "Disable scanning ");
+//            Log.i(TAG, "Disable scanning ");
             stopLeScan();
             if (mScanning) {
                 mHandler.removeCallbacks(stopScanningAfterDelay);
