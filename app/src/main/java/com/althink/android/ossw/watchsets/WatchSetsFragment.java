@@ -2,6 +2,7 @@ package com.althink.android.ossw.watchsets;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -33,7 +34,7 @@ import java.util.ArrayList;
  */
 public class WatchSetsFragment extends ListFragment {
 
-    private final static String TAG = WatchSetsFragment.class.getSimpleName();
+//    private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private static final int WATCH_FACE_IMPORTED = 1;
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
@@ -43,7 +44,7 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.i(TAG, "onCreateView called");
+//        Log.i(TAG, "onCreateView called");
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
         getActivity().setTitle(R.string.drawer_watchsets);
@@ -55,7 +56,7 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "onCreate called");
+//        Log.i(TAG, "onCreate called");
         db = new OsswDB(getActivity());
         listAdapter = new WatchSetsListAdapter();
         setListAdapter(listAdapter);
@@ -65,9 +66,6 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-//        Toolbar toolbar = ((MainActivity)getActivity()).getToolbar();
-//        toolbar.setNavigationOnClickListener(null);
-//                    toolbar.setNavigationIcon(R);
         inflater.inflate(R.menu.watchsets, menu);
         refreshWatchSetList();
 //        setMenuOptions(Mode.NONE);
@@ -93,7 +91,8 @@ public class WatchSetsFragment extends ListFragment {
 //            }
 //        }
         int checkedCount = getListView().getCheckedItemCount();
-        getActivity().setTitle(checkedCount > 0 ? "" : getString(R.string.drawer_watchsets));
+        boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        getActivity().setTitle(hideTitle ? "" : getString(R.string.drawer_watchsets));
 
         setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
     }
