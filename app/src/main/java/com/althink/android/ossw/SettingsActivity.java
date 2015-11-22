@@ -159,12 +159,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             List<CharSequence> entries = new ArrayList<CharSequence>();
             List<CharSequence> entryValues = new ArrayList<CharSequence>();
             for (ResolveInfo info : appList) {
-                int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
-                int flags = info.activityInfo.applicationInfo.flags & mask;
-                if (flags == mask || flags == 0) {
-                    entryValues.add(info.activityInfo.packageName);
-                    entries.add(info.loadLabel(pm).toString());
-                }
+                entryValues.add(info.activityInfo.packageName);
+                entries.add(info.loadLabel(pm).toString());
             }
             notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
             notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));

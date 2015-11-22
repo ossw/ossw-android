@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = MainActivity.class.getSimpleName();
+//    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String DRAWER_SELECTED_POSITION = "drawerSelectedItem";
     private static final int SCREEN_COUNT = 3;
     private static final int SCREEN_DEVICES = 2;
@@ -74,39 +74,39 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            Log.i(TAG, "Intent received: " + intent);
+//            Log.i(TAG, "Intent received: " + intent);
             final String action = intent.getAction();
             if (OsswService.ACTION_WATCH_CONNECTING.equals(action)) {
                 showConnectionAlertBar(R.string.connecting);
                 invalidateOptionsMenu();
-                Log.i(TAG, "Connecting to the watch");
+//                Log.i(TAG, "Connecting to the watch");
             } else if (OsswService.ACTION_WATCH_CONNECTED.equals(action)) {
                 Toast.makeText(MainActivity.this, getString(R.string.toast_watch_is_connected), Toast.LENGTH_SHORT).show();
                 hideConnectionAlertBar();
 //                showConnectionAlertBar(R.string.connected);
                 invalidateOptionsMenu();
-                Log.i(TAG, "Watch is connected");
+//                Log.i(TAG, "Watch is connected");
             } else if (OsswService.ACTION_WATCH_DISCONNECTED.equals(action)) {
                 showConnectionAlertBar(R.string.disconnected);
                 invalidateOptionsMenu();
-                Log.i(TAG, "Watch is disconnected");
+//                Log.i(TAG, "Watch is disconnected");
 
             } else if (OsswService.ACTION_WATCH_AUTO_RECONNECT.equals(action)) {
                 showConnectionAlertBar(R.string.auto_reconnect);
                 invalidateOptionsMenu();
-                Log.i(TAG, "Trying to auto reconnect");
+//                Log.i(TAG, "Trying to auto reconnect");
             }
         }
     };
 
     private void hideConnectionAlertBar() {
-        Log.i(TAG, "HIDING ALERT BAR");
+//        Log.i(TAG, "HIDING ALERT BAR");
         View view = findViewById(R.id.watch_connection_alert);
         view.setVisibility(View.GONE);
     }
 
     private void showConnectionAlertBar(int messageId) {
-        Log.i(TAG, "SHOWING ALERT BAR");
+//        Log.i(TAG, "SHOWING ALERT BAR");
         TextView tv1 = (TextView) findViewById(R.id.connectionStatus);
         tv1.setText(messageId);
         View view = findViewById(R.id.watch_connection_alert);
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "CREATE");
+//        Log.i(TAG, "CREATE");
 
 //        mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         if (savedInstanceState == null) {
-            Log.i(TAG, "SAVED STATE EMPTY");
+//            Log.i(TAG, "SAVED STATE EMPTY");
             mPosition = 0; //savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
             onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
         }
@@ -192,14 +192,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        Log.i(TAG, "POST-CREATE");
+//        Log.i(TAG, "POST-CREATE");
         drawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.i(TAG, "CONFIG-CHANGE");
+//        Log.i(TAG, "CONFIG-CHANGE");
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "RESUME");
+//        Log.i(TAG, "RESUME");
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
         refreshConnectionAlert();
@@ -269,13 +269,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
-        Log.i(TAG, "PAUSE");
+//        Log.i(TAG, "PAUSE");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "DESTROY");
+//        Log.i(TAG, "DESTROY");
         unbindService(mServiceConnection);
 //        unbindService(pluginServiceConnection);
     }
@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.i(TAG, "SAVE-STATE");
+//        Log.i(TAG, "SAVE-STATE");
         outState.putInt(DRAWER_SELECTED_POSITION, mPosition);
     }
 

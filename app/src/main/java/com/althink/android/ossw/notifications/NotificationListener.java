@@ -174,7 +174,20 @@ public class NotificationListener extends NotificationListenerService {
         return !notification.equals(existingNotification);
     }
 
+    private boolean skipNotification(StatusBarNotification sbn) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> selections = sharedPref.getStringSet("notification_applications", null);
+        if (selections == null)
+            return false;
+//        Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
+        if (selections.contains(sbn.getPackageName()))
+            return false;
+        return true;
+    }
+
     private Notification parseNotification(StatusBarNotification sbn, String notificationId, Notification existingNotification) {
+        if (skipNotification(sbn))
+            return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
