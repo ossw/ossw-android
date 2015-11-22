@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
     private void setConnectionAlertBar(BleConnectionStatus status) {
         if (status == BleConnectionStatus.CONNECTED) {
             hideConnectionAlertBar();
-            showConnectionAlertBar(R.string.connected);
+//            showConnectionAlertBar(R.string.connected);
         } else if (status == BleConnectionStatus.CONNECTING) {
             showConnectionAlertBar(R.string.connecting);
         } else if (status == BleConnectionStatus.AUTO_RECONNECT) {
