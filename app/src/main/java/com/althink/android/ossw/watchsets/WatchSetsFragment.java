@@ -93,6 +93,7 @@ public class WatchSetsFragment extends ListFragment {
 //            }
 //        }
         int checkedCount = getListView().getCheckedItemCount();
+        getActivity().setTitle(checkedCount > 0 ? "" : getString(R.string.drawer_watchsets));
 
         setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
     }
