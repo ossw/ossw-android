@@ -788,12 +788,12 @@ public class OsswService extends Service {
     public static class BluetoothDeviceSummary {
         String name = "Unknown";
         String address = "";
-        String sync = "";
+//        String sync = "";
         int rssi = 0;
-        public BluetoothDeviceSummary(String name, String address, String sync, int rssi) {
+        public BluetoothDeviceSummary(String name, String address, /*String sync, */int rssi) {
             this.name = name;
             this.address = address;
-            this.sync = sync;
+//            this.sync = sync;
             this.rssi = rssi;
         }
         public String getAddress() {
@@ -802,11 +802,8 @@ public class OsswService extends Service {
         public String getName() {
             return name;
         }
-        public String getSync() {
-            return sync;
-        }
-        public void setSync(String s) {
-            sync = s;
+        public BleConnectionStatus getSync() {
+            return INSTANCE.getStatus(address);
         }
         public int getRSSI() {
             return rssi;
@@ -826,19 +823,23 @@ public class OsswService extends Service {
     }
 
     // Get the list of synchronized devices
-    // TODO: add support for multiple simultaneous devices (for now the last one is returned)
     public List<BluetoothDeviceSummary> getBondedDevices() {
+        // TODO: add support for multiple simultaneous devices (for now the last one is returned)
         List<BluetoothDeviceSummary> bleDevices = new ArrayList<>();
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
         String address = sharedPref.getString(LAST_WATCH_ADDRESS, "");
         if (address.isEmpty())
             return bleDevices;
-        String sync = bleService.isConnected() ?
-                getString(R.string.connected) : getString(R.string.disconnected);
+//        String sync = bleService.isConnected() ?
+//                getString(R.string.connected) : getString(R.string.disconnected);
         BluetoothDeviceSummary bd = new BluetoothDeviceSummary(
-                bleService.getBluetoothDevice().getName(), address, sync, 0);
+                bleService.getBluetoothDevice().getName(), address, /*sync,*/ 0);
         bleDevices.add(bd);
         return bleDevices;
+    }
+
+    public BleConnectionStatus getStatus(String address) {
+        return bleService.getStatus(address);
     }
 
     /**

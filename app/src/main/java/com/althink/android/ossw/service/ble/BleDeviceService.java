@@ -136,6 +136,12 @@ public class BleDeviceService {
         return bluetoothGatt != null && connectionState == STATE_CONNECTED;
     }
 
+    public BleConnectionStatus getStatus(String address) throws IllegalStateException {
+        if (address.equals(lastBleAddress) && bluetoothGatt != null)
+            return getConnectionStatus();
+        return BleConnectionStatus.DISCONNECTED;
+    }
+
     private void invokeConnectionStatusHandler(BleConnectionStatus status) {
         if (connStatusHandler != null) {
             connStatusHandler.handleConnectionStatusChange(status);

@@ -32,8 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private final static String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String DRAWER_SELECTED_POSITION = "drawerSelectedItem";
+    private static final int SCREEN_COUNT = 3;
+    private static final int SCREEN_DEVICES = 2;
+    private static List<MenuItem> items;
 
     private OsswService mOsswBleService;
 
@@ -79,8 +82,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "Connecting to the watch");
             } else if (OsswService.ACTION_WATCH_CONNECTED.equals(action)) {
                 Toast.makeText(MainActivity.this, getString(R.string.toast_watch_is_connected), Toast.LENGTH_SHORT).show();
-//                hideConnectionAlertBar();
-                showConnectionAlertBar(R.string.connected);
+                hideConnectionAlertBar();
+//                showConnectionAlertBar(R.string.connected);
                 invalidateOptionsMenu();
                 Log.i(TAG, "Watch is connected");
             } else if (OsswService.ACTION_WATCH_DISCONNECTED.equals(action)) {
@@ -96,12 +99,14 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-//    private void hideConnectionAlertBar() {
-//        View view = findViewById(R.id.watch_connection_alert);
-//        view.setVisibility(View.GONE);
-//    }
+    private void hideConnectionAlertBar() {
+        Log.i(TAG, "HIDING ALERT BAR");
+        View view = findViewById(R.id.watch_connection_alert);
+        view.setVisibility(View.GONE);
+    }
 
     private void showConnectionAlertBar(int messageId) {
+        Log.i(TAG, "SHOWING ALERT BAR");
         TextView tv1 = (TextView) findViewById(R.id.connectionStatus);
         tv1.setText(messageId);
         View view = findViewById(R.id.watch_connection_alert);
@@ -111,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Log.i(TAG, "CREATE");
+        Log.i(TAG, "CREATE");
 
 //        mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
@@ -128,15 +133,20 @@ public class MainActivity extends AppCompatActivity {
 
         navigationView = (NavigationView) findViewById(R.id.navigation_view);
         Menu menu = navigationView.getMenu();
-        final List<MenuItem> items = new ArrayList<>();
+        items = new ArrayList<>();
         for (int i = 0; i < menu.size(); i++) {
             items.add(menu.getItem(i));
         }
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
+                mDrawer.closeDrawers();
+                int itemIndex = items.indexOf(menuItem);
+                if (mPosition == itemIndex)
+                    return true;
+                if (itemIndex < SCREEN_COUNT)
+                    mPosition = itemIndex;
                 onDrawerItemSelected(menuItem);
-                mPosition = items.indexOf(menuItem);
                 return true;
             }
         });
@@ -145,11 +155,22 @@ public class MainActivity extends AppCompatActivity {
         frameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPosition = 2;
+                if (mPosition == SCREEN_DEVICES)
+                    return;
+                mPosition = SCREEN_DEVICES;
                 navigationView.getMenu().getItem(mPosition).setChecked(true);
                 onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
             }
         });
+
+        if (savedInstanceState == null) {
+            Log.i(TAG, "SAVED STATE EMPTY");
+            mPosition = 0; //savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
+            onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
+        }
+        else {
+            mPosition = savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
+        }
 
         Intent osswServiceIntent = new Intent(this, OsswService.class);
         startService(osswServiceIntent);
@@ -164,26 +185,21 @@ public class MainActivity extends AppCompatActivity {
                 mDrawer.openDrawer(GravityCompat.START);
                 return true;
         }
-        if (drawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     // Make sure this is the method with just `Bundle` as the signature
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            mPosition = savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
-        }
-        onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
+        Log.i(TAG, "POST-CREATE");
         drawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        Log.i(TAG, "CONFIG-CHANGE");
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
@@ -210,13 +226,12 @@ public class MainActivity extends AppCompatActivity {
                 mOsswBleService.stopSelf();
                 finish();
         }
-        mDrawer.closeDrawers();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        //Log.i(TAG, "RESUME");
+        Log.i(TAG, "RESUME");
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
         refreshConnectionAlert();
@@ -230,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setConnectionAlertBar(BleConnectionStatus status) {
         if (status == BleConnectionStatus.CONNECTED) {
-//            hideConnectionAlertBar();
+            hideConnectionAlertBar();
             showConnectionAlertBar(R.string.connected);
         } else if (status == BleConnectionStatus.CONNECTING) {
             showConnectionAlertBar(R.string.connecting);
@@ -241,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter() {
+    static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTING);
         intentFilter.addAction(OsswService.ACTION_WATCH_CONNECTED);
@@ -254,13 +269,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
-        //Log.i(TAG, "PAUSE");
+        Log.i(TAG, "PAUSE");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //Log.i(TAG, "DESTROY");
+        Log.i(TAG, "DESTROY");
         unbindService(mServiceConnection);
 //        unbindService(pluginServiceConnection);
     }
@@ -268,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Log.i(TAG, "SAVE-STATE");
         outState.putInt(DRAWER_SELECTED_POSITION, mPosition);
     }
 
