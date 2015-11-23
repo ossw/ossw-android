@@ -22,10 +22,12 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -97,6 +99,12 @@ public class WatchSetCompiler {
             }
 
             ByteArrayOutputStream os = new ByteArrayOutputStream();
+            // magic number
+            os.write(0x05);
+            os.write(0x53);
+            // format version
+            os.write(0);
+            os.write(1);
             // write watch set id
             os.write(watchset.getId() >> 24);
             os.write(watchset.getId() >> 16 & 0xFF);
@@ -251,8 +259,8 @@ public class WatchSetCompiler {
 
 
             byte[] modelData = parseModel(screenContext, model);
-            os.write(modelData.length>>8);
-            os.write(modelData.length&0xFF);
+            os.write(modelData.length >> 8);
+            os.write(modelData.length & 0xFF);
             os.write(modelData);
         }
 
@@ -276,19 +284,7 @@ public class WatchSetCompiler {
 
         if (actions != null) {
             os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS);
-            if (actions.length() > 255) {
-                throw new KnownParseError("Too many actions");
-            }
-
-            os.write(actions.length());
-
-            Iterator<String> events = actions.keys();
-            while (events.hasNext()) {
-                String eventKey = events.next();
-                os.write(getEventId(eventKey));
-                byte[] actionData = parseActions(actions.get(eventKey), screenContext);
-                os.write(actionData);
-            }
+            parseEventHandlers(os, actions, screenContext);
         }
 
         String defaultActions = screen.optString("defaultActions", null);
@@ -310,6 +306,69 @@ public class WatchSetCompiler {
 
         os.write(WatchConstants.WATCH_SET_END_OF_DATA);
         return os.toByteArray();
+    }
+
+    private void parseEventHandlers(ByteArrayOutputStream os, JSONObject actions, ScreenContext screenContext) throws Exception {
+
+        Map<Integer, byte[]> handlers = new HashMap<>();
+        if (actions.has("choose")) {
+            // handle top level choose
+            JSONObject choose = (JSONObject) actions.remove("choose");
+            JSONObject when = (JSONObject) actions.remove("when");
+            Set<String> conditionEvents = new HashSet<>();
+            for (Iterator<String> i = when.keys(); i.hasNext(); ) {
+                String optionKey = i.next();
+                JSONObject events = when.getJSONObject(optionKey);
+                for (Iterator<String> e = events.keys(); e.hasNext(); ) {
+                    conditionEvents.add(e.next());
+                }
+            }
+
+            for (String eventKey : conditionEvents) {
+                JSONObject fakeWhen = new JSONObject();
+
+                ByteArrayOutputStream eventOs = new ByteArrayOutputStream();
+
+                for (Iterator<String> i = when.keys(); i.hasNext(); ) {
+                    String optionKey = i.next();
+                    JSONObject optionEvents = when.getJSONObject(optionKey);
+                    if (optionEvents.has(eventKey)) {
+                        fakeWhen.put(optionKey, optionEvents.get(eventKey));
+                    }
+                }
+                eventOs.write(1);
+                buildChooseData(eventOs, choose, fakeWhen, screenContext);
+
+                handlers.put(getEventId(eventKey), eventOs.toByteArray());
+            }
+
+        }
+        Iterator<String> events = actions.keys();
+        while (events.hasNext()) {
+            String eventKey = events.next();
+            if (handlers.containsKey(getEventId(eventKey))) {
+                throw new KnownParseError("Event: " + eventKey + " already handled!");
+            }
+            handlers.put(getEventId(eventKey), parseActions(actions.get(eventKey), screenContext));
+        }
+
+
+        ByteArrayOutputStream indexOs = new ByteArrayOutputStream();
+        indexOs.write(handlers.size());
+        ByteArrayOutputStream dataOs = new ByteArrayOutputStream();
+        for(Map.Entry<Integer, byte[]> entry : handlers.entrySet()) {
+            indexOs.write(entry.getKey());
+            indexOs.write(dataOs.size()>>8);
+            indexOs.write(dataOs.size()&0xFF);
+            dataOs.write(entry.getValue());
+        }
+
+
+        int size = indexOs.size() + dataOs.size();
+        os.write(size>>8);
+        os.write(size&0xFF);
+        os.write(indexOs.toByteArray());
+        os.write(dataOs.toByteArray());
     }
 
     private byte[] parseModel(ScreenContext screenContext, JSONObject model) throws Exception {
@@ -392,17 +451,17 @@ public class WatchSetCompiler {
 
         os.write(1);// type int
         int flags = 0;
-        if(initValue != null) {
+        if (initValue != null) {
             flags |= 0x80;
         }
         if (overflow) {
-            flags|=0x40;
+            flags |= 0x40;
         }
         if (definition.getMax() != null) {
-            flags|=0x20;
+            flags |= 0x20;
         }
         if (definition.getMin() != null) {
-            flags|=0x10;
+            flags |= 0x10;
         }
 
         os.write(flags);
@@ -414,12 +473,12 @@ public class WatchSetCompiler {
         }
 
         if (definition.getMax() != null) {
-            os.write(definition.getMax()>>8);
-            os.write(definition.getMax()&0xFF);
+            os.write(definition.getMax() >> 8);
+            os.write(definition.getMax() & 0xFF);
         }
         if (definition.getMin() != null) {
-            os.write(definition.getMin()>>8);
-            os.write(definition.getMin()&0xFF);
+            os.write(definition.getMin() >> 8);
+            os.write(definition.getMin() & 0xFF);
         }
         return os.toByteArray();
     }
@@ -498,6 +557,11 @@ public class WatchSetCompiler {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         JSONObject choose = config.getJSONObject("choose");
         JSONObject when = config.getJSONObject("when");
+        buildChooseData(os, choose, when, screenContext);
+        return os.toByteArray();
+    }
+
+    private void buildChooseData(ByteArrayOutputStream os, JSONObject choose, JSONObject when, ScreenContext screenContext) throws Exception {
         DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
         os.write(WatchConstants.WATCHSET_FUNCTION_CHOOSE);
         os.write(compileSource(choose, resCtx));
@@ -510,9 +574,11 @@ public class WatchSetCompiler {
             }
             os.write((int) resCtx.resolver.resolve(optionName));
             Object actions = when.get(optionName);
-            os.write(parseActions(actions, screenContext));
+            byte[] data = parseActions(actions, screenContext);
+            os.write(data.length>>8);
+            os.write(data.length&0xFF);
+            os.write(data);
         }
-        return os.toByteArray();
     }
 
     private byte[] compileStandardAction(JSONObject config, ScreenContext screenContext) throws Exception {
@@ -582,7 +648,7 @@ public class WatchSetCompiler {
                     DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
                     dsCtx.dataSourceType = DataSourceType.NUMBER;
                     dsCtx.resolver = definition;
-                    switch(parts[2]) {
+                    switch (parts[2]) {
                         case "set":
                             writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_SET, definition.getFieldId(), compileSource(config.getJSONObject("value"), dsCtx));
                             break;
@@ -707,7 +773,10 @@ public class WatchSetCompiler {
             }
             os.write((int) resCtx.resolver.resolve(optionName));
             Object option = when.get(optionName);
-            os.write(parseScreenControls(option, screenContext));
+            byte[] data = parseScreenControls(option, screenContext);
+            os.write(data.length >> 8);
+            os.write(data.length & 0xFF);
+            os.write(data);
         }
         return os.toByteArray();
     }

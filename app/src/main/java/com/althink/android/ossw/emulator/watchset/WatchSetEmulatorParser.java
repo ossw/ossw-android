@@ -53,6 +53,8 @@ public class WatchSetEmulatorParser {
     public WatchSetEmulatorModel parse(byte[] watchSetData) {
         try {
             InputStream is = new ByteArrayInputStream(watchSetData);
+            // skip header and version
+            is.skip(4);
             //skip watchset id
             int id = is.read() << 24;
             id |= is.read() << 16;
@@ -142,6 +144,10 @@ public class WatchSetEmulatorParser {
                     break;
                 case WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS:
                     //parse actions
+
+                    is.read();
+                    is.read();
+
                     screen.setActions(parseEventHandlers(is));
                     break;
                 case WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY:
@@ -197,16 +203,20 @@ public class WatchSetEmulatorParser {
     private List<EmulatorEventHandler> parseEventHandlers(InputStream is) throws Exception {
         LinkedList<EmulatorEventHandler> actions = new LinkedList<>();
         int eventsNo = is.read();
+        int[] events = new int[eventsNo];
+
         for (int i = 0; i < eventsNo; i++) {
-            actions.add(parseEventHandler(is));
+            events[i] = is.read();
+            //skip offset
+            is.read();
+            is.read();
+        }
+
+        for (int i = 0; i < eventsNo; i++) {
+            List<EmulatorAction> emulatorActions = parseActions(is);
+            actions.add(new EmulatorEventHandler(events[i], new EmulatorCompoundAction(emulatorActions)));
         }
         return actions;
-    }
-
-    private EmulatorEventHandler parseEventHandler(InputStream is) throws Exception {
-        int eventId = is.read();
-        List<EmulatorAction> emulatorActions = parseActions(is);
-        return new EmulatorEventHandler(eventId, new EmulatorCompoundAction(emulatorActions));
     }
 
     private List<EmulatorAction> parseActions(InputStream is) throws Exception {
@@ -232,6 +242,8 @@ public class WatchSetEmulatorParser {
                 HashMap<Object, List<EmulatorAction>> map = new HashMap<>();
                 for (int o = 0; o < optionsNo; o++) {
                     int option = is.read();
+                    is.read();
+                    is.read();
                     map.put(option, parseActions(is));
                 }
                 actions.add(new EmulatorChooseAction(dataSource, map));
@@ -277,6 +289,8 @@ public class WatchSetEmulatorParser {
         Map<Object, List<EmulatorControl>> map = new HashMap<>();
         for (int i = 0; i < optionsNo; i++) {
             int key = 0xFF & is.read();
+            is.read();
+            is.read();
             map.put(key, parseControls(is, ctx));
         }
         return new ChooseEmulatorControl(dataSource, map);
