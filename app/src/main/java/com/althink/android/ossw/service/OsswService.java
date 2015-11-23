@@ -783,6 +783,8 @@ public class OsswService extends Service {
         close();
         started = false;
         INSTANCE = null;
+        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        nManager.cancel(NOTIFICATION_ID);
         super.onDestroy();
     }
 
