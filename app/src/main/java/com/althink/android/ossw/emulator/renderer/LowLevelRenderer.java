@@ -243,6 +243,12 @@ public class LowLevelRenderer {
     }
 
     public void drawImage(byte[] image, int x, int y, int width, int height) {
+        if (width == 0) {
+            width = image[2];
+        }
+        if (height == 0) {
+            height = image[3];
+        }
         drawBitmap(image, 4, x, y, width, height, (int) image[2] & 0xFF);
     }
 

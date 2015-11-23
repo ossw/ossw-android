@@ -65,4 +65,5 @@ public class WatchEmulator {
         WatchExtensionProperty extensionProperty = watchSet.getOperationContext().getExternalParameters().get(property);
         return service.getPropertyFromExtension(extensionProperty.getPluginId(), extensionProperty.getPropertyId());
     }
+
 }

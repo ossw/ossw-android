@@ -1,5 +1,6 @@
 package com.althink.android.ossw.emulator.source.internal;
 
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
@@ -8,7 +9,7 @@ import com.althink.android.ossw.watchsets.DataSourceType;
  */
 public class ZeroDataSource implements EmulatorDataSource {
     @Override
-    public Object getData(DataSourceType type, int range) {
+    public Object getData(DataSourceType type, int range, EmulatorExecutionContext ctx) {
         return 0;
     }
 }

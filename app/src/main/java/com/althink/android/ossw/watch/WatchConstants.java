@@ -15,6 +15,7 @@ public class WatchConstants {
     public static final int SCR_CONTROL_TEXT = 4;
     public static final int SCR_CONTROL_STATIC_IMAGE = 5;
     public static final int SCR_CONTROL_IMAGE_FROM_SET = 6;
+    public static final int SCR_CONTROL_CHOOSE = 0xF0;
 
     public static final int MAX_TEXT_EXT_PROPERTY_LENGTH = 253;
     public static final int DEFAULT_TEXT_EXT_PROPERTY_LENGTH = 32;
@@ -75,6 +76,7 @@ public class WatchConstants {
     public static final int WATCH_SET_SCREEN_SECTION_ACTIONS = 2;
     public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
     public static final int WATCH_SET_SCREEN_SECTION_BASE_ACTIONS = 4;
+    public static final int WATCH_SET_SCREEN_SECTION_MODEL = 5;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
@@ -82,6 +84,7 @@ public class WatchConstants {
     public static final int DATA_SOURCE_EXTERNAL = 1;
     public static final int DATA_SOURCE_SENSOR = 2;
     public static final int DATA_SOURCE_STATIC = 3;
+    public static final int DATA_SOURCE_WATCHSET_MODEL = 4;
 
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
@@ -128,11 +131,19 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP = 0x17;
     public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP = 0x18;
 
-    public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
-    public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
+    public static final int WATCHSET_FUNCTION_MODEL_SET = 0xA0;
+    public static final int WATCHSET_FUNCTION_MODEL_ADD = 0xA1;
+    public static final int WATCHSET_FUNCTION_MODEL_SUBTRACT = 0xA2;
+    public static final int WATCHSET_FUNCTION_MODEL_INCREMENT = 0xA3;
+    public static final int WATCHSET_FUNCTION_MODEL_DECREMENT = 0xA4;
 
-    public static final int WATCHSET_FUNCTION_CLOSE = 0xFE;
-    public static final int WATCHSET_FUNCTION_EXTENSION = 0xFF;
+    public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xE0;
+    public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xE1;
+
+    public static final int WATCHSET_FUNCTION_CLOSE = 0xEE;
+    public static final int WATCHSET_FUNCTION_EXTENSION = 0xEF;
+
+    public static final int WATCHSET_FUNCTION_CHOOSE = 0xF0;
 
     public static final int EVENT_BUTTON_UP_SHORT = 0;
     public static final int EVENT_BUTTON_SELECT_SHORT = 1;

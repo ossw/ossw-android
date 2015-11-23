@@ -1,5 +1,6 @@
 package com.althink.android.ossw.emulator.control;
 
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 
 /**
@@ -7,5 +8,5 @@ import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
  */
 public interface EmulatorControl {
 
-    public void draw(LowLevelRenderer renderer);
+    void draw(LowLevelRenderer renderer, EmulatorExecutionContext ctx);
 }

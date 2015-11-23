@@ -11,6 +11,9 @@ import com.althink.android.ossw.service.WatchExtensionFunction;
 import com.althink.android.ossw.service.WatchExtensionProperty;
 import com.althink.android.ossw.service.WatchOperationContext;
 import com.althink.android.ossw.watch.WatchConstants;
+import com.althink.android.ossw.watchsets.field.EnumFieldDefinition;
+import com.althink.android.ossw.watchsets.field.FieldDefinition;
+import com.althink.android.ossw.watchsets.field.IntegerFieldDefinition;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,7 +67,7 @@ public class WatchSetCompiler {
             }
 
             int apiVersion = jsonObject.getInt("apiVersion");
-            if (apiVersion != 1) {
+            if (apiVersion < 1 || apiVersion > 2) {
                 throw new KnownParseError("Invalid api version");
             }
             String watchsetName = jsonObject.getString("name");
@@ -237,23 +240,21 @@ public class WatchSetCompiler {
         return os.toByteArray();
     }
 
-    private class MemoryAllocator {
-
-        int size = 0;
-
-        public int addBuffer(int size) {
-            int ptr = this.size;
-            this.size += size;
-            return ptr;
-        }
-
-        public int getSize() {
-            return size;
-        }
-    }
-
     private byte[] parseScreen(JSONObject screen) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        ScreenContext screenContext = new ScreenContext();
+
+        JSONObject model = screen.optJSONObject("model");
+        if (model != null) {
+            os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_MODEL);
+
+
+            byte[] modelData = parseModel(screenContext, model);
+            os.write(modelData.length>>8);
+            os.write(modelData.length&0xFF);
+            os.write(modelData);
+        }
 
         JSONArray controls = screen.getJSONArray("controls");
 
@@ -265,10 +266,8 @@ public class WatchSetCompiler {
             throw new KnownParseError("Too many controls, 255 is max");
         }
 
-        MemoryAllocator allocator = new MemoryAllocator();
-
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS);
-        byte[] screenControlsData = parseScreenControls(controls, allocator);
+        byte[] screenControlsData = parseScreenControls(controls, screenContext);
         os.write((screenControlsData.length >> 8) & 0xFF);
         os.write(screenControlsData.length & 0xFF);
         os.write(screenControlsData);
@@ -286,7 +285,8 @@ public class WatchSetCompiler {
             Iterator<String> events = actions.keys();
             while (events.hasNext()) {
                 String eventKey = events.next();
-                byte[] actionData = compileAction(eventKey, actions.getJSONObject(eventKey));
+                os.write(getEventId(eventKey));
+                byte[] actionData = parseActions(actions.get(eventKey), screenContext);
                 os.write(actionData);
             }
         }
@@ -294,115 +294,341 @@ public class WatchSetCompiler {
         String defaultActions = screen.optString("defaultActions", null);
         if (defaultActions != null) {
             os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_BASE_ACTIONS);
-            switch(defaultActions) {
+            switch (defaultActions) {
                 case "watchface":
                     os.write(1);
-                break;
+                    break;
                 default:
                     throw new KnownParseError("Invalid default actions: " + defaultActions);
             }
         }
 
         os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY);
-        os.write((allocator.getSize() >> 8) & 0xFF);
-        os.write(allocator.getSize() & 0xFF);
+        int size = screenContext.getAllocator().getSize();
+        os.write((size >> 8) & 0xFF);
+        os.write(size & 0xFF);
 
         os.write(WatchConstants.WATCH_SET_END_OF_DATA);
         return os.toByteArray();
     }
 
-    private byte[] parseScreenControls(JSONArray controls, MemoryAllocator allocator) throws Exception {
+    private byte[] parseModel(ScreenContext screenContext, JSONObject model) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        os.write(controls.length());
-
-        for (int controlNo = 0; controlNo < controls.length(); controlNo++) {
-            byte[] controlData = compileControl(controls.getJSONObject(controlNo), allocator);
-            os.write(controlData);
+        JSONArray names = model.names();
+        os.write(names.length());
+        for (int i = 0; i < names.length(); i++) {
+            String fieldName = names.getString(i);
+            os.write(parseFieldDefinition(i, fieldName, model.getJSONObject(fieldName), screenContext));
         }
         return os.toByteArray();
     }
 
-    private byte[] compileAction(String eventKey, JSONObject config) throws Exception {
+    private byte[] parseFieldDefinition(int filedId, String fieldName, JSONObject field, ScreenContext screenContext) throws Exception {
+        switch (field.getString("type")) {
+            case "integer":
+                return parseIntegerFieldDefinition(filedId, fieldName, field, screenContext);
+            case "enum":
+                return parseEnumFieldDefinition(filedId, fieldName, field, screenContext);
+            default:
+                throw new KnownParseError("Invalid field type: " + field.getString("type"));
+        }
+    }
+
+    private byte[] parseEnumFieldDefinition(int filedId, String fieldName, JSONObject field, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        JSONArray values = field.getJSONArray("values");
+        Map<String, Integer> valuesMap = new HashMap<>();
+        for (int i = 0; i < values.length(); i++) {
+            valuesMap.put(values.getString(i), i);
+        }
+        EnumFieldDefinition definition = new EnumFieldDefinition(filedId, valuesMap);
+
+        DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
+        resCtx.dataSourceType = DataSourceType.NUMBER;
+        resCtx.resolver = new EnumToIntResolver(valuesMap);
+
+        JSONObject initValue = field.optJSONObject("value");
+        boolean overflow = field.optBoolean("overflow", false);
+
+        screenContext.getModel().put(fieldName, definition);
+
+        os.write(1);
+        int flags = 0x20 | 0x10;
+        if (initValue != null) {
+            flags |= 0x80;
+        }
+        if (overflow) {
+            flags |= 0x40;
+        }
+
+        os.write(flags);
+
+        if (initValue != null) {
+            DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+            info.dataSourceType = DataSourceType.NUMBER;
+            info.resolver = definition;
+            os.write(compileSource(initValue, info));
+        }
+
+        //max
+        os.write((values.length() - 1) >> 8);
+        os.write((values.length() - 1) & 0xFF);
+
+        //min
+        os.write(0);
+        os.write(0);
+        return os.toByteArray();
+    }
+
+    private byte[] parseIntegerFieldDefinition(int filedId, String fieldName, JSONObject field, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        IntegerFieldDefinition definition = new IntegerFieldDefinition(filedId);
+        definition.setMin(field.optInt("min"));
+        definition.setMax(field.optInt("max"));
+        boolean overflow = field.optBoolean("overflow", false);
+        JSONObject initValue = field.optJSONObject("value");
+
+        screenContext.getModel().put(fieldName, definition);
+
+        os.write(1);// type int
+        int flags = 0;
+        if(initValue != null) {
+            flags |= 0x80;
+        }
+        if (overflow) {
+            flags|=0x40;
+        }
+        if (definition.getMax() != null) {
+            flags|=0x20;
+        }
+        if (definition.getMin() != null) {
+            flags|=0x10;
+        }
+
+        os.write(flags);
+
+        if (initValue != null) {
+            DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+            info.dataSourceType = DataSourceType.NUMBER;
+            os.write(compileSource(initValue, info));
+        }
+
+        if (definition.getMax() != null) {
+            os.write(definition.getMax()>>8);
+            os.write(definition.getMax()&0xFF);
+        }
+        if (definition.getMin() != null) {
+            os.write(definition.getMin()>>8);
+            os.write(definition.getMin()&0xFF);
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] parseScreenControls(Object controls, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        if (controls instanceof JSONArray) {
+            os.write(parseScreenControls((JSONArray) controls, screenContext));
+        } else if (controls instanceof JSONObject) {
+            os.write(1);
+            os.write(parseScreenControl((JSONObject) controls, screenContext));
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] parseScreenControls(JSONArray controls, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(controls.length());
+
+        for (int controlNo = 0; controlNo < controls.length(); controlNo++) {
+            JSONObject control = controls.getJSONObject(controlNo);
+            os.write(parseScreenControl(control, screenContext));
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] parseScreenControl(JSONObject control, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        if (control.has("type")) {
+            os.write(compileControl(control, screenContext));
+        } else if (control.has("choose")) {
+            os.write(compileScreenControlChoose(control, screenContext));
+        } else {
+            throw new KnownParseError("Invalid screen control");
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] parseActions(Object config, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        if (config instanceof JSONArray) {
+            os.write(compileActions((JSONArray) config, screenContext));
+        } else if (config instanceof JSONObject) {
+            os.write(1);
+            os.write(compileAction((JSONObject) config, screenContext));
+        } else {
+            throw new KnownParseError("Invalid actions");
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileActions(JSONArray actions, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(actions.length());
+
+        for (int controlNo = 0; controlNo < actions.length(); controlNo++) {
+            JSONObject control = actions.getJSONObject(controlNo);
+            os.write(compileAction(control, screenContext));
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileAction(JSONObject action, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        if (action.has("action")) {
+            os.write(compileStandardAction(action, screenContext));
+        } else if (action.has("choose")) {
+            os.write(compileActionChoose(action, screenContext));
+        } else {
+            throw new KnownParseError("Invalid screen control");
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileActionChoose(JSONObject config, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        JSONObject choose = config.getJSONObject("choose");
+        JSONObject when = config.getJSONObject("when");
+        DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
+        os.write(WatchConstants.WATCHSET_FUNCTION_CHOOSE);
+        os.write(compileSource(choose, resCtx));
+        os.write(when.length());
+        JSONArray options = when.names();
+        for (int i = 0; i < options.length(); i++) {
+            String optionName = options.getString(i);
+            if (resCtx.resolver == null) {
+                throw new KnownParseError("Choose value not supported");
+            }
+            os.write((int) resCtx.resolver.resolve(optionName));
+            Object actions = when.get(optionName);
+            os.write(parseActions(actions, screenContext));
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileStandardAction(JSONObject config, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
-        os.write(getEventId(eventKey));
         String action = config.getString("action");
-
-        int fId;
-        int fParam;
 
         switch (action) {
             case "extensionFunction":
                 String extensionId = config.getString("extensionId");
                 String function = config.getString("function");
                 String parameter = config.optString("parameter");
-                fId = WatchConstants.WATCHSET_FUNCTION_EXTENSION;
-                fParam = addExtensionFunction(new WatchExtensionFunction(extensionId, function, parameter));
+                writeActionWithParam(os, WatchConstants.WATCHSET_FUNCTION_EXTENSION, addExtensionFunction(new WatchExtensionFunction(extensionId, function, parameter)));
                 break;
             case "toggleBacklight":
-                fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT);
                 break;
-            case "stopwatchStart":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START;
-                fParam = 0;
+            case "stopwatch.start":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START);
                 break;
             case "stopwatch.stop":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_STOP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_STOP);
                 break;
             case "stopwatch.reset":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RESET;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RESET);
                 break;
             case "stopwatch.startStop":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START_STOP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START_STOP);
                 break;
             case "stopwatch.nextLap":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP);
                 break;
             case "stopwatch.recall.nextLap":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP);
                 break;
             case "stopwatch.recall.prevLap":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP);
                 break;
             case "stopwatch.recall.firstLap":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP);
                 break;
             case "stopwatch.recall.lastLap":
-                fId = WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP);
                 break;
             case "toggleColors":
-                fId = WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS);
                 break;
             case "showScreen":
-                fId = WatchConstants.WATCHSET_FUNCTION_CHANGE_SCREEN;
-                String screenId = config.getString("screenId");
-                fParam = resolveScreenId(screenId);
+                writeActionWithParam(os, WatchConstants.WATCHSET_FUNCTION_CHANGE_SCREEN, resolveScreenId(config.getString("screenId")));
                 break;
             case "close":
-                fId = WatchConstants.WATCHSET_FUNCTION_CLOSE;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_CLOSE);
                 break;
             case "settings":
-                fId = WatchConstants.WATCHSET_FUNCTION_SHOW_SETTINGS;
-                fParam = 0;
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_SETTINGS);
                 break;
             default:
-                throw new KnownParseError("Invalid action: " + action);
+                if (action.startsWith("model.")) {
+                    String parts[] = action.split("\\.");
+                    if (parts.length != 3) {
+                        throw new KnownParseError("Invalid action: " + action);
+                    }
+                    FieldDefinition definition = screenContext.getModel().get(parts[1]);
+                    if (definition == null) {
+                        throw new KnownParseError("Invalid field name in action: " + action);
+                    }
+                    DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
+                    dsCtx.dataSourceType = DataSourceType.NUMBER;
+                    dsCtx.resolver = definition;
+                    switch(parts[2]) {
+                        case "set":
+                            writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_SET, definition.getFieldId(), compileSource(config.getJSONObject("value"), dsCtx));
+                            break;
+                        case "add":
+                            writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_ADD, definition.getFieldId(), compileSource(config.getJSONObject("value"), dsCtx));
+                            break;
+                        case "subtract":
+                            writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_SUBTRACT, definition.getFieldId(), compileSource(config.getJSONObject("value"), dsCtx));
+                            break;
+                        case "increment":
+                            writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_INCREMENT, definition.getFieldId());
+                            break;
+                        case "decrement":
+                            writeModelAction(os, WatchConstants.WATCHSET_FUNCTION_MODEL_DECREMENT, definition.getFieldId());
+                            break;
+                        default:
+                            throw new KnownParseError("Invalid action: " + action);
+
+                    }
+                } else {
+                    throw new KnownParseError("Invalid action: " + action);
+                }
         }
-        os.write(fId);
-        os.write(fParam >> 8);
-        os.write(fParam & 0xFF);
         return os.toByteArray();
+    }
+
+    private void writeModelAction(ByteArrayOutputStream os, int functionId, int fieldId, byte[] dataSource) throws Exception {
+        os.write(functionId);
+        os.write(fieldId & 0xFF);
+        if (dataSource != null) {
+            os.write(dataSource);
+        }
+    }
+
+    private void writeModelAction(ByteArrayOutputStream os, int functionId, int fieldId) throws Exception {
+        writeModelAction(os, functionId, fieldId, null);
+    }
+
+    private void writeSimpleAction(ByteArrayOutputStream os, int functionId) {
+        os.write(functionId);
+    }
+
+    private void writeActionWithParam(ByteArrayOutputStream os, int functionId, int parameter) {
+        os.write(functionId);
+        os.write(parameter >> 8);
+        os.write(parameter & 0xFF);
     }
 
     private int addExtensionFunction(WatchExtensionFunction extensionFunction) {
@@ -447,26 +673,46 @@ public class WatchSetCompiler {
         throw new KnownParseError("Unknown event key: " + eventKey);
     }
 
-    private byte[] compileControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileControl(JSONObject control, ScreenContext screenContext) throws Exception {
         String controlType = control.getString("type");
 
         switch (controlType) {
             case "number":
-                return compileNumberControl(control, allocator);
+                return compileNumberControl(control, screenContext);
             case "text":
-                return compileTextControl(control, allocator);
+                return compileTextControl(control, screenContext);
             case "progress":
-                return compileProgressControl(control, allocator);
+                return compileProgressControl(control, screenContext);
             case "image":
-                return compileImageControl(control, allocator);
+                return compileImageControl(control, screenContext);
             case "imageFromSet":
-                return compileImageFromSetControl(control, allocator);
-
+                return compileImageFromSetControl(control, screenContext);
         }
         throw new KnownParseError("Not supported control type: " + controlType);
     }
 
-    private byte[] compileProgressControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileScreenControlChoose(JSONObject object, ScreenContext screenContext) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        JSONObject choose = object.getJSONObject("choose");
+        JSONObject when = object.getJSONObject("when");
+        DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
+        os.write(WatchConstants.SCR_CONTROL_CHOOSE);
+        os.write(compileSource(choose, resCtx));
+        os.write(when.length());
+        JSONArray options = when.names();
+        for (int i = 0; i < options.length(); i++) {
+            String optionName = options.getString(i);
+            if (resCtx.resolver == null) {
+                throw new KnownParseError("Invalid choose definition");
+            }
+            os.write((int) resCtx.resolver.resolve(optionName));
+            Object option = when.get(optionName);
+            os.write(parseScreenControls(option, screenContext));
+        }
+        return os.toByteArray();
+    }
+
+    private byte[] compileProgressControl(JSONObject control, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_HORIZONTAL_PROGRESS_BAR);
@@ -502,16 +748,17 @@ public class WatchSetCompiler {
         os.write(0); //RFU
         os.write(0); //RFU
 
-        int dataPtr = allocator.addBuffer(4);
+        int dataPtr = screenContext.getAllocator().addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
 
-        JSONObject source = control.getJSONObject("source");
         int dataSize = buildNumberRangeFromMaxValue(maxValue);
-        ControlInfo info = new ControlInfo();
+        DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+        info.dataSourceType = DataSourceType.NUMBER;
         info.dataRange = dataSize;
 
-        os.write(compileSource(source, DataSourceType.NUMBER, info));
+        JSONObject source = control.getJSONObject("source");
+        os.write(compileSource(source, info));
 
         return os.toByteArray();
     }
@@ -525,7 +772,7 @@ public class WatchSetCompiler {
         return v << 5;
     }
 
-    private byte[] compileImageControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileImageControl(JSONObject control, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_STATIC_IMAGE);
@@ -533,7 +780,7 @@ public class WatchSetCompiler {
         os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
         os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
 
-        JSONObject style = control.getJSONObject("style");
+        JSONObject style = control.optJSONObject("style");
         os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
         os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
 
@@ -542,7 +789,7 @@ public class WatchSetCompiler {
         return os.toByteArray();
     }
 
-    private byte[] compileImageFromSetControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileImageFromSetControl(JSONObject control, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_IMAGE_FROM_SET);
@@ -557,14 +804,15 @@ public class WatchSetCompiler {
         JSONObject image = control.getJSONObject("imageSet");
         writeResourceType(os, image);
 
-        int dataPtr = allocator.addBuffer(4);
+        int dataPtr = screenContext.getAllocator().addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
 
         JSONObject source = control.getJSONObject("source");
-        ControlInfo info = new ControlInfo();
+        DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+        info.dataSourceType = DataSourceType.NUMBER;
         info.dataRange = 0x40;
-        os.write(compileSource(source, DataSourceType.NUMBER, info));
+        os.write(compileSource(source, info));
 
         return os.toByteArray();
     }
@@ -583,7 +831,7 @@ public class WatchSetCompiler {
         }
     }
 
-    private byte[] compileNumberControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileNumberControl(JSONObject control, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_NUMBER);
@@ -613,14 +861,15 @@ public class WatchSetCompiler {
                 writeResourceType(os, font);
                 break;
         }
-        int dataPtr = allocator.addBuffer(4);
+        int dataPtr = screenContext.getAllocator().addBuffer(4);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
 
         JSONObject source = control.getJSONObject("source");
-        ControlInfo info = new ControlInfo();
+        DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+        info.dataSourceType = DataSourceType.NUMBER;
         info.dataRange = buildDataSourceRangeFromNumberRange(numberRange);
-        os.write(compileSource(source, DataSourceType.NUMBER, info));
+        os.write(compileSource(source, info));
 
         return os.toByteArray();
     }
@@ -659,10 +908,10 @@ public class WatchSetCompiler {
                 range == WatchConstants.NUMBER_RANGE_0__99999_99) {
             size = 3;
         }
-        return size << 5 | (range&0xF);
+        return size << 5 | (range & 0xF);
     }
 
-    private byte[] compileTextControl(JSONObject control, MemoryAllocator allocator) throws Exception {
+    private byte[] compileTextControl(JSONObject control, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         os.write(WatchConstants.SCR_CONTROL_TEXT);
@@ -687,13 +936,14 @@ public class WatchSetCompiler {
             throw new KnownParseError("Text length is not in range [0, " +
                     WatchConstants.MAX_TEXT_EXT_PROPERTY_LENGTH + "]");
 
-        ControlInfo info = new ControlInfo();
+        DataSourceResolutionContext info = new DataSourceResolutionContext(screenContext);
+        info.dataSourceType = DataSourceType.STRING;
         info.dataRange = stringLength;
 
         JSONObject source = control.getJSONObject("source");
-        byte[] dataSourceData = compileSource(source, DataSourceType.STRING, info);
+        byte[] dataSourceData = compileSource(source, info);
 
-        int dataPtr = allocator.addBuffer(info.dataRange + 1);
+        int dataPtr = screenContext.getAllocator().addBuffer(info.dataRange + 1);
         os.write((dataPtr >> 8) & 0xFF);
         os.write(dataPtr & 0xFF);
 
@@ -833,7 +1083,7 @@ public class WatchSetCompiler {
         }
     }
 
-    private byte[] compileSource(JSONObject source, DataSourceType dataSourceType, ControlInfo info) throws Exception {
+    private byte[] compileSource(JSONObject source, DataSourceResolutionContext info) throws JSONException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         int flags = 0;
         String converter = source.optString("converter", null);
@@ -843,29 +1093,53 @@ public class WatchSetCompiler {
         switch (source.getString("type")) {
             case "static":
                 os.write(flags | WatchConstants.DATA_SOURCE_STATIC);
-                if (dataSourceType == DataSourceType.STRING) {
+                if (info.dataSourceType == DataSourceType.STRING) {
                     byte[] value = source.getString("value").getBytes();
                     os.write(value.length);
-                    os.write(value);
+                    os.write(value, 0, value.length);
                     info.dataRange = value.length;
+                } else if (info.dataSourceType == DataSourceType.NUMBER) {
+                    int value;
+                    if (info.resolver != null) {
+                        value = (int) info.resolver.resolve(source.getString("value"));
+                    } else {
+                        value = source.getInt("value");
+                    }
+                    os.write(4);
+                    os.write(value >> 24);
+                    os.write(value >> 16 & 0xFF);
+                    os.write(value >> 8 & 0xFF);
+                    os.write(value & 0xFF);
                 } else {
-                    throw new KnownParseError("Static data source not supported for type: " + source.getString("type"));
+                    throw new KnownParseError("Static data source not supported for type: " + info.dataSourceType);
                 }
                 break;
             case "internal":
                 os.write(flags | WatchConstants.DATA_SOURCE_INTERNAL);
-                os.write(getInternalSourceKey(source.getString("property"), dataSourceType, info.dataRange));
+                os.write(getInternalSourceKey(source.getString("property"), info.dataSourceType, info.dataRange));
                 break;
             case "sensor":
                 os.write(flags | WatchConstants.DATA_SOURCE_SENSOR);
-                os.write(getSensorSourceKey(source.getString("property"), dataSourceType, info.dataRange));
+                os.write(getSensorSourceKey(source.getString("property"), info.dataSourceType, info.dataRange));
                 break;
-            case "extension":
+            case "extension": {
                 os.write(flags | WatchConstants.DATA_SOURCE_EXTERNAL);
                 String extensionId = source.getString("extensionId");
                 String property = source.getString("property");
-                os.write(addExtensionProperty(new WatchExtensionProperty(extensionId, property, dataSourceType, info.dataRange)));
-                break;
+                os.write(addExtensionProperty(new WatchExtensionProperty(extensionId, property, info.dataSourceType, info.dataRange)));
+            }
+            break;
+            case "model": {
+                os.write(flags | WatchConstants.DATA_SOURCE_WATCHSET_MODEL);
+                String property = source.getString("property");
+                FieldDefinition fieldDef = info.screenContext.getModel().get(property);
+                if (fieldDef == null) {
+                    throw new KnownParseError("Invalid model property: " + property);
+                }
+                info.resolver = fieldDef;
+                os.write(fieldDef.getFieldId());
+            }
+            break;
             default:
                 throw new KnownParseError("Unknown type: " + source.getString("type"));
         }
@@ -903,7 +1177,7 @@ public class WatchSetCompiler {
     }
 
     private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
-        if (!dataSourceType.equals(DataSourceType.NUMBER)) {
+        if (!DataSourceType.NUMBER.equals(dataSourceType)) {
             throw new IllegalArgumentException("Unknown data source type");
         }
         switch (property) {
@@ -951,9 +1225,9 @@ public class WatchSetCompiler {
     }
 
     private int getConverterKey(String converterName) {
-        switch(converterName) {
+        switch (converterName) {
             case "msToHours":
-               return WatchConstants.CONVERTER_MS_TO_HOURS;
+                return WatchConstants.CONVERTER_MS_TO_HOURS;
             case "msToMinutesRemainder":
                 return WatchConstants.CONVERTER_MS_TO_MINUTES_REMAINDER;
             case "msToSecondsRemainder":
@@ -978,6 +1252,9 @@ public class WatchSetCompiler {
     }
 
     private int getIntegerInRange(JSONObject control, String property, int min, int max) throws JSONException {
+        if (control == null || !control.has(property)) {
+            return 0;
+        }
         int val = control.getInt(property);
         if (val < min || val > max) {
             throw new KnownParseError("Value of " + property + " is not in range");
