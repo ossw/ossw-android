@@ -18,7 +18,7 @@
         android:id="@+id/menu_import"
         android:orderInCategory="100"
         android:title="@string/menu_import"
-        android:icon="@drawable/ic_playlist_add_white_24dp"
+        android:icon="@drawable/ic_add"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_items_remove"
