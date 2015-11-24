@@ -126,7 +126,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             .setContentText("")
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setDeleteIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_NOTIFICATION_INTENT_ACTION), 0))
-                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
+                            .setSmallIcon(R.drawable.ic_watch_dial);
                     notifyManager.notify(OsswService.TEST_NOTIFICATION_ID, builder.build());
                     return true;
                 }
@@ -142,8 +142,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             .setPriority(2)
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setFullScreenIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.FULLSCREEN_FAKE_ALARM_INTENT_ACTION), 0), false)
-                            .addAction(android.support.v7.appcompat.R.drawable.abc_ic_clear_mtrl_alpha, "Close", PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION), 0))
-                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
+                            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION), 0))
+                            .setSmallIcon(R.drawable.ic_watch_dial);
                     notifyManager.notify(OsswService.TEST_ALERT_ID, builder.build());
                     return true;
                 }

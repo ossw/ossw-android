@@ -53,7 +53,7 @@ public abstract class WatchSetsFragment extends ListFragment {
 //        Log.i(TAG, "onCreateView called");
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
-        getActivity().setTitle(R.string.drawer_watch_faces);
+        getActivity().setTitle(getTitle());
         setHasOptionsMenu(true);
         // Inflate the layout for this fragment
         return v;
