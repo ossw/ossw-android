@@ -24,3 +24,5 @@ android:
     #- sys-img-x86-android-17
 script:
   - ./gradlew assemble lint
+after_failure:
+  - cat /home/travis/build/ossw/ossw-android/app/build/outputs/lint-results.xml
