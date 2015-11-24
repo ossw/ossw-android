@@ -13,7 +13,7 @@
         android:layout_gravity="bottom|start"
         android:text="@string/title_main"
         android:textSize="56sp"
-        android:textColor="@color/myPrimaryColor"
+        android:textColor="@android:color/white"
         android:paddingStart="16dp"
         android:layout_alignParentBottom="true"/>
 </RelativeLayout>

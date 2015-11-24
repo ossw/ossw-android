@@ -9,9 +9,11 @@
             android:title="@string/drawer_watch_faces" />
         <item
             android:id="@+id/nav_applications"
+            android:icon="@drawable/ic_categorize"
             android:title="@string/drawer_applications" />
         <item
             android:id="@+id/nav_utilities"
+            android:icon="@drawable/ic_tools"
             android:title="@string/drawer_utilities" />
         <item
             android:id="@+id/nav_extension"
