@@ -1786,6 +1786,46 @@ public class OptionsNormal implements EmulatorFont {
                     (byte) 0xC0, // ##
                     (byte) 0x00, //
                     (byte) 0x00, //
+
+                    // @1872 '&' (10 pixels wide)
+                    (byte) 0x00, (byte) 0x00, //
+                    (byte) 0xFF, (byte) 0x00, // ########
+                    (byte) 0xFF, (byte) 0x00, // ########
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xFF, (byte) 0xC0, // ##########
+                    (byte) 0xFF, (byte) 0xC0, // ##########
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xC3, (byte) 0x00, // ##    ##
+                    (byte) 0xFF, (byte) 0xC0, // ##########
+                    (byte) 0xFF, (byte) 0xC0, // ##########
+                    (byte) 0x00, (byte) 0x00, //
+                    (byte) 0x00, (byte) 0x00, //
+                    (byte) 0x00, (byte) 0x00, //
+                    (byte) 0x00, (byte) 0x00, //
+
+                    // @1908 '$' (8 pixels wide)
+                    (byte) 0x30, //   ##
+                    (byte) 0x30, //   ##
+                    (byte) 0xFF, // ########
+                    (byte) 0xFF, // ########
+                    (byte) 0xC0, // ##
+                    (byte) 0xC0, // ##
+                    (byte) 0xFF, // ########
+                    (byte) 0xFF, // ########
+                    (byte) 0x03, //       ##
+                    (byte) 0x03, //       ##
+                    (byte) 0x03, //       ##
+                    (byte) 0x03, //       ##
+                    (byte) 0xFF, // ########
+                    (byte) 0xFF, // ########
+                    (byte) 0x30, //   ##
+                    (byte) 0x30, //   ##
+                    (byte) 0x00, //
+                    (byte) 0x00, //
             };
 
     private static final CharInfo[] optionNormalFontDescriptors =
@@ -1793,9 +1833,9 @@ public class OptionsNormal implements EmulatorFont {
                     new CharInfo(2, 0),        // !
                     new CharInfo(6, 18),        // "
                     new CharInfo(10, 36),        // #
-                    new CharInfo(0, 0),        // $
+                    new CharInfo(8, 1908),        // $
                     new CharInfo(18, 72),        // %
-                    new CharInfo(0, 0),        // &
+                    new CharInfo(10, 1872),        // &
                     new CharInfo(2, 126),        // '
                     new CharInfo(4, 144),        // (
                     new CharInfo(4, 162),        // )

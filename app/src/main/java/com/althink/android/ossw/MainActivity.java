@@ -26,7 +26,9 @@ import android.widget.Toast;
 import com.althink.android.ossw.plugins.PluginsFragment;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.ble.BleConnectionStatus;
-import com.althink.android.ossw.watchsets.WatchSetsFragment;
+import com.althink.android.ossw.watchsets.ApplicationsFragment;
+import com.althink.android.ossw.watchsets.UtilitiesFragment;
+import com.althink.android.ossw.watchsets.WatchFacesFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +51,10 @@ public class MainActivity extends AppCompatActivity {
     private ActionBarDrawerToggle drawerToggle;
     private int mPosition;
 
-    private WatchSetsFragment mWatchsetsFragment;
+    private WatchFacesFragment mWatchFacesFragment;
+    private ApplicationsFragment mApplicationsFragment;
+    private UtilitiesFragment mUtilitiesFragment;
+
     private PluginsFragment mPluginsFragment;
     private DeviceScanFragment mWatchesFragment;
 
@@ -120,7 +125,9 @@ public class MainActivity extends AppCompatActivity {
 
 //        mHomeFragment = new HomeFragment();
         mPluginsFragment = new PluginsFragment();
-        mWatchsetsFragment = new WatchSetsFragment();
+        mWatchFacesFragment = new WatchFacesFragment();
+        mApplicationsFragment = new ApplicationsFragment();
+        mUtilitiesFragment = new UtilitiesFragment();
         mWatchesFragment = new DeviceScanFragment();
 
         setContentView(R.layout.activity_main);
@@ -207,7 +214,17 @@ public class MainActivity extends AppCompatActivity {
         switch (menuItem.getItemId()) {
             case R.id.nav_watchface:
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, mWatchsetsFragment).commit();
+                        .replace(R.id.fragment_container, mWatchFacesFragment).commit();
+                break;
+            case R.id.nav_applications:
+                setTitle(R.string.drawer_applications);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mApplicationsFragment).commit();
+                break;
+            case R.id.nav_utilities:
+                setTitle(R.string.drawer_utilities);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mUtilitiesFragment).commit();
                 break;
             case R.id.nav_extension:
                 getSupportFragmentManager().beginTransaction()
@@ -304,4 +321,5 @@ public class MainActivity extends AppCompatActivity {
             getFragmentManager().popBackStack();
         }
     }
+
 }

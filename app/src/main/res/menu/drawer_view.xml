@@ -6,15 +6,21 @@
             android:checked="true"
             android:id="@+id/nav_watchface"
             android:icon="@drawable/ic_watchface"
-            android:title="Watch faces" />
+            android:title="@string/drawer_watch_faces" />
+        <item
+            android:id="@+id/nav_applications"
+            android:title="@string/drawer_applications" />
+        <item
+            android:id="@+id/nav_utilities"
+            android:title="@string/drawer_utilities" />
         <item
             android:id="@+id/nav_extension"
             android:icon="@drawable/ic_extension"
-            android:title="Extensions" />
+            android:title="@string/drawer_plugins" />
         <item
             android:id="@+id/nav_watch"
             android:icon="@drawable/ic_watch"
-            android:title="Watches" />
+            android:title="@string/drawer_watches" />
     </group>
     <group
         android:checkableBehavior="none"

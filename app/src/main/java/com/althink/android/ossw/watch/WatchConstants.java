@@ -74,12 +74,14 @@ public class WatchConstants {
     public static final int WATCH_SET_SCREEN_SECTION_CONTROLS = 1;
     public static final int WATCH_SET_SCREEN_SECTION_ACTIONS = 2;
     public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
+    public static final int WATCH_SET_SCREEN_SECTION_BASE_ACTIONS = 4;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
     public static final int DATA_SOURCE_INTERNAL = 0;
     public static final int DATA_SOURCE_EXTERNAL = 1;
     public static final int DATA_SOURCE_SENSOR = 2;
+    public static final int DATA_SOURCE_STATIC = 3;
 
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
@@ -94,22 +96,20 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 8;
     public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 9;
     public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 10;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_H = 11;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_M = 12;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_S = 13;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_CS = 14;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_MS = 15;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 16;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_H = 17;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_M = 18;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_S = 19;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_CS = 20;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_MS = 21;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_H = 22;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_M = 23;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_S = 24;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_CS = 25;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_MS = 26;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME = 11;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 12;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 13;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 14;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 15;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_NUMBER = 16;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 17;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 18;
+
+    public static final int CONVERTER_MS_TO_HOURS = 1;
+    public static final int CONVERTER_MS_TO_MINUTES_REMAINDER = 2;
+    public static final int CONVERTER_MS_TO_SECONDS_REMAINDER = 3;
+    public static final int CONVERTER_MS_TO_CS_REMAINDER = 4;
+    public static final int CONVERTER_MS_REMAINDER = 5;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
@@ -123,6 +123,10 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_STOPWATCH_STOP = 0x12;
     public static final int WATCHSET_FUNCTION_STOPWATCH_START_STOP = 0x13;
     public static final int WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP = 0x14;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP = 0x15;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP = 0x16;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP = 0x17;
+    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP = 0x18;
 
     public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
     public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
@@ -138,6 +142,7 @@ public class WatchConstants {
     public static final int EVENT_BUTTON_SELECT_LONG = 5;
     public static final int EVENT_BUTTON_DOWN_LONG = 6;
     public static final int EVENT_BUTTON_BACK_LONG = 7;
+    public static final int EVENT_SCREEN_INIT = 0xF0;
 
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;

@@ -1,5 +1,6 @@
 package com.althink.android.ossw.notifications.parser;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -78,15 +79,23 @@ public class BaseNotificationParser {
         if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())) {
             return true;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (sbn.getNotification().actions.length > 0) {
-                return true;
-            }
+        if (hasActions(sbn)) {
+            return true;
         }
         if (isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_NO_CLEAR) &&
                 isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_FOREGROUND_SERVICE) &&
                 isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
             return true;
+        }
+        return false;
+    }
+
+    @TargetApi(19)
+    private boolean hasActions(StatusBarNotification sbn) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (sbn.getNotification().actions.length > 0) {
+                return true;
+            }
         }
         return false;
     }
@@ -116,10 +125,15 @@ public class BaseNotificationParser {
             case "com.skype.raider":
                 return skypeNotificationType(sbn);
         }
+        return buildFromCategory(sbn);
+    }
 
+    @TargetApi(21)
+    private NotificationCategory buildFromCategory(StatusBarNotification sbn) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             return NotificationCategory.OTHER;
         }
+
         String category = sbn.getNotification().category;
         if (category == null) {
             return NotificationCategory.OTHER;
@@ -159,10 +173,8 @@ public class BaseNotificationParser {
         if ("com.android.dialer".equals(sbn.getPackageName()) && existingNotification != null) {
             return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if ("com.htc.android.worldclock".equals(sbn.getPackageName()) && sbn.getNotification().actions.length > 0) {
-                return NotificationType.ALERT;
-            }
+        if ("com.htc.android.worldclock".equals(sbn.getPackageName()) && hasActions(sbn)) {
+            return NotificationType.ALERT;
         }
         if (sbn.getNotification().fullScreenIntent == null) {
             return NotificationType.INFO;

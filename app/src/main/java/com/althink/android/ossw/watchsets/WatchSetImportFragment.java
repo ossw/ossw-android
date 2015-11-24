@@ -1,5 +1,6 @@
 package com.althink.android.ossw.watchsets;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
@@ -23,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.WatchView;
@@ -49,6 +49,7 @@ public class WatchSetImportFragment extends Fragment {
     private CompiledWatchSet watchSet;
     private String source;
     private Uri uri;
+    private WatchSetType type;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -112,54 +113,9 @@ public class WatchSetImportFragment extends Fragment {
      * @author paulburke
      */
     public static String getPath(final Context context, final Uri uri) {
-
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
-        // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
-            // ExternalStorageProvider
-            if (isExternalStorageDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-
-                if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
-                }
-
-                // TODO handle non-primary volumes
-            }
-            // DownloadsProvider
-            else if (isDownloadsDocument(uri)) {
-
-                final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-
-                return getDataColumn(context, contentUri, null, null);
-            }
-            // MediaProvider
-            else if (isMediaDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-
-                Uri contentUri = null;
-                if ("image".equals(type)) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                }
-
-                final String selection = "_id=?";
-                final String[] selectionArgs = new String[]{
-                        split[1]
-                };
-
-                return getDataColumn(context, contentUri, selection, selectionArgs);
-            }
+        String path = getDocumentUriPath(context, uri);
+        if (path != null) {
+            return path;
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
@@ -175,6 +131,58 @@ public class WatchSetImportFragment extends Fragment {
             return uri.getPath();
         }
 
+        return null;
+    }
+
+    @TargetApi(19)
+    private static String getDocumentUriPath(final Context context, final Uri uri) {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return null;
+        }
+
+        if (isExternalStorageDocument(uri)) {
+            final String docId = DocumentsContract.getDocumentId(uri);
+            final String[] split = docId.split(":");
+            final String type = split[0];
+
+            if ("primary".equalsIgnoreCase(type)) {
+                return Environment.getExternalStorageDirectory() + "/" + split[1];
+            }
+
+            // TODO handle non-primary volumes
+        }
+        // DownloadsProvider
+        else if (isDownloadsDocument(uri)) {
+
+            final String id = DocumentsContract.getDocumentId(uri);
+            final Uri contentUri = ContentUris.withAppendedId(
+                    Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+            return getDataColumn(context, contentUri, null, null);
+        }
+        // MediaProvider
+        else if (isMediaDocument(uri)) {
+            final String docId = DocumentsContract.getDocumentId(uri);
+            final String[] split = docId.split(":");
+            final String type = split[0];
+
+            Uri contentUri = null;
+            if ("image".equals(type)) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if ("video".equals(type)) {
+                contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+            } else if ("audio".equals(type)) {
+                contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            }
+
+            final String selection = "_id=?";
+            final String[] selectionArgs = new String[]{
+                    split[1]
+            };
+
+            return getDataColumn(context, contentUri, selection, selectionArgs);
+        }
         return null;
     }
 
@@ -307,7 +315,7 @@ public class WatchSetImportFragment extends Fragment {
                 if (watchSet != null) {
                     OsswService service = OsswService.getInstance();
                     if (service != null) {
-                        service.createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
+                        service.createOrUpdateWatchSet(type, watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
                     }
                     getActivity().setResult(Activity.RESULT_OK);
                     getActivity().finish();
@@ -334,5 +342,7 @@ public class WatchSetImportFragment extends Fragment {
         this.uri = uri;
     }
 
-
+    public void setWatchsetType(WatchSetType type) {
+        this.type = type;
+    }
 }

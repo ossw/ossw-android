@@ -5,9 +5,9 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,7 +23,7 @@ import android.widget.Toast;
 import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
-import com.althink.android.ossw.db.OsswDB;
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.db.WatchSetInfo;
 import com.althink.android.ossw.service.OsswService;
 
@@ -32,14 +32,20 @@ import java.util.ArrayList;
 /**
  * Created by krzysiek on 13/06/15.
  */
-public class WatchSetsFragment extends ListFragment {
+public abstract class WatchSetsFragment extends ListFragment {
 
 //    private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private static final int WATCH_FACE_IMPORTED = 1;
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
+
     private WatchSetsListAdapter listAdapter;
-    private OsswDB db;
+    private WatchSetType type;
+    private Handler toastHandler = new Handler();
+
+    public WatchSetsFragment(WatchSetType type) {
+        this.type = type;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -47,7 +53,7 @@ public class WatchSetsFragment extends ListFragment {
 //        Log.i(TAG, "onCreateView called");
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
-        getActivity().setTitle(R.string.drawer_watchsets);
+        getActivity().setTitle(R.string.drawer_watch_faces);
         setHasOptionsMenu(true);
         // Inflate the layout for this fragment
         return v;
@@ -57,7 +63,6 @@ public class WatchSetsFragment extends ListFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        Log.i(TAG, "onCreate called");
-        db = new OsswDB(getActivity());
         listAdapter = new WatchSetsListAdapter();
         setListAdapter(listAdapter);
         //Log.i(TAG, "On create");
@@ -73,7 +78,7 @@ public class WatchSetsFragment extends ListFragment {
 
     private void refreshWatchSetList() {
         listAdapter.clear();
-        for (WatchSetInfo info : db.listWatchSets()) {
+        for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getActivity()).listWatchSets(type)) {
             listAdapter.addWatchSet(info);
         }
         listAdapter.notifyDataSetChanged();
@@ -92,9 +97,21 @@ public class WatchSetsFragment extends ListFragment {
 //        }
         int checkedCount = getListView().getCheckedItemCount();
         boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
-        getActivity().setTitle(hideTitle ? "" : getString(R.string.drawer_watchsets));
+        getActivity().setTitle(hideTitle ? "" : getTitle());
 
         setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
+    }
+
+    private String getTitle() {
+        switch(type){
+            case WATCH_FACE:
+                return getString(R.string.drawer_watch_faces);
+            case APPLICATION:
+                return getString(R.string.drawer_applications);
+            case UTILITY:
+                return getString(R.string.drawer_utilities);
+        }
+        return "";
     }
 
     private void setMenuOptions(Mode mode) {
@@ -139,6 +156,7 @@ public class WatchSetsFragment extends ListFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+        OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
         if (id == R.id.menu_import) {
             showFileChooser();
             return true;
@@ -159,13 +177,22 @@ public class WatchSetsFragment extends ListFragment {
             int count = getListView().getCount();
             for (int i = 0; i < count; i++) {
                 if (sparseBooleanArray.get(i)) {
-                    WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                    String source = db.getWatchSetSourceById(info.getId());
-                    Integer extWatchSetId = db.getExtWatchSetId(info.getId());
-                    CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
-                    OsswService osswBleService = OsswService.getInstance();
-                    if (osswBleService != null) {
-                        osswBleService.uploadData(UploadDataType.WATCHSET, compiledWatchSet.getWatchData());
+                    try {
+                        WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                        String source = db.getWatchSetSourceById(info.getId());
+                        Integer extWatchSetId = db.getExtWatchSetId(info.getId());
+                        CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
+                        OsswService osswBleService = OsswService.getInstance();
+                        if (osswBleService != null) {
+                            osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
+                        }
+                    } catch(Exception e) {
+                        toastHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
                     resetSelection();
                     return true;
@@ -173,6 +200,18 @@ public class WatchSetsFragment extends ListFragment {
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    protected UploadDataType buildDataType(WatchSetType type) {
+        switch (type) {
+            case WATCH_FACE:
+                return UploadDataType.WATCH_FACE;
+            case APPLICATION:
+                return UploadDataType.APPLICATION;
+            case UTILITY:
+                return UploadDataType.UTILITY;
+        }
+        return null;
     }
 
     private void showFileChooser() {

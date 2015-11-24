@@ -31,15 +31,15 @@ public class ImageFromSetEmulatorControl extends AbstractEmulatorControl {
         }
         int intValue = (int) value;
 
-        int firstImageId = image.getData()[2];
-        int numberOfImages = image.getData()[3];
+        int firstImageId = 0xFF&image.getData()[2];
+        int numberOfImages = 0xFF&image.getData()[3];
 
         if (intValue < firstImageId || intValue >= firstImageId + numberOfImages) {
             return;
         }
 
-        int imageWidth = image.getData()[4];
-        int imageHeight = image.getData()[5];
+        int imageWidth = 0xFF&image.getData()[4];
+        int imageHeight = 0xFF&image.getData()[5];
 
         int imageNo = intValue - firstImageId;
         int idx = 6 + (((imageWidth + 7) / 8) * imageHeight * imageNo);
