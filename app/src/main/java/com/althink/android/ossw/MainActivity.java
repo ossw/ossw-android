@@ -36,7 +36,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 //    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String DRAWER_SELECTED_POSITION = "drawerSelectedItem";
-    private static int SCREEN_DEVICES_INDEX = 0;
+    private static int MENU_COUNT = 5;
     private static List<MenuItem> items;
 
     private OsswService mOsswBleService;
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < menu.size(); i++) {
             items.add(menu.getItem(i));
         }
-        SCREEN_DEVICES_INDEX = items.size() - 1;
+        MENU_COUNT = 5;
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 int itemIndex = items.indexOf(menuItem);
                 if (mPosition == itemIndex)
                     return true;
-                if (itemIndex < items.size())
+                if (itemIndex < MENU_COUNT)
                     mPosition = itemIndex;
                 onDrawerItemSelected(menuItem);
                 return true;
@@ -162,9 +162,9 @@ public class MainActivity extends AppCompatActivity {
         frameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mPosition == SCREEN_DEVICES_INDEX)
+                if (mPosition == MENU_COUNT - 1)
                     return;
-                mPosition = SCREEN_DEVICES_INDEX;
+                mPosition = MENU_COUNT - 1;
                 navigationView.getMenu().getItem(mPosition).setChecked(true);
                 onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
             }
