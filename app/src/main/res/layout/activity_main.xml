@@ -8,7 +8,7 @@
         android:id="@+id/drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="false">
 
         <RelativeLayout
             android:id="@+id/container"
@@ -75,7 +75,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:background="@android:color/white"
-            android:fitsSystemWindows="true"
+            android:fitsSystemWindows="false"
             app:headerLayout="@layout/drawer_header"
             app:menu="@menu/drawer_view" />
 
