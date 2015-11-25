@@ -2,18 +2,13 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_height="80dp"
+    android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:background="?attr/colorPrimaryDark"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark"
-    >
-    <TextView
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:text="@string/title_main"
-        android:textSize="56sp"
-        android:textColor="@android:color/white"
-        android:paddingStart="16dp"
-        android:layout_alignParentBottom="true"/>
+        android:src="@drawable/header"
+        android:adjustViewBounds="true"/>
 </RelativeLayout>
