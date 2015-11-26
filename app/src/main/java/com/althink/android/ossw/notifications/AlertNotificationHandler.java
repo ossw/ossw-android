@@ -2,6 +2,7 @@ package com.althink.android.ossw.notifications;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.althink.android.ossw.SettingsActivity;
 import com.althink.android.ossw.notifications.message.AlertNotificationMessageBuilder;
@@ -19,23 +20,23 @@ import java.util.TimerTask;
  */
 public class AlertNotificationHandler {
 
-    //private String TAG = this.getClass().getSimpleName();
+    private String TAG = this.getClass().getSimpleName();
 
     private static Notification lastNotification;
 
     private static Timer timer;
 
     public void handleNotificationStart(Notification notification) {
-        //Log.i(TAG, "HANDLE notification START: " + notification);
+        Log.i(TAG, "HANDLE notification START: " + notification);
         if (!(notification instanceof SimpleNotification)) {
-            //Log.i(TAG, "HANDLE notification START - SKIP");
+            Log.i(TAG, "HANDLE notification START - SKIP");
             return;
         }
 
         boolean update = lastNotification != null && lastNotification.getExternalId() == notification.getExternalId();
 
         if (lastNotification != null && !update) {
-            //Log.i(TAG, "SKIP, other alert notification in progress");
+            Log.i(TAG, "SKIP, other alert notification in progress");
             return;
         }
         lastNotification = notification;
@@ -62,10 +63,10 @@ public class AlertNotificationHandler {
             osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibrationPattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));
 
             if (!update) {
-                //Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
+                Log.i(TAG, "Start notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
                 startNotificationExtender(notification.getExternalId(), osswBleService);
             } else {
-                //Log.i(TAG, "Update notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
+                Log.i(TAG, "Update notification: " + lastNotification.getId() + ", " + lastNotification.getExternalId());
             }
         }
     }

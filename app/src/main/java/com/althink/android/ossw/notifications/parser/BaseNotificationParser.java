@@ -72,6 +72,7 @@ public class BaseNotificationParser {
             COM_ANDROID_PHONE_LINE1 = phoneRes.getIdentifier("com.android.phone:id/text1", null, null);
             COM_ANDROID_PHONE_LINE2 = phoneRes.getIdentifier("com.android.phone:id/text2", null, null);
         } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
@@ -93,6 +94,8 @@ public class BaseNotificationParser {
     @TargetApi(19)
     private boolean hasActions(StatusBarNotification sbn) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (sbn.getNotification().actions == null)
+                return false;
             if (sbn.getNotification().actions.length > 0) {
                 return true;
             }
@@ -205,19 +208,25 @@ public class BaseNotificationParser {
         if (operations.isEmpty()) {
             try {
                 Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.dialer");
-                int dismissId = dialerRes.getIdentifier("com.android.dialer:string/description_dismiss", null, null);
-                String dismiss = dialerRes.getString(dismissId);
-                operations.add(new Operation(dismiss, null));
-                return;
+                if (dialerRes != null) {
+                    int dismissId = dialerRes.getIdentifier("com.android.dialer:string/description_dismiss", null, null);
+                    String dismiss = dialerRes.getString(dismissId);
+                    operations.add(new Operation(dismiss, null));
+                    return;
+                }
             } catch (Exception e) {
+                e.printStackTrace();
             }
 
             try {
                 Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.phone");
-                int dismissId = dialerRes.getIdentifier("com.android.phone:string/description_target_decline", null, null);
-                String dismiss = dialerRes.getString(dismissId);
-                operations.add(new Operation(dismiss, null));
+                if (dialerRes != null) {
+                    int dismissId = dialerRes.getIdentifier("com.android.phone:string/description_target_decline", null, null);
+                    String dismiss = dialerRes.getString(dismissId);
+                    operations.add(new Operation(dismiss, null));
+                }
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
