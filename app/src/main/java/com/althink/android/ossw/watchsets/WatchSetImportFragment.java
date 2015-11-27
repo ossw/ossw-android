@@ -74,8 +74,9 @@ public class WatchSetImportFragment extends Fragment {
             OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
             source = db.getWatchSetSourceById(id);
         } else if (uri != null) {
-            File file = new File(getPath(getActivity(), uri));
-            source = loadFileData(file);
+            String path = getPath(getActivity(), uri);
+            if (path != null)
+                source = loadFileData(new File(path));
         }
         if (source != null && !source.isEmpty()) {
             try {
@@ -319,7 +320,7 @@ public class WatchSetImportFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         Activity activity = getActivity();
         activity.setTitle(R.string.drawer_preview);
-        Toolbar toolbar = (Toolbar)activity.findViewById(R.id.toolbar_actionbar);
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbar_actionbar);
         if (id == null && uri != null)
             toolbar.inflateMenu(R.menu.import_watchset);
     }
