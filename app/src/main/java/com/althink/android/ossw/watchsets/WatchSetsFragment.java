@@ -73,7 +73,6 @@ public abstract class WatchSetsFragment extends ListFragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.watchsets, menu);
         refreshWatchSetList();
-//        setMenuOptions(Mode.NONE);
     }
 
     private void refreshWatchSetList() {
@@ -118,17 +117,21 @@ public abstract class WatchSetsFragment extends ListFragment {
         Menu menu = ((MainActivity)getActivity()).getToolbar().getMenu();
         MenuItem uploadAction = menu.findItem(R.id.menu_upload_to_watch);
         MenuItem itemsRemoveAction = menu.findItem(R.id.menu_items_remove);
+        MenuItem previewAction = menu.findItem(R.id.menu_preview);
         switch (mode) {
             case MULTI:
                 uploadAction.setVisible(false);
+                previewAction.setVisible(false);
                 itemsRemoveAction.setVisible(true);
                 break;
             case SINGLE:
                 uploadAction.setVisible(true);
+                previewAction.setVisible(true);
                 itemsRemoveAction.setVisible(true);
                 break;
             case NONE:
                 uploadAction.setVisible(false);
+                previewAction.setVisible(false);
                 itemsRemoveAction.setVisible(false);
                 break;
         }
@@ -161,7 +164,6 @@ public abstract class WatchSetsFragment extends ListFragment {
             showFileChooser();
             return true;
         } else if (id == R.id.menu_items_remove) {
-
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
             int count = getListView().getCount();
             for (int i = 0; i < count; i++) {
@@ -172,6 +174,19 @@ public abstract class WatchSetsFragment extends ListFragment {
             }
             refreshWatchSetList();
             return true;
+        } else if (id == R.id.menu_preview) {
+            SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
+            int count = getListView().getCount();
+            for (int i = 0; i < count; i++) {
+                if (sparseBooleanArray.get(i)) {
+                    WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
+                    Intent intent = new Intent(getActivity().getApplicationContext(), WatchSetPreviewActivity.class);
+                    intent.putExtra("id", info.getId());
+                    intent.putExtra("type", type);
+                    startActivity(intent);
+                    return true;
+                }
+            }
         } else if (id == R.id.menu_upload_to_watch) {
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
             int count = getListView().getCount();
@@ -239,13 +254,9 @@ public abstract class WatchSetsFragment extends ListFragment {
                     // Get the Uri of the selected file
                     Uri uri = data.getData();
                     //Log.i(TAG, "File Uri: " + uri.toString());
-//                    final FragmentTransaction ft = getFragmentManager().beginTransaction();
-//                    WatchSetImportFragment importFragment = new WatchSetImportFragment();
-//                    importFragment.setUri(uri);
-//                    ft.replace(R.id.fragment_container, importFragment).addToBackStack("Preview fragment");
-//                    ft.commit();
                     Intent i = new Intent(getActivity().getApplicationContext(), WatchSetPreviewActivity.class);
                     i.putExtra("uri", uri.toString());
+                    i.putExtra("type", type);
                     startActivityForResult(i, WATCH_FACE_IMPORTED);
                 }
                 break;

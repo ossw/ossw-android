@@ -33,12 +33,18 @@ public class WatchSetPreviewActivity extends AppCompatActivity {
             }
         });
         WatchSetImportFragment importFragment = new WatchSetImportFragment();
-        Uri uri;
+
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            String uriString = extras.getString("uri");
-            uri = Uri.parse(uriString);
-            importFragment.setUri(uri);
+            WatchSetType t = (WatchSetType) extras.getSerializable("type");
+            importFragment.setWatchsetType(t);
+            String param = extras.getString("uri");
+            if (param != null && !param.isEmpty()) {
+                Uri uri = Uri.parse(param);
+                importFragment.setUri(uri);
+            }
+            if (extras.containsKey("id"))
+                importFragment.setId(extras.getInt("id"));
         }
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, importFragment)
                 .commit();

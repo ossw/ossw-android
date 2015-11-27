@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.althink.android.ossw.R;
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.WatchView;
 import com.althink.android.ossw.emulator.event.ButtonLongPressedEmulatorEvent;
@@ -49,6 +50,7 @@ public class WatchSetImportFragment extends Fragment {
     private CompiledWatchSet watchSet;
     private String source;
     private Uri uri;
+    private Integer id;
     private WatchSetType type;
 
     @Override
@@ -58,17 +60,6 @@ public class WatchSetImportFragment extends Fragment {
         setHasOptionsMenu(true);
         final WatchView watchView = (WatchView) view.findViewById(R.id.watch_emulator_screen_view);
         emulator = watchView.getWatchEmulator();
-//
-//        view.findViewById(R.id.upload_watchset).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
-//                if (watchSet != null) {
-//                    ((MainActivity) getActivity()).getOsswBleService().createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
-//                    osswBleService.uploadData(UploadDataType.WATCHSET, watchSet.getWatchData());
-//                }
-//            }
-//        });
 
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_up), EmulatorButton.UP);
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_down), EmulatorButton.DOWN);
@@ -78,13 +69,17 @@ public class WatchSetImportFragment extends Fragment {
         return view;
     }
 
-    private boolean loadWatchSetFromFile() {
-        if (uri != null) {
+    private boolean loadWatchSet() {
+        if (id != null) {
+            OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
+            source = db.getWatchSetSourceById(id);
+        } else if (uri != null) {
+            File file = new File(getPath(getActivity(), uri));
+            source = loadFileData(file);
+        }
+        if (source != null && !source.isEmpty()) {
             try {
-                File file = new File(getPath(getActivity(), uri));
-
-                watchSet = parseWatchSet(file);
-
+                watchSet = new WatchSetCompiler(getActivity()).compile(source, null);
                 //Log.i(TAG, "File " + file.getPath() + " successfully loaded, watchSetId: " + watchSet.getId());
 
                 WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet);
@@ -268,11 +263,6 @@ public class WatchSetImportFragment extends Fragment {
         });
     }
 
-    public CompiledWatchSet parseWatchSet(File file) {
-        source = loadFileData(file);
-        return new WatchSetCompiler(getActivity()).compile(source, null);
-    }
-
     private String loadFileData(File file) {
         BufferedReader input = null;
         try {
@@ -301,7 +291,7 @@ public class WatchSetImportFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        loadWatchSetFromFile();
+        loadWatchSet();
     }
 
     @Override
@@ -309,7 +299,7 @@ public class WatchSetImportFragment extends Fragment {
         int id = item.getItemId();
         switch (id) {
             case R.id.menu_watchset_reload:
-                loadWatchSetFromFile();
+                loadWatchSet();
                 break;
             case R.id.menu_watchset_import:
                 if (watchSet != null) {
@@ -330,7 +320,8 @@ public class WatchSetImportFragment extends Fragment {
         Activity activity = getActivity();
         activity.setTitle(R.string.drawer_preview);
         Toolbar toolbar = (Toolbar)activity.findViewById(R.id.toolbar_actionbar);
-        toolbar.inflateMenu(R.menu.import_watchset);
+        if (id == null && uri != null)
+            toolbar.inflateMenu(R.menu.import_watchset);
     }
 
     @Override
@@ -340,6 +331,10 @@ public class WatchSetImportFragment extends Fragment {
 
     public void setUri(Uri uri) {
         this.uri = uri;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public void setWatchsetType(WatchSetType type) {
