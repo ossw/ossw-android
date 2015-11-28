@@ -5,27 +5,8 @@ package com.althink.android.ossw.watchsets.field;
  */
 public class IntegerFieldDefinition extends FieldDefinition {
 
-    private Integer min;
-    private Integer max;
-
     public IntegerFieldDefinition(int fieldId) {
         super(fieldId);
-    }
-
-    public void setMax(Integer max) {
-        this.max = max;
-    }
-
-    public void setMin(Integer min) {
-        this.min = min;
-    }
-
-    public Integer getMax() {
-        return max;
-    }
-
-    public Integer getMin() {
-        return min;
     }
 
     @Override

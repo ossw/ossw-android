@@ -430,20 +430,24 @@ public class WatchSetCompiler {
         }
 
         //max
-        os.write((values.length() - 1) >> 8);
-        os.write((values.length() - 1) & 0xFF);
-
+        DataSourceResolutionContext context = new DataSourceResolutionContext(screenContext);
+        context.dataSourceType = DataSourceType.NUMBER;
+        context.dataRange = 0;
+        JSONObject source = new JSONObject();
+        source.put("type", "static");
+        source.put("value", values.length() - 1);
+        os.write(compileSource(source, context));
         //min
-        os.write(0);
-        os.write(0);
+        source.put("value", 0);
+        os.write(compileSource(source, context));
         return os.toByteArray();
     }
 
     private byte[] parseIntegerFieldDefinition(int filedId, String fieldName, JSONObject field, ScreenContext screenContext) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IntegerFieldDefinition definition = new IntegerFieldDefinition(filedId);
-        definition.setMin(field.optInt("min"));
-        definition.setMax(field.optInt("max"));
+        JSONObject min = field.optJSONObject("min");
+        JSONObject max = field.optJSONObject("max");
         boolean overflow = field.optBoolean("overflow", false);
         JSONObject initValue = field.optJSONObject("value");
 
@@ -457,10 +461,10 @@ public class WatchSetCompiler {
         if (overflow) {
             flags |= 0x40;
         }
-        if (definition.getMax() != null) {
+        if (max != null) {
             flags |= 0x20;
         }
-        if (definition.getMin() != null) {
+        if (min != null) {
             flags |= 0x10;
         }
 
@@ -472,13 +476,15 @@ public class WatchSetCompiler {
             os.write(compileSource(initValue, info));
         }
 
-        if (definition.getMax() != null) {
-            os.write(definition.getMax() >> 8);
-            os.write(definition.getMax() & 0xFF);
+        if (max != null) {
+            DataSourceResolutionContext context = new DataSourceResolutionContext(screenContext);
+            context.dataSourceType = DataSourceType.NUMBER;
+            os.write(compileSource(max, context));
         }
-        if (definition.getMin() != null) {
-            os.write(definition.getMin() >> 8);
-            os.write(definition.getMin() & 0xFF);
+        if (min != null) {
+            DataSourceResolutionContext context = new DataSourceResolutionContext(screenContext);
+            context.dataSourceType = DataSourceType.NUMBER;
+            os.write(compileSource(min, context));
         }
         return os.toByteArray();
     }
@@ -611,18 +617,6 @@ public class WatchSetCompiler {
             case "stopwatch.nextLap":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP);
                 break;
-            case "stopwatch.recall.nextLap":
-                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP);
-                break;
-            case "stopwatch.recall.prevLap":
-                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP);
-                break;
-            case "stopwatch.recall.firstLap":
-                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP);
-                break;
-            case "stopwatch.recall.lastLap":
-                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP);
-                break;
             case "toggleColors":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS);
                 break;
@@ -718,23 +712,29 @@ public class WatchSetCompiler {
     private int getEventId(String eventKey) {
         switch (eventKey) {
             case "button_up_short":
+            case "buttons.up.short":
                 return WatchConstants.EVENT_BUTTON_UP_SHORT;
             case "button_select_short":
+            case "buttons.select.short":
                 return WatchConstants.EVENT_BUTTON_SELECT_SHORT;
             case "button_down_short":
+            case "buttons.down.short":
                 return WatchConstants.EVENT_BUTTON_DOWN_SHORT;
             case "button_back_short":
+            case "buttons.back.short":
                 return WatchConstants.EVENT_BUTTON_BACK_SHORT;
             case "button_up_long":
+            case "buttons.up.long":
                 return WatchConstants.EVENT_BUTTON_UP_LONG;
             case "button_select_long":
+            case "buttons.select.long":
                 return WatchConstants.EVENT_BUTTON_SELECT_LONG;
             case "button_down_long":
+            case "buttons.down.long":
                 return WatchConstants.EVENT_BUTTON_DOWN_LONG;
             case "button_back_long":
+            case "buttons.back.long":
                 return WatchConstants.EVENT_BUTTON_BACK_LONG;
-            case "screen_init":
-                return WatchConstants.EVENT_SCREEN_INIT;
         }
         throw new KnownParseError("Unknown event key: " + eventKey);
     }
@@ -764,6 +764,9 @@ public class WatchSetCompiler {
         DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
         os.write(WatchConstants.SCR_CONTROL_CHOOSE);
         os.write(compileSource(choose, resCtx));
+        int buffer = screenContext.getAllocator().addBuffer(1);
+        os.write(buffer<<8);
+        os.write(buffer&0xFF);
         os.write(when.length());
         JSONArray options = when.names();
         for (int i = 0; i < options.length(); i++) {
@@ -1152,12 +1155,16 @@ public class WatchSetCompiler {
         }
     }
 
-    private byte[] compileSource(JSONObject source, DataSourceResolutionContext info) throws JSONException {
+    private byte[] compileSource(JSONObject source, DataSourceResolutionContext info) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         int flags = 0;
         String converter = source.optString("converter", null);
         if (converter != null) {
             flags |= 0x80;
+        }
+        JSONObject index = source.optJSONObject("index");
+        if (index != null) {
+            flags |= 0x40;
         }
         switch (source.getString("type")) {
             case "static":
@@ -1213,6 +1220,12 @@ public class WatchSetCompiler {
                 throw new KnownParseError("Unknown type: " + source.getString("type"));
         }
 
+        if (index != null) {
+            DataSourceResolutionContext idxCtx = new DataSourceResolutionContext(info.screenContext);
+            idxCtx.dataSourceType = DataSourceType.NUMBER;
+            idxCtx.dataRange = 0;
+            os.write(compileSource(index, idxCtx));
+        }
         if (converter != null) {
             os.write(getConverterKey(converter));
         }
@@ -1281,8 +1294,6 @@ public class WatchSetCompiler {
                 return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME;
             case "stopwatch.currentLap.split":
                 return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT;
-            case "stopwatch.recallLap.number":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_NUMBER;
             case "stopwatch.recallLap.time":
                 return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME;
             case "stopwatch.recallLap.split":

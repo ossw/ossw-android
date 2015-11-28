@@ -7,7 +7,7 @@ import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
  */
 public interface EmulatorModelProperty {
 
-    void initialize(EmulatorExecutionContext ctx);
+    void initialize();
 
     void add(Object value);
 

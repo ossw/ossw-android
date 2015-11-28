@@ -11,23 +11,26 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
 
     private EmulatorDataSource initValue;
 
-    private Integer min;
+    private EmulatorDataSource min;
 
-    private Integer max;
+    private EmulatorDataSource max;
 
     private boolean overflow;
 
     private Integer value;
 
-    public IntegerEmulatorModelProperty(EmulatorDataSource initValue, Integer max, Integer min, boolean overflow) {
+    private EmulatorExecutionContext ctx;
+
+    public IntegerEmulatorModelProperty(EmulatorDataSource initValue, EmulatorDataSource max, EmulatorDataSource min, boolean overflow, EmulatorExecutionContext ctx) {
         this.initValue = initValue;
         this.max = max;
         this.min = min;
         this.overflow = overflow;
+        this.ctx = ctx;
     }
 
     @Override
-    public void initialize(EmulatorExecutionContext ctx) {
+    public void initialize() {
         setValue(initValue.getData(DataSourceType.NUMBER, 0x40, ctx));
     }
 
@@ -35,11 +38,14 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
     public void add(Object value) {
         if (this.value != null && value != null) {
             this.value += (Integer) value;
-            if (max != null && this.value > max) {
-                if (overflow) {
-                    this.value = min;
-                } else {
-                    this.value = max;
+            if (max != null) {
+                int maxValue = (int) max.getData(DataSourceType.NUMBER, 0, ctx);
+                if (this.value > maxValue) {
+                    if (overflow && min != null) {
+                        this.value = (int) min.getData(DataSourceType.NUMBER, 0, ctx);
+                    } else {
+                        this.value = maxValue;
+                    }
                 }
             }
         }
@@ -49,11 +55,15 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
     public void subtract(Object value) {
         if (this.value != null && value != null) {
             this.value -= (Integer) value;
-            if (min != null && this.value < min) {
-                if (overflow) {
-                    this.value = max;
-                } else {
-                    this.value = min;
+            if (min != null) {
+                int minValue = (int) min.getData(DataSourceType.NUMBER, 0, ctx);
+                if (this.value < minValue) {
+                    if (overflow && max != null) {
+                        this.value = (int) max.getData(DataSourceType.NUMBER, 0, ctx);
+                        ;
+                    } else {
+                        this.value = minValue;
+                    }
                 }
             }
         }
@@ -63,11 +73,14 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
     public void increment() {
         if (value != null) {
             value++;
-            if (max != null && value > max) {
-                if (overflow) {
-                    this.value = min;
-                } else {
-                    this.value = max;
+            if (max != null) {
+                int maxValue = (int) max.getData(DataSourceType.NUMBER, 0, ctx);
+                if (value > maxValue) {
+                    if (overflow && min != null) {
+                        this.value = (int) min.getData(DataSourceType.NUMBER, 0, ctx);
+                    } else {
+                        this.value = maxValue;
+                    }
                 }
             }
         }
@@ -77,11 +90,14 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
     public void decrement() {
         if (value != null) {
             value--;
-            if (min != null && value < min) {
-                if (overflow) {
-                    this.value = max;
-                } else {
-                    this.value = min;
+            if (min != null) {
+                int minValue = (int) min.getData(DataSourceType.NUMBER, 0, ctx);
+                if (value < minValue) {
+                    if (overflow && max != null) {
+                        this.value = (int) max.getData(DataSourceType.NUMBER, 0, ctx);
+                    } else {
+                        this.value = minValue;
+                    }
                 }
             }
         }
@@ -96,11 +112,17 @@ public class IntegerEmulatorModelProperty implements EmulatorModelProperty {
     public void setValue(Object value) {
         this.value = (Integer) value;
         if (this.value != null) {
-            if (max != null && this.value > max) {
-                this.value = max;
+            if (min != null) {
+                int minValue = (int) min.getData(DataSourceType.NUMBER, 0, ctx);
+                if (this.value < minValue) {
+                    this.value = minValue;
+                }
             }
-            if (min != null && this.value < min) {
-                this.value = min;
+            if (max != null) {
+                int maxValue = (int) max.getData(DataSourceType.NUMBER, 0, ctx);
+                if (this.value > maxValue) {
+                    this.value = maxValue;
+                }
             }
         }
     }

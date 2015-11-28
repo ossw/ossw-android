@@ -105,11 +105,10 @@ public class WatchSetEmulatorModel {
             }
         }
 
-        EmulatorExecutionContext executionContext = new EmulatorExecutionContext(this, null);
         if (getCurrentScreenModel() != null) {
             Collection<EmulatorModelProperty> modelProperties = getCurrentScreenModel().values();
             for (EmulatorModelProperty property : modelProperties) {
-                property.initialize(executionContext);
+                property.initialize();
             }
         }
     }

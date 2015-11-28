@@ -104,9 +104,8 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 13;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 14;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 15;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_NUMBER = 16;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 17;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 18;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 16;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 17;
 
     public static final int CONVERTER_MS_TO_HOURS = 1;
     public static final int CONVERTER_MS_TO_MINUTES_REMAINDER = 2;
@@ -126,10 +125,6 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_STOPWATCH_STOP = 0x12;
     public static final int WATCHSET_FUNCTION_STOPWATCH_START_STOP = 0x13;
     public static final int WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP = 0x14;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP = 0x15;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP = 0x16;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP = 0x17;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP = 0x18;
 
     public static final int WATCHSET_FUNCTION_MODEL_SET = 0xA0;
     public static final int WATCHSET_FUNCTION_MODEL_ADD = 0xA1;
@@ -153,7 +148,6 @@ public class WatchConstants {
     public static final int EVENT_BUTTON_SELECT_LONG = 5;
     public static final int EVENT_BUTTON_DOWN_LONG = 6;
     public static final int EVENT_BUTTON_BACK_LONG = 7;
-    public static final int EVENT_SCREEN_INIT = 0xF0;
 
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;

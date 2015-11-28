@@ -22,7 +22,12 @@ import java.io.InputStream;
  * Created by krzysiek on 14/06/15.
  */
 public class EmulatorDataSourceFactory {
+
     public static EmulatorDataSource internalDataSource(int property) {
+        return internalDataSource(property, null);
+    }
+
+    public static EmulatorDataSource internalDataSource(int property, EmulatorDataSource index) {
         switch (property) {
             case WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12:
                 return new Hour12InternalEmulatorDataSource();
