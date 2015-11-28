@@ -9,7 +9,7 @@
         android:id="@+id/toolbar_actionbar"
         layout="@layout/toolbar_default"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="?attr/actionBarSize" />
 
     <FrameLayout
         android:id="@+id/container"
