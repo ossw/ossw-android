@@ -73,6 +73,7 @@ public abstract class WatchSetsFragment extends ListFragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.watchsets, menu);
         refreshWatchSetList();
+        resetSelection();
     }
 
     private void refreshWatchSetList() {
@@ -81,7 +82,6 @@ public abstract class WatchSetsFragment extends ListFragment {
             listAdapter.addWatchSet(info);
         }
         listAdapter.notifyDataSetChanged();
-        resetSelection();
     }
 
     @Override
@@ -95,9 +95,6 @@ public abstract class WatchSetsFragment extends ListFragment {
 //            }
 //        }
         int checkedCount = getListView().getCheckedItemCount();
-        boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
-        getActivity().setTitle(hideTitle ? "" : getTitle());
-
         setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
     }
 
@@ -114,6 +111,9 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private void setMenuOptions(Mode mode) {
+        int checkedCount = getListView().getCheckedItemCount();
+        boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        getActivity().setTitle(hideTitle ? "" : getTitle());
         Menu menu = ((MainActivity)getActivity()).getToolbar().getMenu();
         MenuItem uploadAction = menu.findItem(R.id.menu_upload_to_watch);
         MenuItem itemsRemoveAction = menu.findItem(R.id.menu_items_remove);
@@ -173,6 +173,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                 }
             }
             refreshWatchSetList();
+            resetSelection();
             return true;
         } else if (id == R.id.menu_preview) {
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
