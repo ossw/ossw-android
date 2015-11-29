@@ -14,6 +14,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.notifications.NotificationListener;
 import com.althink.android.ossw.notifications.model.ListNotification;
 import com.althink.android.ossw.notifications.model.Notification;
@@ -57,7 +58,8 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         Date date = new Date(sbn.getNotification().when);
 
         if (NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
-            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
+            if (!sbn.getPackageName().equals("com.althink.android.ossw"))
+                Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
             return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
@@ -147,18 +149,20 @@ public class NotificationParserApi19 extends BaseNotificationParser {
 
                     if (methodName != null && (methodName.equals("setText") || methodName.equals("setFormat"))) {
 
-
                         if (methodName.equals("setText")) {
                             // should be 10 /
                             parcel.readInt();
                         }
 
                         // Store the actual string
-                        String value = TextUtils.CHAR_SEQUENCE_CREATOR
-                                .createFromParcel(parcel).toString();
+                        CharSequence chars = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
 
                         Log.d(TAG, "viewId is " + viewId);
-                        Log.d(TAG, "Found value: " + value);
+                        Log.d(TAG, "Found value: " + chars);
+
+                        if (chars == null)
+                            continue;
+                        String value = chars.toString();
 
                         if (viewId == BaseNotificationParser.COM_ANDROID_PHONE_LINE1) {
                             //sender when one mail / number of messages when multiple
@@ -170,13 +174,20 @@ public class NotificationParserApi19 extends BaseNotificationParser {
                             text = value;
                         }
 
+                        // vaspa: workaround cause viewId never matches PHONE_LINE ids
+                        if (methodName.equals("setText") && text == null) {
+                            text = value;
+                        }
+
                         parcel.recycle();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error accessing object!", e);
                 }
             }
-
+            // vaspa: same workaround
+            if (title == null)
+                title = context.getString(R.string.incall_title);
             if (title != null && text != null) {
                 return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn, externalId);
             }
