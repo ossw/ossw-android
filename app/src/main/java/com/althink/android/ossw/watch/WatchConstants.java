@@ -77,6 +77,9 @@ public class WatchConstants {
     public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
     public static final int WATCH_SET_SCREEN_SECTION_BASE_ACTIONS = 4;
     public static final int WATCH_SET_SCREEN_SECTION_MODEL = 5;
+    public static final int WATCH_SET_SCREEN_SECTION_SETTINGS = 6;
+
+    public static final int WATCH_SET_SETTING_INVERTIBLE = 1;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
@@ -89,29 +92,39 @@ public class WatchConstants {
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
     public static final int INTERNAL_DATA_SOURCE_BATTERY_LEVEL = 0;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_24 = 1;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12 = 2;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR = 3;
-    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 4;
-    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 5;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK = 6;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 7;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 8;
-    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 9;
-    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 10;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME = 11;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 12;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 13;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 14;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 15;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 16;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 17;
+    public static final int INTERNAL_DATA_SOURCE_TIME_IN_SECONDS = 1;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_24 = 2;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12 = 3;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR = 4;
+    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 5;
+    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 6;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK = 7;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 8;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 9;
+    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 10;
+    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 11;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME = 12;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 13;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 14;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 15;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 16;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 17;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 18;
 
     public static final int CONVERTER_MS_TO_HOURS = 1;
     public static final int CONVERTER_MS_TO_MINUTES_REMAINDER = 2;
     public static final int CONVERTER_MS_TO_SECONDS_REMAINDER = 3;
     public static final int CONVERTER_MS_TO_CS_REMAINDER = 4;
     public static final int CONVERTER_MS_REMAINDER = 5;
+    public static final int CONVERTER_TIME_TO_HOUR_24 = 6;
+    public static final int CONVERTER_TIME_TO_ROUNDED_HOUR_24 = 7;
+    public static final int CONVERTER_TIME_TO_MINUTES = 8;
+    public static final int CONVERTER_TIME_TO_SECONDS = 9;
+    public static final int CONVERTER_TIME_TO_FIVE_MINUTES_ROUNDED_TIME = 10;
+    public static final int CONVERTER_HOUR_24_TO_HOUR_12 = 11;
+    public static final int CONVERTER_HOUR_24_TO_HOUR_12_PERIOD = 12;
+    public static final int CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR = 13;
+    public static final int CONVERTER_MINUTES_TO_PAST_TO_MINUTES = 14;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;

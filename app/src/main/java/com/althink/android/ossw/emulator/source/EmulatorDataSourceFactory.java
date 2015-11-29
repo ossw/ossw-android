@@ -1,6 +1,17 @@
 package com.althink.android.ossw.emulator.source;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
+import com.althink.android.ossw.emulator.source.converter.EmulatorDataConverter;
+import com.althink.android.ossw.emulator.source.converter.Hour24ToHour12Converter;
+import com.althink.android.ossw.emulator.source.converter.Hour24ToHour12PeriodConverter;
+import com.althink.android.ossw.emulator.source.converter.MinutesToPastToDesignator;
+import com.althink.android.ossw.emulator.source.converter.MinutesToPastToMinutes;
+import com.althink.android.ossw.emulator.source.converter.TimeToFiveMinutesRoundedTimeConverter;
+import com.althink.android.ossw.emulator.source.converter.TimeToHour24Converter;
+import com.althink.android.ossw.emulator.source.converter.TimeToMinutesConverter;
+import com.althink.android.ossw.emulator.source.converter.MockConverter;
+import com.althink.android.ossw.emulator.source.converter.TimeToRoundedHour24Converter;
+import com.althink.android.ossw.emulator.source.converter.TimeToSecondsConverter;
 import com.althink.android.ossw.emulator.source.internal.BatteryLevelInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.DayOfMonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.DayOfWeekInternalEmulatorDataSource;
@@ -11,6 +22,7 @@ import com.althink.android.ossw.emulator.source.internal.Hour24InternalEmulatorD
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.TimeInSecondsInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.YearInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.ZeroDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -29,6 +41,8 @@ public class EmulatorDataSourceFactory {
 
     public static EmulatorDataSource internalDataSource(int property, EmulatorDataSource index) {
         switch (property) {
+            case WatchConstants.INTERNAL_DATA_SOURCE_TIME_IN_SECONDS:
+                return new TimeInSecondsInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12:
                 return new Hour12InternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR:
@@ -78,4 +92,43 @@ public class EmulatorDataSourceFactory {
     public static EmulatorDataSource modelDataSource(int property) throws Exception {
         return new EmulatorModelDataSource(property);
     }
+
+    public static EmulatorDataSource convertedDataSource(int converterId, EmulatorDataSource dataSource) throws Exception {
+        EmulatorDataConverter converter;
+        switch (converterId) {
+            case WatchConstants.CONVERTER_TIME_TO_HOUR_24:
+                converter = new TimeToHour24Converter();
+                break;
+            case WatchConstants.CONVERTER_TIME_TO_ROUNDED_HOUR_24:
+                converter = new TimeToRoundedHour24Converter();
+                break;
+            case WatchConstants.CONVERTER_TIME_TO_MINUTES:
+                converter = new TimeToMinutesConverter();
+                break;
+            case WatchConstants.CONVERTER_TIME_TO_SECONDS:
+                converter = new TimeToSecondsConverter();
+                break;
+            case WatchConstants.CONVERTER_TIME_TO_FIVE_MINUTES_ROUNDED_TIME:
+                converter = new TimeToFiveMinutesRoundedTimeConverter();
+                break;
+            case WatchConstants.CONVERTER_HOUR_24_TO_HOUR_12:
+                converter = new Hour24ToHour12Converter();
+                break;
+            case WatchConstants.CONVERTER_HOUR_24_TO_HOUR_12_PERIOD:
+                converter = new Hour24ToHour12PeriodConverter();
+                break;
+            case WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_MINUTES:
+                converter = new MinutesToPastToMinutes();
+                break;
+            case WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR:
+                converter = new MinutesToPastToDesignator();
+                break;
+            default:
+                converter = new MockConverter();
+
+        }
+        return new EmulatorConvertedDataSource(converter, dataSource);
+    }
+
+
 }

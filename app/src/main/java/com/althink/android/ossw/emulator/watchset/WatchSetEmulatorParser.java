@@ -163,6 +163,11 @@ public class WatchSetEmulatorParser {
                     screen.setModel(parseModel(is, execCtx));
                 }
                     break;
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_SETTINGS: {
+                    int size = is.read() << 8 | is.read();
+                    is.skip(size);
+                }
+                break;
                 default:
                     throw new RuntimeException("Unknown key: " + key);
             }
@@ -399,23 +404,33 @@ public class WatchSetEmulatorParser {
         if ((type & 0x40) != 0) {
             indexDataSource = parseDataSource(is);
         }
-        if ((type & 0x80) != 0) {
-            is.read();//converter
-        }
+        EmulatorDataSource dataSource;
         switch (type & 0x3F) {
             case WatchConstants.DATA_SOURCE_INTERNAL:
-                return EmulatorDataSourceFactory.internalDataSource(property, indexDataSource);
+                dataSource = EmulatorDataSourceFactory.internalDataSource(property, indexDataSource);
+                break;
             case WatchConstants.DATA_SOURCE_EXTERNAL:
-                return EmulatorDataSourceFactory.externalDataSource(property, emulator);
+                dataSource = EmulatorDataSourceFactory.externalDataSource(property, emulator);
+                break;
             case WatchConstants.DATA_SOURCE_SENSOR:
-                return EmulatorDataSourceFactory.sensorDataSource(property);
+                dataSource = EmulatorDataSourceFactory.sensorDataSource(property);
+                break;
             case WatchConstants.DATA_SOURCE_STATIC:
-                return EmulatorDataSourceFactory.staticDataSource(property, is);
+                dataSource = EmulatorDataSourceFactory.staticDataSource(property, is);
+                break;
             case WatchConstants.DATA_SOURCE_WATCHSET_MODEL:
-                return EmulatorDataSourceFactory.modelDataSource(property);
+                dataSource = EmulatorDataSourceFactory.modelDataSource(property);
+                break;
             default:
                 throw new RuntimeException("unknown data source type: " + type);
         }
+        if ((type & 0x80) != 0) {
+            int converterNo = is.read();
+            for(int i=0; i<converterNo; i++) {
+                dataSource = EmulatorDataSourceFactory.convertedDataSource(is.read(), dataSource);
+            }
+        }
+        return dataSource;
     }
 
 }

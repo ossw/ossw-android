@@ -304,7 +304,37 @@ public class WatchSetCompiler {
         os.write((size >> 8) & 0xFF);
         os.write(size & 0xFF);
 
+        JSONObject settings = screen.optJSONObject("settings");
+        if (settings != null) {
+            os.write(WatchConstants.WATCH_SET_SCREEN_SECTION_SETTINGS);
+            byte[] data = parseSettings(settings);
+            os.write((data.length >> 8) & 0xFF);
+            os.write(data.length & 0xFF);
+            os.write(data);
+        }
+
         os.write(WatchConstants.WATCH_SET_END_OF_DATA);
+        return os.toByteArray();
+    }
+
+    private byte[] parseSettings(JSONObject settings) throws Exception {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        if (settings.length() > 256) {
+            throw new KnownParseError("Too many settings");
+        }
+        os.write(settings.length());
+        for (Iterator<String> i = settings.keys(); i.hasNext(); ) {
+            String optionKey = i.next();
+
+            switch(optionKey) {
+                case "invertible":
+                    os.write(WatchConstants.WATCH_SET_SETTING_INVERTIBLE);
+                    os.write(settings.getBoolean("invertible")?1:0);
+                    break;
+                default:
+                    throw new KnownParseError("Unknown setting: " + optionKey);
+            }
+        }
         return os.toByteArray();
     }
 
@@ -762,6 +792,7 @@ public class WatchSetCompiler {
         JSONObject choose = object.getJSONObject("choose");
         JSONObject when = object.getJSONObject("when");
         DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
+        resCtx.dataSourceType = DataSourceType.NUMBER;
         os.write(WatchConstants.SCR_CONTROL_CHOOSE);
         os.write(compileSource(choose, resCtx));
         int buffer = screenContext.getAllocator().addBuffer(1);
@@ -771,10 +802,11 @@ public class WatchSetCompiler {
         JSONArray options = when.names();
         for (int i = 0; i < options.length(); i++) {
             String optionName = options.getString(i);
-            if (resCtx.resolver == null) {
-                throw new KnownParseError("Invalid choose definition");
+            if (resCtx.resolver != null) {
+                os.write((int) resCtx.resolver.resolve(optionName));
+            } else {
+                os.write((int) Integer.parseInt(optionName));
             }
-            os.write((int) resCtx.resolver.resolve(optionName));
             Object option = when.get(optionName);
             byte[] data = parseScreenControls(option, screenContext);
             os.write(data.length >> 8);
@@ -1158,7 +1190,7 @@ public class WatchSetCompiler {
     private byte[] compileSource(JSONObject source, DataSourceResolutionContext info) throws Exception {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         int flags = 0;
-        String converter = source.optString("converter", null);
+        Object converter = source.opt("converter");
         if (converter != null) {
             flags |= 0x80;
         }
@@ -1227,9 +1259,24 @@ public class WatchSetCompiler {
             os.write(compileSource(index, idxCtx));
         }
         if (converter != null) {
-            os.write(getConverterKey(converter));
+            parseConverters(os, converter);
         }
         return os.toByteArray();
+    }
+
+    private void parseConverters(ByteArrayOutputStream os, Object converter) throws Exception {
+        if(converter instanceof String) {
+            os.write(1);
+            os.write(getConverterKey((String)converter));
+        } else if (converter instanceof JSONArray) {
+            JSONArray arr = (JSONArray)converter;
+            os.write(arr.length());
+            for(int i=0; i< arr.length(); i++) {
+                os.write(getConverterKey(arr.getString(i)));
+            }
+        } else {
+            throw new KnownParseError("Invalid converter");
+        }
     }
 
     private int addExtensionProperty(WatchExtensionProperty property) {
@@ -1263,6 +1310,8 @@ public class WatchSetCompiler {
             throw new IllegalArgumentException("Unknown data source type");
         }
         switch (property) {
+            case "time":
+                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_IN_SECONDS;
             case "hour":
                 return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_24;
             case "hour12":
@@ -1316,6 +1365,24 @@ public class WatchSetCompiler {
                 return WatchConstants.CONVERTER_MS_TO_CS_REMAINDER;
             case "msRemainder":
                 return WatchConstants.CONVERTER_MS_REMAINDER;
+            case "timeToHour24":
+                return WatchConstants.CONVERTER_TIME_TO_HOUR_24;
+            case "timeToRoundedHour24":
+                return WatchConstants.CONVERTER_TIME_TO_ROUNDED_HOUR_24;
+            case "timeToMinutes":
+                return WatchConstants.CONVERTER_TIME_TO_MINUTES;
+            case "timeToSeconds":
+                return WatchConstants.CONVERTER_TIME_TO_SECONDS;
+            case "timeToFiveMinutesRoundTime":
+                return WatchConstants.CONVERTER_TIME_TO_FIVE_MINUTES_ROUNDED_TIME;
+            case "hour24ToHour12":
+                return WatchConstants.CONVERTER_HOUR_24_TO_HOUR_12;
+            case "hour24ToHour12Period":
+                return WatchConstants.CONVERTER_HOUR_24_TO_HOUR_12_PERIOD;
+            case "minutesToPastToDesignator":
+                return WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR;
+            case "minutesToPastToMinutes":
+                return WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_MINUTES;
         }
         throw new KnownParseError("Unknown converter: " + converterName);
     }
