@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceScanFragment extends ListFragment {
-//    private final static String TAG = DeviceScanFragment.class.getSimpleName();
+    private final static String TAG = DeviceScanFragment.class.getSimpleName();
 
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -57,6 +57,11 @@ public class DeviceScanFragment extends ListFragment {
 //        Log.i(TAG, "onCreate called");
         // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
         setListAdapter(mLeDeviceListAdapter);
     }
 
@@ -130,17 +135,21 @@ public class DeviceScanFragment extends ListFragment {
 
     @Override
     public void onPause() {
-        super.onPause();
-//        Log.i(TAG, "onPause called");
-        getActivity().unregisterReceiver(mGattUpdateReceiver);
+        Log.i(TAG, "onPause called");
+        if (getActivity() != null) {
+            getActivity().unregisterReceiver(mGattUpdateReceiver);
+            Log.i(TAG, "unregister receiver");
+        }
         scanLeDevice(false);
+        super.onPause();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-//        Log.i(TAG, "onResume called");
-        getActivity().registerReceiver(mGattUpdateReceiver, ((MainActivity) getActivity()).makeGattUpdateIntentFilter());
+        Log.i(TAG, "onResume called");
+        if (isAdded())
+            getActivity().registerReceiver(mGattUpdateReceiver, ((MainActivity) getActivity()).makeGattUpdateIntentFilter());
     }
 
     @Override
@@ -194,7 +203,7 @@ public class DeviceScanFragment extends ListFragment {
                 mScanning = false;
             }
         }
-        if (getActivity() != null)
+        if (isAdded())
             getActivity().invalidateOptionsMenu();
     }
 
@@ -305,7 +314,8 @@ public class DeviceScanFragment extends ListFragment {
 
                 @Override
                 public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-                    getActivity().runOnUiThread(new Runnable() {
+                    if (isAdded())
+                        getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             mLeDeviceListAdapter.addDevice(device, ScanRecord.parseFromBytes(scanRecord), rssi);

@@ -26,6 +26,7 @@ public class PluginsFragment extends ListFragment {
 
     private final static String TAG = PluginsFragment.class.getSimpleName();
     private LayoutInflater mInflator;
+    private PluginListAdapter listAdaptor;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -40,17 +41,18 @@ public class PluginsFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //Log.i(TAG, "On create");
         PluginManager scanner = new PluginManager(getActivity());
-
-        PluginListAdapter listAdaptor = new PluginListAdapter();
-
+        listAdaptor = new PluginListAdapter();
         for (PluginDefinition plugin : scanner.findPlugins()) {
             listAdaptor.addPlugin(plugin);
         }
-        setListAdapter(listAdaptor);
+    }
 
-        //Log.i(TAG, "On create");
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setListAdapter(listAdaptor);
     }
 
     @Override

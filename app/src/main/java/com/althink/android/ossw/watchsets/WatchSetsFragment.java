@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,7 +35,7 @@ import java.util.ArrayList;
  */
 public abstract class WatchSetsFragment extends ListFragment {
 
-//    private final static String TAG = WatchSetsFragment.class.getSimpleName();
+    private final static String TAG = WatchSetsFragment.class.getSimpleName();
     private static final int WATCH_FACE_IMPORTED = 1;
     private LayoutInflater mInflater;
     private static final int FILE_SELECT_CODE = 0;
@@ -50,10 +51,9 @@ public abstract class WatchSetsFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-//        Log.i(TAG, "onCreateView called");
+        Log.i(TAG, "onCreateView called");
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
-        getActivity().setTitle(getTitle());
         setHasOptionsMenu(true);
         // Inflate the layout for this fragment
         return v;
@@ -62,25 +62,33 @@ public abstract class WatchSetsFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        Log.i(TAG, "onCreate called");
+        Log.i(TAG, "onCreate called");
         listAdapter = new WatchSetsListAdapter();
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.i(TAG, "onActivityCreated called");
+        getActivity().setTitle(getTitle());
         setListAdapter(listAdapter);
-        //Log.i(TAG, "On create");
+        refreshWatchSetList();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
+        Log.i(TAG, "onCreateOptionsMenu called");
         inflater.inflate(R.menu.watchsets, menu);
-        refreshWatchSetList();
         resetSelection();
     }
 
     private void refreshWatchSetList() {
         listAdapter.clear();
-        for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getActivity()).listWatchSets(type)) {
-            listAdapter.addWatchSet(info);
-        }
+        if (isAdded())
+            for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getActivity()).listWatchSets(type)) {
+                listAdapter.addWatchSet(info);
+            }
         listAdapter.notifyDataSetChanged();
     }
 
@@ -99,7 +107,7 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private String getTitle() {
-        switch(type){
+        switch (type) {
             case WATCH_FACE:
                 return getString(R.string.drawer_watch_faces);
             case APPLICATION:
@@ -111,10 +119,12 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private void setMenuOptions(Mode mode) {
+        if (!isAdded())
+            return;
         int checkedCount = getListView().getCheckedItemCount();
         boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
         getActivity().setTitle(hideTitle ? "" : getTitle());
-        Menu menu = ((MainActivity)getActivity()).getToolbar().getMenu();
+        Menu menu = ((MainActivity) getActivity()).getToolbar().getMenu();
         MenuItem uploadAction = menu.findItem(R.id.menu_upload_to_watch);
         MenuItem itemsRemoveAction = menu.findItem(R.id.menu_items_remove);
         MenuItem previewAction = menu.findItem(R.id.menu_preview);
@@ -146,6 +156,7 @@ public abstract class WatchSetsFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
+        Log.i(TAG, "onResume called");
 //        MainActivity activity = ((MainActivity) getActivity());
 //        activity.resetBottomToolbar();
 //        bottomToolbar = activity.getToolbar();
@@ -179,9 +190,9 @@ public abstract class WatchSetsFragment extends ListFragment {
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
             int count = getListView().getCount();
             for (int i = 0; i < count; i++) {
-                if (sparseBooleanArray.get(i)) {
+                if (sparseBooleanArray.get(i) && isAdded()) {
                     WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                    Intent intent = new Intent(getActivity().getApplicationContext(), WatchSetPreviewActivity.class);
+                    Intent intent = new Intent(getActivity(), WatchSetPreviewActivity.class);
                     intent.putExtra("id", info.getId());
                     intent.putExtra("type", type);
                     startActivity(intent);
@@ -192,7 +203,7 @@ public abstract class WatchSetsFragment extends ListFragment {
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
             int count = getListView().getCount();
             for (int i = 0; i < count; i++) {
-                if (sparseBooleanArray.get(i)) {
+                if (sparseBooleanArray.get(i) && isAdded()) {
                     try {
                         WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
                         String source = db.getWatchSetSourceById(info.getId());
@@ -202,7 +213,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                         if (osswBleService != null) {
                             osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         toastHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -251,11 +262,11 @@ public abstract class WatchSetsFragment extends ListFragment {
         //Log.i(TAG, "result code: " + resultCode);
         switch (requestCode) {
             case FILE_SELECT_CODE:
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == Activity.RESULT_OK && isAdded()) {
                     // Get the Uri of the selected file
                     Uri uri = data.getData();
                     //Log.i(TAG, "File Uri: " + uri.toString());
-                    Intent i = new Intent(getActivity().getApplicationContext(), WatchSetPreviewActivity.class);
+                    Intent i = new Intent(getActivity(), WatchSetPreviewActivity.class);
                     i.putExtra("uri", uri.toString());
                     i.putExtra("type", type);
                     startActivityForResult(i, WATCH_FACE_IMPORTED);
