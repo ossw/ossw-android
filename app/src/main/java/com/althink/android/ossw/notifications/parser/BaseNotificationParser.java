@@ -76,7 +76,8 @@ public class BaseNotificationParser {
     }
 
     protected boolean isValidAlert(StatusBarNotification sbn) {
-        if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())) {
+        if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName()) 
+                || "com.android.incallui".equals(sbn.getPackageName())) {
             return true;
         }
         if (hasActions(sbn)) {
@@ -93,7 +94,7 @@ public class BaseNotificationParser {
     @TargetApi(19)
     private boolean hasActions(StatusBarNotification sbn) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (sbn.getNotification().actions.length > 0) {
+            if (sbn.getNotification().actions != null && sbn.getNotification().actions.length > 0) {
                 return true;
             }
         }
@@ -101,7 +102,7 @@ public class BaseNotificationParser {
     }
 
 
-    private boolean isFlagSet(android.app.Notification notification, int flag) {
+    protected boolean isFlagSet(android.app.Notification notification, int flag) {
         return (notification.flags & flag) != 0;
     }
 
@@ -170,7 +171,8 @@ public class BaseNotificationParser {
     }
 
     protected NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
-        if ("com.android.dialer".equals(sbn.getPackageName()) && existingNotification != null) {
+        if (("com.android.dialer".equals(sbn.getPackageName()) || "com.android.incallui".equals(sbn.getPackageName())) 
+                && existingNotification != null) {
             return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
         }
         if ("com.htc.android.worldclock".equals(sbn.getPackageName()) && hasActions(sbn)) {
