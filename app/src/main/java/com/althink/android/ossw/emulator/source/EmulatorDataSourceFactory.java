@@ -4,8 +4,11 @@ import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.source.converter.EmulatorDataConverter;
 import com.althink.android.ossw.emulator.source.converter.Hour24ToHour12Converter;
 import com.althink.android.ossw.emulator.source.converter.Hour24ToHour12PeriodConverter;
-import com.althink.android.ossw.emulator.source.converter.MinutesToPastToDesignator;
-import com.althink.android.ossw.emulator.source.converter.MinutesToPastToMinutes;
+import com.althink.android.ossw.emulator.source.converter.HundredsConverter;
+import com.althink.android.ossw.emulator.source.converter.MinutesToPastToDesignatorConverter;
+import com.althink.android.ossw.emulator.source.converter.MinutesToPastToMinutesConverter;
+import com.althink.android.ossw.emulator.source.converter.OnesConverter;
+import com.althink.android.ossw.emulator.source.converter.TensConverter;
 import com.althink.android.ossw.emulator.source.converter.TimeToFiveMinutesRoundedTimeConverter;
 import com.althink.android.ossw.emulator.source.converter.TimeToHour24Converter;
 import com.althink.android.ossw.emulator.source.converter.TimeToMinutesConverter;
@@ -118,10 +121,19 @@ public class EmulatorDataSourceFactory {
                 converter = new Hour24ToHour12PeriodConverter();
                 break;
             case WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_MINUTES:
-                converter = new MinutesToPastToMinutes();
+                converter = new MinutesToPastToMinutesConverter();
                 break;
             case WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR:
-                converter = new MinutesToPastToDesignator();
+                converter = new MinutesToPastToDesignatorConverter();
+                break;
+            case WatchConstants.CONVERTER_ONES:
+                converter = new OnesConverter();
+                break;
+            case WatchConstants.CONVERTER_TENS:
+                converter = new TensConverter();
+                break;
+            case WatchConstants.CONVERTER_HUNDREDS:
+                converter = new HundredsConverter();
                 break;
             default:
                 converter = new MockConverter();

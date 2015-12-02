@@ -32,9 +32,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -293,10 +295,21 @@ public class WatchSetEmulatorParser {
         int optionsNo = is.read();
         Map<Object, List<EmulatorControl>> map = new HashMap<>();
         for (int i = 0; i < optionsNo; i++) {
-            int key = 0xFF & is.read();
+            Set<Integer> keys = new HashSet<>();
+            int valuesNo = 0xFF & is.read();
+            for(int j=0; j<valuesNo; j++) {
+                keys.add(0xFF & is.read());
+            }
             is.read();
             is.read();
-            map.put(key, parseControls(is, ctx));
+            List<EmulatorControl> controls = parseControls(is, ctx);
+            for(Integer k: keys) {
+                map.put(k, controls);
+            }
+        }
+        int otherwiseSize = is.read()<<8 | is.read() & 0xFF;
+        if (otherwiseSize > 0) {
+            map.put(null, parseControls(is, ctx));
         }
         return new ChooseEmulatorControl(dataSource, map);
     }

@@ -28,6 +28,13 @@ public class ChooseEmulatorControl extends AbstractEmulatorControl {
             for (EmulatorControl control : controls) {
                 control.draw(renderer, ctx);
             }
+        } else {
+            List<EmulatorControl> otherwise = controlsMap.get(null);
+            if (otherwise != null) {
+                for (EmulatorControl control : otherwise) {
+                    control.draw(renderer, ctx);
+                }
+            }
         }
     }
 }

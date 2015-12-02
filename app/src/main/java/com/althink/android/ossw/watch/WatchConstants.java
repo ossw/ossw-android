@@ -125,6 +125,9 @@ public class WatchConstants {
     public static final int CONVERTER_HOUR_24_TO_HOUR_12_PERIOD = 12;
     public static final int CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR = 13;
     public static final int CONVERTER_MINUTES_TO_PAST_TO_MINUTES = 14;
+    public static final int CONVERTER_ONES = 15;
+    public static final int CONVERTER_TENS = 16;
+    public static final int CONVERTER_HUNDREDS = 17;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;

@@ -791,6 +791,7 @@ public class WatchSetCompiler {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         JSONObject choose = object.getJSONObject("choose");
         JSONObject when = object.getJSONObject("when");
+        Object otherwise = object.opt("otherwise");
         DataSourceResolutionContext resCtx = new DataSourceResolutionContext(screenContext);
         resCtx.dataSourceType = DataSourceType.NUMBER;
         os.write(WatchConstants.SCR_CONTROL_CHOOSE);
@@ -801,17 +802,29 @@ public class WatchSetCompiler {
         os.write(when.length());
         JSONArray options = when.names();
         for (int i = 0; i < options.length(); i++) {
-            String optionName = options.getString(i);
-            if (resCtx.resolver != null) {
-                os.write((int) resCtx.resolver.resolve(optionName));
-            } else {
-                os.write((int) Integer.parseInt(optionName));
+            String[] optionNames = options.getString(i).split("\\|");
+            os.write(optionNames.length);
+            for (int n=0; n<optionNames.length; n++) {
+                if (resCtx.resolver != null) {
+                    os.write((int) resCtx.resolver.resolve(optionNames[n]));
+                } else {
+                    os.write((int) Integer.parseInt(optionNames[n]));
+                }
             }
-            Object option = when.get(optionName);
+            Object option = when.get(options.getString(i));
             byte[] data = parseScreenControls(option, screenContext);
             os.write(data.length >> 8);
             os.write(data.length & 0xFF);
             os.write(data);
+        }
+        if (otherwise != null) {
+            byte[] data = parseScreenControls(otherwise, screenContext);
+            os.write(data.length >> 8);
+            os.write(data.length & 0xFF);
+            os.write(data);
+        } else {
+            os.write(0);
+            os.write(0);
         }
         return os.toByteArray();
     }
@@ -901,9 +914,14 @@ public class WatchSetCompiler {
         os.write(getIntegerInRange(position, "x", 0, WatchConstants.SCREEN_WIDTH - 1));
         os.write(getIntegerInRange(position, "y", 0, WatchConstants.SCREEN_HEIGHT - 1));
 
-        JSONObject style = control.getJSONObject("style");
-        os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
-        os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+        JSONObject style = control.optJSONObject("style");
+        if (style != null) {
+            os.write(getIntegerInRange(style, "width", 0, WatchConstants.SCREEN_WIDTH));
+            os.write(getIntegerInRange(style, "height", 0, WatchConstants.SCREEN_HEIGHT));
+        } else {
+            os.write(0);
+            os.write(0);
+        }
 
         JSONObject image = control.getJSONObject("imageSet");
         writeResourceType(os, image);
@@ -927,6 +945,9 @@ public class WatchSetCompiler {
             case "resource":
                 String resourceId = image.getString("id");
                 os.write(WatchConstants.RESOURCE_SOURCE_ATTACHED);
+                if (!resourceIdToNumber.containsKey(resourceId)) {
+                    throw new KnownParseError("Invalid resource id: " + resourceId);
+                }
                 os.write(resourceIdToNumber.get(resourceId));
                 break;
             default:
@@ -1383,6 +1404,12 @@ public class WatchSetCompiler {
                 return WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR;
             case "minutesToPastToMinutes":
                 return WatchConstants.CONVERTER_MINUTES_TO_PAST_TO_MINUTES;
+            case "ones":
+                return WatchConstants.CONVERTER_ONES;
+            case "tens":
+                return WatchConstants.CONVERTER_TENS;
+            case "hundreds":
+                return WatchConstants.CONVERTER_HUNDREDS;
         }
         throw new KnownParseError("Unknown converter: " + converterName);
     }
