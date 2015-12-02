@@ -56,7 +56,8 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
-        if (NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
+        if (NotificationType.INFO == type 
+                && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
             Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
             return null;
         }

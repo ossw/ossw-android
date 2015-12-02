@@ -101,7 +101,7 @@ public class BaseNotificationParser {
     }
 
 
-    private boolean isFlagSet(android.app.Notification notification, int flag) {
+    protected boolean isFlagSet(android.app.Notification notification, int flag) {
         return (notification.flags & flag) != 0;
     }
 
