@@ -148,8 +148,11 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private void resetSelection() {
-        getListView().clearChoices();
-        getListView().requestLayout();
+        if (getView() != null) {
+            ListView listView = getListView();
+            listView.clearChoices();
+            listView.requestLayout();
+        }
         setMenuOptions(Mode.NONE);
     }
 
