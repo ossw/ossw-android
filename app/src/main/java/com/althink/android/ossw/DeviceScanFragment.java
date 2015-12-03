@@ -74,7 +74,7 @@ public class DeviceScanFragment extends ListFragment {
         MainActivity faActivity  = (MainActivity)getActivity();
 //        Toolbar toolbar = faActivity.getToolbar();
 //        faActivity.setSupportActionBar(toolbar);
-        faActivity.setTitle(R.string.title_devices);
+        faActivity.setTitle(R.string.drawer_watches);
         mHandler = new Handler();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
