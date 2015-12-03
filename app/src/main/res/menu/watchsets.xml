@@ -18,16 +18,24 @@
         android:id="@+id/menu_import"
         android:orderInCategory="100"
         android:title="@string/menu_import"
-        android:icon="@drawable/ic_playlist_add_white_24dp"
+        android:icon="@drawable/ic_add"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_items_remove"
         android:orderInCategory="110"
         android:title="@string/menu_items_remove"
+        android:icon="@drawable/ic_delete"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/menu_preview"
+        android:orderInCategory="111"
+        android:title="@string/menu_preview"
+        android:icon="@drawable/ic_preview"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_upload_to_watch"
-        android:orderInCategory="111"
+        android:orderInCategory="112"
         android:title="@string/menu_upload_to_watch"
+        android:icon="@drawable/ic_upload"
         app:showAsAction="always|withText" />
 </menu>

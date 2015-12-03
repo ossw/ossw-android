@@ -1,6 +1,7 @@
 package com.althink.android.ossw.watchsets;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,19 +13,19 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
-import com.althink.android.ossw.UploadDataType;
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.WatchView;
 import com.althink.android.ossw.emulator.event.ButtonLongPressedEmulatorEvent;
@@ -49,25 +50,16 @@ public class WatchSetImportFragment extends Fragment {
     private CompiledWatchSet watchSet;
     private String source;
     private Uri uri;
+    private Integer id;
     private WatchSetType type;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_watchset_import, container, false);
+        setHasOptionsMenu(true);
         final WatchView watchView = (WatchView) view.findViewById(R.id.watch_emulator_screen_view);
         emulator = watchView.getWatchEmulator();
-//
-//        view.findViewById(R.id.upload_watchset).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                OsswService osswBleService = ((MainActivity) getActivity()).getOsswBleService();
-//                if (watchSet != null) {
-//                    ((MainActivity) getActivity()).getOsswBleService().createOrUpdateWatchSet(watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
-//                    osswBleService.uploadData(UploadDataType.WATCHSET, watchSet.getWatchData());
-//                }
-//            }
-//        });
 
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_up), EmulatorButton.UP);
         registerClickHandlers(view.findViewById(R.id.watch_emulator_button_down), EmulatorButton.DOWN);
@@ -77,13 +69,18 @@ public class WatchSetImportFragment extends Fragment {
         return view;
     }
 
-    private boolean loadWatchSetFromFile() {
-        if (uri != null) {
+    private boolean loadWatchSet() {
+        if (id != null) {
+            OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
+            source = db.getWatchSetSourceById(id);
+        } else if (uri != null) {
+            String path = getPath(getActivity(), uri);
+            if (path != null)
+                source = loadFileData(new File(path));
+        }
+        if (source != null && !source.isEmpty()) {
             try {
-                File file = new File(getPath(getActivity(), uri));
-
-                watchSet = parseWatchSet(file);
-
+                watchSet = new WatchSetCompiler(getActivity()).compile(source, null);
                 //Log.i(TAG, "File " + file.getPath() + " successfully loaded, watchSetId: " + watchSet.getId());
 
                 WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet);
@@ -267,11 +264,6 @@ public class WatchSetImportFragment extends Fragment {
         });
     }
 
-    public CompiledWatchSet parseWatchSet(File file) {
-        source = loadFileData(file);
-        return new WatchSetCompiler(getActivity()).compile(source, null);
-    }
-
     private String loadFileData(File file) {
         BufferedReader input = null;
         try {
@@ -300,45 +292,37 @@ public class WatchSetImportFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        loadWatchSet();
+    }
 
-        MainActivity activity = ((MainActivity) getActivity());
-        activity.resetBottomToolbar();
-        Toolbar bottomToolbar = activity.getBottomToolbar();
-        bottomToolbar.inflateMenu(R.menu.import_watchset);
-        bottomToolbar.setVisibility(View.VISIBLE);
-
-        bottomToolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-
-        bottomToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getFragmentManager().popBackStack();
-            }
-        });
-        bottomToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int id = item.getItemId();
-
-                switch (id) {
-                    case R.id.menu_watchset_reload:
-                        loadWatchSetFromFile();
-                        break;
-                    case R.id.menu_watchset_import:
-                        if (watchSet != null) {
-                            OsswService service = OsswService.getInstance();
-                            if (service != null) {
-                                service.createOrUpdateWatchSet(type, watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
-                            }
-                            getFragmentManager().popBackStack();
-                        }
-                        break;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.menu_watchset_reload:
+                loadWatchSet();
+                break;
+            case R.id.menu_watchset_import:
+                if (watchSet != null) {
+                    OsswService service = OsswService.getInstance();
+                    if (service != null) {
+                        service.createOrUpdateWatchSet(type, watchSet.getName(), source, watchSet.getWatchContext(), watchSet.getId());
+                    }
+                    getActivity().setResult(Activity.RESULT_OK);
+                    getActivity().finish();
                 }
-                return false;
-            }
-        });
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-        loadWatchSetFromFile();
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Activity activity = getActivity();
+        activity.setTitle(R.string.drawer_preview);
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbar_actionbar);
+        if (id == null && uri != null)
+            toolbar.inflateMenu(R.menu.import_watchset);
     }
 
     @Override
@@ -348,6 +332,10 @@ public class WatchSetImportFragment extends Fragment {
 
     public void setUri(Uri uri) {
         this.uri = uri;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public void setWatchsetType(WatchSetType type) {

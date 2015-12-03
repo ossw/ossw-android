@@ -72,11 +72,12 @@ public class BaseNotificationParser {
             COM_ANDROID_PHONE_LINE1 = phoneRes.getIdentifier("com.android.phone:id/text1", null, null);
             COM_ANDROID_PHONE_LINE2 = phoneRes.getIdentifier("com.android.phone:id/text2", null, null);
         } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
     protected boolean isValidAlert(StatusBarNotification sbn) {
-        if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName()) 
+        if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())
                 || "com.android.incallui".equals(sbn.getPackageName())) {
             return true;
         }
@@ -122,6 +123,7 @@ public class BaseNotificationParser {
             case "com.google.android.deskclock":
             case "ch.bitspin.timely":
             case "com.htc.android.worldclock":
+            case "com.sec.android.app.clockpackage":
                 return NotificationCategory.ALARM;
             case "com.skype.raider":
                 return skypeNotificationType(sbn);
@@ -171,11 +173,14 @@ public class BaseNotificationParser {
     }
 
     protected NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
-        if (("com.android.dialer".equals(sbn.getPackageName()) || "com.android.incallui".equals(sbn.getPackageName())) 
+        if (("com.android.dialer".equals(sbn.getPackageName())|| "com.android.phone".equals(sbn.getPackageName()) || "com.android.incallui".equals(sbn.getPackageName()))
                 && existingNotification != null) {
             return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
         }
         if ("com.htc.android.worldclock".equals(sbn.getPackageName()) && hasActions(sbn)) {
+            return NotificationType.ALERT;
+        }
+        if ("com.sec.android.app.clockpackage".equals(sbn.getPackageName()) && hasActions(sbn)) {
             return NotificationType.ALERT;
         }
         if (sbn.getNotification().fullScreenIntent == null) {
@@ -207,19 +212,25 @@ public class BaseNotificationParser {
         if (operations.isEmpty()) {
             try {
                 Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.dialer");
-                int dismissId = dialerRes.getIdentifier("com.android.dialer:string/description_dismiss", null, null);
-                String dismiss = dialerRes.getString(dismissId);
-                operations.add(new Operation(dismiss, null));
-                return;
+                if (dialerRes != null) {
+                    int dismissId = dialerRes.getIdentifier("com.android.dialer:string/description_dismiss", null, null);
+                    String dismiss = dialerRes.getString(dismissId);
+                    operations.add(new Operation(dismiss, null));
+                    return;
+                }
             } catch (Exception e) {
+                e.printStackTrace();
             }
 
             try {
                 Resources dialerRes = context.getPackageManager().getResourcesForApplication("com.android.phone");
-                int dismissId = dialerRes.getIdentifier("com.android.phone:string/description_target_decline", null, null);
-                String dismiss = dialerRes.getString(dismissId);
-                operations.add(new Operation(dismiss, null));
+                if (dialerRes != null) {
+                    int dismissId = dialerRes.getIdentifier("com.android.phone:string/description_target_decline", null, null);
+                    String dismiss = dialerRes.getString(dismissId);
+                    operations.add(new Operation(dismiss, null));
+                }
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

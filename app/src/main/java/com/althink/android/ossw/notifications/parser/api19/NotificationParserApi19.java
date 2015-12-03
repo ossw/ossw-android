@@ -2,25 +2,21 @@ package com.althink.android.ossw.notifications.parser.api19;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
-import android.text.SpannableString;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.althink.android.ossw.notifications.NotificationListener;
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.notifications.model.ListNotification;
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.NotificationCategory;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.notifications.model.Operation;
-import com.althink.android.ossw.notifications.model.SimpleListItem;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.model.SubjectMessageItem;
 import com.althink.android.ossw.notifications.parser.BaseNotificationParser;
@@ -56,9 +52,8 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
-        if (NotificationType.INFO == type 
-                && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
-            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
+        if (NotificationType.INFO == type && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
+            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
             return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
@@ -148,18 +143,20 @@ public class NotificationParserApi19 extends BaseNotificationParser {
 
                     if (methodName != null && (methodName.equals("setText") || methodName.equals("setFormat"))) {
 
-
                         if (methodName.equals("setText")) {
                             // should be 10 /
                             parcel.readInt();
                         }
 
                         // Store the actual string
-                        String value = TextUtils.CHAR_SEQUENCE_CREATOR
-                                .createFromParcel(parcel).toString();
+                        CharSequence chars = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
 
                         Log.d(TAG, "viewId is " + viewId);
-                        Log.d(TAG, "Found value: " + value);
+                        Log.d(TAG, "Found value: " + chars);
+
+                        if (chars == null)
+                            continue;
+                        String value = chars.toString();
 
                         if (viewId == BaseNotificationParser.COM_ANDROID_PHONE_LINE1) {
                             //sender when one mail / number of messages when multiple
@@ -171,13 +168,20 @@ public class NotificationParserApi19 extends BaseNotificationParser {
                             text = value;
                         }
 
+                        // vaspa: workaround cause viewId never matches PHONE_LINE ids
+                        if (methodName.equals("setText") && text == null) {
+                            text = value;
+                        }
+
                         parcel.recycle();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error accessing object!", e);
                 }
             }
-
+            // vaspa: same workaround
+            if (title == null)
+                title = context.getString(R.string.incall_title);
             if (title != null && text != null) {
                 return new SimpleNotification(notificationId, type, category, sbn.getPackageName(), date, operations, title, text, sbn, externalId);
             }

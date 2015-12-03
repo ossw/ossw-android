@@ -96,7 +96,7 @@ public class NotificationListener extends NotificationListenerService {
     public void onNotificationPosted(final StatusBarNotification sbn) {
 
         //Log.i(TAG, "**********  onNotificationPosted");
-        //Log.i(TAG, "ID :" + sbn.getId() + " <> " + sbn.getNotification().tickerText + " <> " + sbn.getPackageName() + " <> " + sbn.getNotification().priority + " <> " + sbn.getNotification().flags);
+        Log.i(TAG, "ID :" + sbn.getId() + " <> " + sbn.getNotification().tickerText + " <> " + sbn.getPackageName() + " <> " + sbn.getNotification().priority + " <> " + sbn.getNotification().flags);
 
         RemoteViews bigContentView = sbn.getNotification().bigContentView;
 
@@ -123,7 +123,7 @@ public class NotificationListener extends NotificationListenerService {
             boolean isUpdate = existingNotification != null && existingNotification.getExternalId() != null && existingNotification.getExternalId().equals(notification.getExternalId());
 
             if (isUpdate && !hasChanged(notification, existingNotification)) {
-                //Log.i(TAG, "Nothing has changed in notification, SKIP IT");
+                Log.i(TAG, "Nothing has changed in notification, SKIP IT");
                 return;
             }
 
@@ -131,8 +131,8 @@ public class NotificationListener extends NotificationListenerService {
                 notification.setExternalId(getNextNotificationId());
             }
 
-            //Log.i(TAG, "Successfully parsed message:");
-            //Log.i(TAG, notification.toString());
+            Log.i(TAG, "Successfully parsed message:");
+            Log.i(TAG, notification.toString());
 
             notifications.put(notification.getId(), notification);
 
@@ -156,7 +156,7 @@ public class NotificationListener extends NotificationListenerService {
                             int dash = active.indexOf('-');
                             int from_time = getMinutes(active.substring(0, dash));
                             int till_time = getMinutes(active.substring(dash + 1));
-                            //Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", "+till_time);
+                            Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", "+till_time);
                             if ((from_time <= minutes && minutes <= till_time) ||
                                     (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
                                 vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
@@ -174,7 +174,25 @@ public class NotificationListener extends NotificationListenerService {
         return !notification.equals(existingNotification);
     }
 
+    private boolean skipNotification(StatusBarNotification sbn) {
+        String pName = sbn.getPackageName();
+        if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
+                || "com.sec.android.app.clockpackage".equals(pName))
+            return false;
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> selections = sharedPref.getStringSet("notification_applications", null);
+        if (selections == null)
+            return false;
+        Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
+        if (selections.contains(sbn.getPackageName()))
+            return false;
+        return true;
+    }
+
     private Notification parseNotification(StatusBarNotification sbn, String notificationId, Notification existingNotification) {
+        if (skipNotification(sbn))
+            return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
@@ -194,7 +212,7 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void updateNotificationList(boolean notify, int vibrationPattern, int vibrationLength) {
-        //Log.i(TAG, "UPDATE NOTIFICATIONS");
+        Log.i(TAG, "UPDATE NOTIFICATIONS");
         NotificationType type = notify ? NotificationType.INFO : NotificationType.UPDATE;
         List<Notification> notifyList = getAllInfoNotifications();
 
@@ -244,7 +262,7 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         //Log.i(TAG, "********** onNOtificationRemoved");
-        //Log.i(TAG, "ID :" + sbn.getId() + "<>" + sbn.getNotification().tickerText + "<>" + sbn.getPackageName());
+        Log.i(TAG, "ID :" + sbn.getId() + "<>" + sbn.getNotification().tickerText + "<>" + sbn.getPackageName());
 
         String notificationId = new NotificationIdBuilder().build(sbn);
         Notification removedNotification = notifications.remove(notificationId);

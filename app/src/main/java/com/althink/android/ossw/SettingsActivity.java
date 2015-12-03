@@ -4,11 +4,13 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
@@ -17,17 +19,17 @@ import android.preference.PreferenceScreen;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.appcompat.AppCompatPreferenceActivity;
-import com.althink.android.ossw.notifications.VibrationPatternBuilder;
-import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.OsswService;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    private Toolbar mToolbar;
     public static final String NOTIFICATION_VIBRATION_PREFIX = "notif_vibrate";
     public static final String ALERT_VIBRATION_PREFIX = "alert_notif_vibrate";
 
@@ -37,7 +39,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         setContentView(R.layout.activity_settings);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         mToolbar.setClickable(true);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -123,7 +125,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             .setContentText("")
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setDeleteIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_NOTIFICATION_INTENT_ACTION), 0))
-                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
+                            .setSmallIcon(R.drawable.ic_watch_dial);
                     notifyManager.notify(OsswService.TEST_NOTIFICATION_ID, builder.build());
                     return true;
                 }
@@ -139,12 +141,29 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             .setPriority(2)
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setFullScreenIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.FULLSCREEN_FAKE_ALARM_INTENT_ACTION), 0), false)
-                            .addAction(android.support.v7.appcompat.R.drawable.abc_ic_clear_mtrl_alpha, "Close", PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION), 0))
-                            .setSmallIcon(android.support.v7.appcompat.R.drawable.abc_btn_switch_to_on_mtrl_00001);
+                            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_ALARM_INTENT_ACTION), 0))
+                            .setSmallIcon(R.drawable.ic_watch_dial);
                     notifyManager.notify(OsswService.TEST_ALERT_ID, builder.build());
                     return true;
                 }
             });
+
+            // Application list for choosing notification sources
+            MultiSelectListPreference notificationApps = (MultiSelectListPreference) findPreference("notification_applications");
+            PackageManager pm = getActivity().getPackageManager();
+            Intent intentFilter = new Intent(Intent.ACTION_MAIN, null);
+            intentFilter.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> appList = pm.queryIntentActivities(intentFilter, PackageManager.PERMISSION_GRANTED);
+            Collections.sort(appList, new ResolveInfo.DisplayNameComparator(pm));
+            List<CharSequence> entries = new ArrayList<CharSequence>();
+            List<CharSequence> entryValues = new ArrayList<CharSequence>();
+            for (ResolveInfo info : appList) {
+                entryValues.add(info.activityInfo.packageName);
+                entries.add(info.loadLabel(pm).toString());
+            }
+            notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
+            notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design guidelines.

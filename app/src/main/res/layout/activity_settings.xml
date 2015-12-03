@@ -7,21 +7,19 @@
         android:id="@+id/toolbar_actionbar"
         layout="@layout/toolbar_default"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="?attr/actionBarSize" />
 
     <FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/toolbar_actionbar"
-        android:clickable="true">>
-
+        android:clickable="true">
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clickable="true"></FrameLayout>
-
+            android:clickable="true"/>
     </FrameLayout>
 
     <ListView

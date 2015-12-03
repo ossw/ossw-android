@@ -3,7 +3,9 @@
     <SwitchPreference
         android:defaultValue="true"
         android:key="synchronize_time"
-        android:title="@string/pref_synchronize_time_title" />
+        android:title="@string/pref_synchronize_time_title"
+        android:switchTextOff="@string/off"
+        android:switchTextOn="@string/on"/>
 
     <PreferenceCategory android:title="Notifications">
 
@@ -13,7 +15,16 @@
         <SwitchPreference
             android:key="notifications"
             android:defaultValue="true"
-            android:title="@string/pref_notifications_title"/>
+            android:title="@string/pref_notifications_title"
+            android:switchTextOff="@string/off"
+            android:switchTextOn="@string/on"/>
+        <MultiSelectListPreference
+            android:key="notification_applications"
+            android:title="@string/pref_notification_filter"
+            android:dialogTitle="@string/pref_notification_filter"
+            android:entries="@array/empty_array"
+            android:entryValues="@array/empty_array"
+            android:defaultValue="@array/empty_array"/>
         <ListPreference
             android:defaultValue="normalBold"
             android:dialogTitle="@string/select_font"
@@ -25,7 +36,9 @@
         <SwitchPreference
             android:key="notif_vibrate"
             android:defaultValue="true"
-            android:title="Vibration"/>
+            android:title="Vibration"
+            android:switchTextOff="@string/off"
+            android:switchTextOn="@string/on"/>
         <EditTextPreference
             android:key="notif_vibrate_time"
             android:title="Active time interval"
@@ -60,7 +73,9 @@
         <SwitchPreference
             android:key="alert_notifications"
             android:defaultValue="true"
-            android:title="@string/pref_alert_notifications_title"/>
+            android:title="@string/pref_alert_notifications_title"
+            android:switchTextOff="@string/off"
+            android:switchTextOn="@string/on"/>
         <ListPreference
             android:defaultValue="optionNormal"
             android:dialogTitle="@string/select_font"
@@ -72,7 +87,9 @@
             <SwitchPreference
                 android:key="alert_notif_vibrate"
                 android:defaultValue="true"
-                android:title="Vibration"/>
+                android:title="Vibration"
+                android:switchTextOff="@string/off"
+                android:switchTextOn="@string/on"/>
             <EditTextPreference
                 android:key="alert_notif_vibrate_time"
                 android:title="Active time interval"
@@ -95,7 +112,12 @@
                 android:key="button_test_alert_vibration"/>
         </PreferenceCategory>
     </PreferenceScreen>
-
+    <SwitchPreference
+        android:key="disconnect_alert"
+        android:defaultValue="true"
+        android:title="@string/pref_disconnect_notif_title"
+        android:switchTextOff="@string/off"
+        android:switchTextOn="@string/on"/>
     <PreferenceScreen
         android:title="@string/pref_notifications_access_title">
         <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
