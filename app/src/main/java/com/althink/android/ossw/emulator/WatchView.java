@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
+import com.althink.android.ossw.emulator.actions.EmulatorEventHandler;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.NumberEmulatorControl;
 import com.althink.android.ossw.emulator.control.digits.GeneratedDigits;
@@ -54,7 +55,7 @@ public class WatchView extends View {
         //controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 4, 3, false, new GeneratedDigits(20, 20, 8), new Hour24InternalEmulatorDataSource()));
         //controls.add(new NumberEmulatorControl(NumberEmulatorControl.NumberRange.NUMBER_RANGE_0__99, 5, 85, 3, false, new GeneratedDigits(20, 20, 6), new MinutesInternalEmulatorDataSource()));
         List<WatchSetScreenEmulatorModel> screens = new LinkedList<>();
-        screens.add(new WatchSetScreenEmulatorModel(controls, new LinkedList<EmulatorAction>()));
+        screens.add(new WatchSetScreenEmulatorModel(controls, new LinkedList<EmulatorEventHandler>()));
         WatchSetEmulatorModel watchset = new WatchSetEmulatorModel(screens);
         watchEmulator.showWatchSet(watchset);
     }

@@ -53,8 +53,7 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         Date date = new Date(sbn.getNotification().when);
 
         if (NotificationType.INFO == type && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
-            if (!sbn.getPackageName().equals("com.althink.android.ossw"))
-                Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
+            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
             return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {

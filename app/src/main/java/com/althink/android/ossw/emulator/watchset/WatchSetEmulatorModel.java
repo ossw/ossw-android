@@ -1,14 +1,18 @@
 package com.althink.android.ossw.emulator.watchset;
 
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
+import com.althink.android.ossw.emulator.actions.EmulatorEventHandler;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.event.ButtonLongPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.ButtonPressedEmulatorEvent;
 import com.althink.android.ossw.emulator.event.EmulatorButton;
 import com.althink.android.ossw.emulator.event.EmulatorEvent;
+import com.althink.android.ossw.emulator.model.EmulatorModelProperty;
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.service.WatchOperationContext;
 import com.althink.android.ossw.watch.WatchConstants;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +25,7 @@ public class WatchSetEmulatorModel {
     private int id;
     List<WatchSetScreenEmulatorModel> screens;
     private int currentScreen;
-    private Map<EmulatorEvent, EmulatorAction> eventMapping =  new HashMap<>();
+    private Map<EmulatorEvent, EmulatorAction> eventMapping = new HashMap<>();
     private Map<Integer, byte[]> resources;
 
     private WatchOperationContext operationContext;
@@ -61,8 +65,12 @@ public class WatchSetEmulatorModel {
         return screens.get(currentScreen).getControls();
     }
 
-    public List<EmulatorAction> getCurrentScreenActions() {
+    public List<EmulatorEventHandler> getCurrentScreenActions() {
         return screens.get(currentScreen).getActions();
+    }
+
+    public Map<Integer, EmulatorModelProperty> getCurrentScreenModel() {
+        return screens.get(currentScreen).getModel();
     }
 
     public void setScreens(List<WatchSetScreenEmulatorModel> screens) {
@@ -88,13 +96,19 @@ public class WatchSetEmulatorModel {
 
     public void setCurrentScreen(int i) {
         currentScreen = i;
-
         eventMapping.clear();
-        List<EmulatorAction> currentScreenActions = getCurrentScreenActions();
+        List<EmulatorEventHandler> currentScreenActions = getCurrentScreenActions();
         if (currentScreenActions != null) {
-            for (EmulatorAction action : currentScreenActions) {
-                EmulatorEvent event = buildEventForId(action.getEventId());
-                eventMapping.put(event, action);
+            for (EmulatorEventHandler eventHandler : currentScreenActions) {
+                EmulatorEvent event = buildEventForId(eventHandler.getEventId());
+                eventMapping.put(event, eventHandler.getAction());
+            }
+        }
+
+        if (getCurrentScreenModel() != null) {
+            Collection<EmulatorModelProperty> modelProperties = getCurrentScreenModel().values();
+            for (EmulatorModelProperty property : modelProperties) {
+                property.initialize();
             }
         }
     }
@@ -106,4 +120,5 @@ public class WatchSetEmulatorModel {
     public Map<Integer, byte[]> getResources() {
         return resources;
     }
+
 }

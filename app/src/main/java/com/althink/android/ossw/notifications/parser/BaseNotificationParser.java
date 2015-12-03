@@ -173,7 +173,7 @@ public class BaseNotificationParser {
     }
 
     protected NotificationType getNotificationType(StatusBarNotification sbn, Notification existingNotification) {
-        if (("com.android.dialer".equals(sbn.getPackageName()) || "com.android.incallui".equals(sbn.getPackageName()))
+        if (("com.android.dialer".equals(sbn.getPackageName())|| "com.android.phone".equals(sbn.getPackageName()) || "com.android.incallui".equals(sbn.getPackageName()))
                 && existingNotification != null) {
             return sbn.getNotification().priority > 0 ? NotificationType.ALERT : NotificationType.INFO;
         }

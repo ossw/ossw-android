@@ -1,5 +1,6 @@
 package com.althink.android.ossw.emulator.control;
 
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.emulator.source.EmulatorResourceSource;
@@ -24,7 +25,7 @@ public class ImageEmulatorControl extends AbstractEmulatorControl {
         this.image = image;
     }
 
-    public void draw(LowLevelRenderer renderer) {
+    public void draw(LowLevelRenderer renderer, EmulatorExecutionContext ctx) {
         renderer.drawImage(image.getData(), x, y, width, height);
     }
 }

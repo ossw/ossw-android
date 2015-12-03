@@ -2,6 +2,12 @@ package com.althink.android.ossw.emulator.watchset;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
 import com.althink.android.ossw.emulator.actions.EmulatorAction;
+import com.althink.android.ossw.emulator.actions.EmulatorCompoundAction;
+import com.althink.android.ossw.emulator.actions.EmulatorEventHandler;
+import com.althink.android.ossw.emulator.actions.EmulatorChooseAction;
+import com.althink.android.ossw.emulator.actions.EmulatorModelAction;
+import com.althink.android.ossw.emulator.actions.SimpleEmulatorAction;
+import com.althink.android.ossw.emulator.control.ChooseEmulatorControl;
 import com.althink.android.ossw.emulator.control.EmulatorControl;
 import com.althink.android.ossw.emulator.control.ImageEmulatorControl;
 import com.althink.android.ossw.emulator.control.ImageFromSetEmulatorControl;
@@ -11,6 +17,9 @@ import com.althink.android.ossw.emulator.control.TextEmulatorControl;
 import com.althink.android.ossw.emulator.control.digits.NumbersFontRenderer;
 import com.althink.android.ossw.emulator.control.digits.DigitsRenderer;
 import com.althink.android.ossw.emulator.control.digits.GeneratedDigits;
+import com.althink.android.ossw.emulator.model.EmulatorModelProperty;
+import com.althink.android.ossw.emulator.model.IntegerEmulatorModelProperty;
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.emulator.source.EmulatorAttachedResourceSource;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.emulator.source.EmulatorDataSourceFactory;
@@ -23,9 +32,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krzysiek on 14/06/15.
@@ -45,6 +56,8 @@ public class WatchSetEmulatorParser {
     public WatchSetEmulatorModel parse(byte[] watchSetData) {
         try {
             InputStream is = new ByteArrayInputStream(watchSetData);
+            // skip header and version
+            is.skip(4);
             //skip watchset id
             int id = is.read() << 24;
             id |= is.read() << 16;
@@ -87,11 +100,11 @@ public class WatchSetEmulatorParser {
         Map<Integer, byte[]> result = new HashMap<>();
         int resNo = is.read();
         int[] resourceOffsets = new int[resNo];
-        for(int i=0; i<resNo; i++) {
-            resourceOffsets[i] = is.read()<<16 | is.read()<<8 | is.read();
+        for (int i = 0; i < resNo; i++) {
+            resourceOffsets[i] = is.read() << 16 | is.read() << 8 | is.read();
         }
-        for(int i=0; i<resNo; i++) {
-            int resSize = (i == resNo -1) ? size - resourceOffsets[i] : resourceOffsets[i+1]-resourceOffsets[i];
+        for (int i = 0; i < resNo; i++) {
+            int resSize = (i == resNo - 1) ? size - resourceOffsets[i] : resourceOffsets[i + 1] - resourceOffsets[i];
 
             byte[] data = new byte[resSize];
             is.read(data);
@@ -121,29 +134,42 @@ public class WatchSetEmulatorParser {
 
     private WatchSetScreenEmulatorModel parseScreen(InputStream is, ParseContext ctx) throws Exception {
         WatchSetScreenEmulatorModel screen = new WatchSetScreenEmulatorModel();
+        EmulatorExecutionContext execCtx = new EmulatorExecutionContext(ctx.model, emulator);
         int key;
         while ((key = is.read()) != WatchConstants.WATCH_SET_END_OF_DATA) {
             switch (key) {
-                case WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS:
-
-                    is.read();
-                    is.read();
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_CONTROLS: {
+                    int size = is.read() << 8 | is.read();
 
                     //parse controls
                     screen.setControls(parseControls(is, ctx));
+                }
                     break;
-                case WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS:
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_ACTIONS: {
                     //parse actions
-                    screen.setActions(parseActions(is));
+                    int size = is.read() << 8 | is.read();
+
+                    screen.setActions(parseEventHandlers(is));
+                }
                     break;
-                case WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY:
-                    is.read();
-                    is.read();
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_MEMORY: {
+                    int size = is.read() << 8 | is.read();
+                }
                     break;
                 case WatchConstants.WATCH_SET_SCREEN_SECTION_BASE_ACTIONS:
                     //parse base actions
                     is.read();
                     break;
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_MODEL: {
+                    int size = is.read() << 8 | is.read();
+                    screen.setModel(parseModel(is, execCtx));
+                }
+                    break;
+                case WatchConstants.WATCH_SET_SCREEN_SECTION_SETTINGS: {
+                    int size = is.read() << 8 | is.read();
+                    is.skip(size);
+                }
+                break;
                 default:
                     throw new RuntimeException("Unknown key: " + key);
             }
@@ -151,20 +177,86 @@ public class WatchSetEmulatorParser {
         return screen;
     }
 
-    private List<EmulatorAction> parseActions(InputStream is) throws Exception {
-        LinkedList<EmulatorAction> actions = new LinkedList<>();
-        int actionsNo = is.read();
-        for (int i = 0; i < actionsNo; i++) {
-            actions.add(parseAction(is));
+    private Map<Integer, EmulatorModelProperty> parseModel(InputStream is, EmulatorExecutionContext ctx) throws Exception {
+        int variablesNo = is.read();
+        Map<Integer, EmulatorModelProperty> properties = new HashMap<>();
+        for (int i = 0; i < variablesNo; i++) {
+            int type = is.read();//type
+            int flags = is.read();//flags
+            EmulatorDataSource dataSource = null;
+            EmulatorDataSource min = null;
+            EmulatorDataSource max = null;
+
+            if ((flags & 0x80) != 0) {
+                //read init value
+                dataSource = parseDataSource(is);
+            }
+            boolean overflow = (flags & 0x40) != 0;
+            if ((flags & 0x20) != 0) {
+                max = parseDataSource(is);
+            }
+
+            if ((flags & 0x10) != 0) {
+                min = parseDataSource(is);
+            }
+
+            properties.put(i, new IntegerEmulatorModelProperty(dataSource, max, min, overflow, ctx));
+        }
+        return properties;
+    }
+
+    private List<EmulatorEventHandler> parseEventHandlers(InputStream is) throws Exception {
+        LinkedList<EmulatorEventHandler> actions = new LinkedList<>();
+        int eventsNo = is.read();
+        int[] events = new int[eventsNo];
+
+        for (int i = 0; i < eventsNo; i++) {
+            events[i] = is.read();
+            //skip offset
+            is.read();
+            is.read();
+        }
+
+        for (int i = 0; i < eventsNo; i++) {
+            List<EmulatorAction> emulatorActions = parseActions(is);
+            actions.add(new EmulatorEventHandler(events[i], new EmulatorCompoundAction(emulatorActions)));
         }
         return actions;
     }
 
-    private EmulatorAction parseAction(InputStream is) throws Exception {
-        int eventId = is.read();
-        int actionType = is.read();
-        int parameter = (is.read() << 8) | is.read();
-        return new EmulatorAction(eventId, actionType, parameter);
+    private List<EmulatorAction> parseActions(InputStream is) throws Exception {
+        int actionsNo = is.read();
+        List<EmulatorAction> actions = new LinkedList<EmulatorAction>();
+        for (int i = 0; i < actionsNo; i++) {
+
+            int actionType = is.read();
+
+            if (WatchConstants.WATCHSET_FUNCTION_EXTENSION == actionType || WatchConstants.WATCHSET_FUNCTION_CHANGE_SCREEN == actionType) {
+                int parameter = (is.read() << 8) | is.read();
+                actions.add(new SimpleEmulatorAction(actionType, parameter));
+            } else if (WatchConstants.WATCHSET_FUNCTION_MODEL_INCREMENT == actionType || WatchConstants.WATCHSET_FUNCTION_MODEL_DECREMENT == actionType) {
+                int propertyId = is.read();
+                actions.add(new EmulatorModelAction(actionType, propertyId));
+            } else if (WatchConstants.WATCHSET_FUNCTION_MODEL_SET == actionType || WatchConstants.WATCHSET_FUNCTION_MODEL_ADD == actionType || WatchConstants.WATCHSET_FUNCTION_MODEL_SUBTRACT == actionType) {
+                int propertyId = is.read();
+                EmulatorDataSource dataSource = parseDataSource(is);
+                actions.add(new EmulatorModelAction(actionType, propertyId, dataSource));
+            } else if (WatchConstants.WATCHSET_FUNCTION_CHOOSE == actionType) {
+                EmulatorDataSource dataSource = parseDataSource(is);
+                int optionsNo = is.read();
+                HashMap<Object, List<EmulatorAction>> map = new HashMap<>();
+                for (int o = 0; o < optionsNo; o++) {
+                    int option = is.read();
+                    is.read();
+                    is.read();
+                    map.put(option, parseActions(is));
+                }
+                actions.add(new EmulatorChooseAction(dataSource, map));
+            } else {
+                actions.add(new SimpleEmulatorAction(actionType, 0));
+            }
+        }
+        return actions;
     }
 
     private List<EmulatorControl> parseControls(InputStream is, ParseContext ctx) throws Exception {
@@ -189,9 +281,37 @@ public class WatchSetEmulatorParser {
                 return parseTextControl(is);
             case WatchConstants.SCR_CONTROL_HORIZONTAL_PROGRESS_BAR:
                 return parseProgressControl(is);
+            case WatchConstants.SCR_CONTROL_CHOOSE:
+                return parseChooseControl(is, ctx);
             default:
                 throw new RuntimeException("Unknown control type: " + controlType);
         }
+    }
+
+    private EmulatorControl parseChooseControl(InputStream is, ParseContext ctx) throws Exception {
+        EmulatorDataSource dataSource = parseDataSource(is);
+        is.read();
+        is.read();
+        int optionsNo = is.read();
+        Map<Object, List<EmulatorControl>> map = new HashMap<>();
+        for (int i = 0; i < optionsNo; i++) {
+            Set<Integer> keys = new HashSet<>();
+            int valuesNo = 0xFF & is.read();
+            for(int j=0; j<valuesNo; j++) {
+                keys.add(0xFF & is.read());
+            }
+            is.read();
+            is.read();
+            List<EmulatorControl> controls = parseControls(is, ctx);
+            for(Integer k: keys) {
+                map.put(k, controls);
+            }
+        }
+        int otherwiseSize = is.read()<<8 | is.read() & 0xFF;
+        if (otherwiseSize > 0) {
+            map.put(null, parseControls(is, ctx));
+        }
+        return new ChooseEmulatorControl(dataSource, map);
     }
 
     private EmulatorControl parseImageControl(InputStream is, ParseContext ctx) throws Exception {
@@ -231,7 +351,7 @@ public class WatchSetEmulatorParser {
         int type = style >> 6;
         int digitSpace = style & 0x1F;
         boolean zeroPadded = (style & 0x20) != 0;
-        switch(type) {
+        switch (type) {
             case 0:
                 int gen2 = is.read();
                 int gen3 = is.read();
@@ -281,8 +401,8 @@ public class WatchSetEmulatorParser {
         int width = is.read();
         int height = is.read();
         int style = is.read() << 24;
-        style |= is.read()<< 16;
-        style |= is.read()<< 8;
+        style |= is.read() << 16;
+        style |= is.read() << 8;
         style |= is.read();
         is.read();
         is.read();
@@ -293,21 +413,37 @@ public class WatchSetEmulatorParser {
     private EmulatorDataSource parseDataSource(InputStream is) throws Exception {
         int type = is.read();
         int property = is.read();
-        if ((type & 0x80) != 0) {
-            is.read();
+        EmulatorDataSource indexDataSource = null;
+        if ((type & 0x40) != 0) {
+            indexDataSource = parseDataSource(is);
         }
-        switch (type&0x3F) {
+        EmulatorDataSource dataSource;
+        switch (type & 0x3F) {
             case WatchConstants.DATA_SOURCE_INTERNAL:
-                return EmulatorDataSourceFactory.internalDataSource(property);
+                dataSource = EmulatorDataSourceFactory.internalDataSource(property, indexDataSource);
+                break;
             case WatchConstants.DATA_SOURCE_EXTERNAL:
-                return EmulatorDataSourceFactory.externalDataSource(property, emulator);
+                dataSource = EmulatorDataSourceFactory.externalDataSource(property, emulator);
+                break;
             case WatchConstants.DATA_SOURCE_SENSOR:
-                return EmulatorDataSourceFactory.sensorDataSource(property);
+                dataSource = EmulatorDataSourceFactory.sensorDataSource(property);
+                break;
             case WatchConstants.DATA_SOURCE_STATIC:
-                return EmulatorDataSourceFactory.staticDataSource(property, is);
+                dataSource = EmulatorDataSourceFactory.staticDataSource(property, is);
+                break;
+            case WatchConstants.DATA_SOURCE_WATCHSET_MODEL:
+                dataSource = EmulatorDataSourceFactory.modelDataSource(property);
+                break;
             default:
                 throw new RuntimeException("unknown data source type: " + type);
         }
+        if ((type & 0x80) != 0) {
+            int converterNo = is.read();
+            for(int i=0; i<converterNo; i++) {
+                dataSource = EmulatorDataSourceFactory.convertedDataSource(is.read(), dataSource);
+            }
+        }
+        return dataSource;
     }
 
 }

@@ -15,6 +15,7 @@ public class WatchConstants {
     public static final int SCR_CONTROL_TEXT = 4;
     public static final int SCR_CONTROL_STATIC_IMAGE = 5;
     public static final int SCR_CONTROL_IMAGE_FROM_SET = 6;
+    public static final int SCR_CONTROL_CHOOSE = 0xF0;
 
     public static final int MAX_TEXT_EXT_PROPERTY_LENGTH = 253;
     public static final int DEFAULT_TEXT_EXT_PROPERTY_LENGTH = 32;
@@ -75,6 +76,10 @@ public class WatchConstants {
     public static final int WATCH_SET_SCREEN_SECTION_ACTIONS = 2;
     public static final int WATCH_SET_SCREEN_SECTION_MEMORY = 3;
     public static final int WATCH_SET_SCREEN_SECTION_BASE_ACTIONS = 4;
+    public static final int WATCH_SET_SCREEN_SECTION_MODEL = 5;
+    public static final int WATCH_SET_SCREEN_SECTION_SETTINGS = 6;
+
+    public static final int WATCH_SET_SETTING_INVERTIBLE = 1;
 
     public static final int WATCH_SET_END_OF_DATA = 0xFF;
 
@@ -82,26 +87,27 @@ public class WatchConstants {
     public static final int DATA_SOURCE_EXTERNAL = 1;
     public static final int DATA_SOURCE_SENSOR = 2;
     public static final int DATA_SOURCE_STATIC = 3;
+    public static final int DATA_SOURCE_WATCHSET_MODEL = 4;
 
     public static final int RESOURCE_SOURCE_ATTACHED = 1;
 
     public static final int INTERNAL_DATA_SOURCE_BATTERY_LEVEL = 0;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_24 = 1;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12 = 2;
-    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR = 3;
-    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 4;
-    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 5;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK = 6;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 7;
-    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 8;
-    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 9;
-    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 10;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME = 11;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 12;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 13;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 14;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 15;
-    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_NUMBER = 16;
+    public static final int INTERNAL_DATA_SOURCE_TIME_IN_SECONDS = 1;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_24 = 2;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12 = 3;
+    public static final int INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR = 4;
+    public static final int INTERNAL_DATA_SOURCE_TIME_MINUTES = 5;
+    public static final int INTERNAL_DATA_SOURCE_TIME_SECONDS = 6;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK = 7;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH = 8;
+    public static final int INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR = 9;
+    public static final int INTERNAL_DATA_SOURCE_DATE_MONTH = 10;
+    public static final int INTERNAL_DATA_SOURCE_DATE_YEAR = 11;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME = 12;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER = 13;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME = 14;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT = 15;
+    public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 16;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 17;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 18;
 
@@ -110,6 +116,18 @@ public class WatchConstants {
     public static final int CONVERTER_MS_TO_SECONDS_REMAINDER = 3;
     public static final int CONVERTER_MS_TO_CS_REMAINDER = 4;
     public static final int CONVERTER_MS_REMAINDER = 5;
+    public static final int CONVERTER_TIME_TO_HOUR_24 = 6;
+    public static final int CONVERTER_TIME_TO_ROUNDED_HOUR_24 = 7;
+    public static final int CONVERTER_TIME_TO_MINUTES = 8;
+    public static final int CONVERTER_TIME_TO_SECONDS = 9;
+    public static final int CONVERTER_TIME_TO_FIVE_MINUTES_ROUNDED_TIME = 10;
+    public static final int CONVERTER_HOUR_24_TO_HOUR_12 = 11;
+    public static final int CONVERTER_HOUR_24_TO_HOUR_12_PERIOD = 12;
+    public static final int CONVERTER_MINUTES_TO_PAST_TO_DESIGNATOR = 13;
+    public static final int CONVERTER_MINUTES_TO_PAST_TO_MINUTES = 14;
+    public static final int CONVERTER_ONES = 15;
+    public static final int CONVERTER_TENS = 16;
+    public static final int CONVERTER_HUNDREDS = 17;
 
     public static final int SENSOR_DATA_SOURCE_HR = 0;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
@@ -123,16 +141,20 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_STOPWATCH_STOP = 0x12;
     public static final int WATCHSET_FUNCTION_STOPWATCH_START_STOP = 0x13;
     public static final int WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP = 0x14;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_PREV_LAP = 0x15;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_NEXT_LAP = 0x16;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_LAST_LAP = 0x17;
-    public static final int WATCHSET_FUNCTION_STOPWATCH_RECALL_FIRST_LAP = 0x18;
 
-    public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xF0;
-    public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xF1;
+    public static final int WATCHSET_FUNCTION_MODEL_SET = 0xA0;
+    public static final int WATCHSET_FUNCTION_MODEL_ADD = 0xA1;
+    public static final int WATCHSET_FUNCTION_MODEL_SUBTRACT = 0xA2;
+    public static final int WATCHSET_FUNCTION_MODEL_INCREMENT = 0xA3;
+    public static final int WATCHSET_FUNCTION_MODEL_DECREMENT = 0xA4;
 
-    public static final int WATCHSET_FUNCTION_CLOSE = 0xFE;
-    public static final int WATCHSET_FUNCTION_EXTENSION = 0xFF;
+    public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xE0;
+    public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xE1;
+
+    public static final int WATCHSET_FUNCTION_CLOSE = 0xEE;
+    public static final int WATCHSET_FUNCTION_EXTENSION = 0xEF;
+
+    public static final int WATCHSET_FUNCTION_CHOOSE = 0xF0;
 
     public static final int EVENT_BUTTON_UP_SHORT = 0;
     public static final int EVENT_BUTTON_SELECT_SHORT = 1;
@@ -142,7 +164,6 @@ public class WatchConstants {
     public static final int EVENT_BUTTON_SELECT_LONG = 5;
     public static final int EVENT_BUTTON_DOWN_LONG = 6;
     public static final int EVENT_BUTTON_BACK_LONG = 7;
-    public static final int EVENT_SCREEN_INIT = 0xF0;
 
     public static final int OSSW_RX_COMMAND_SET_WATCH_SET_ID = 0x10;
     public static final int OSSW_RX_COMMAND_INVOKE_EXTERNAL_FUNCTION = 0x11;

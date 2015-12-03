@@ -6,11 +6,9 @@ I.gradle
 /.idea/dataSources.ids
 .DS_Store
 /build
-.gradle/2.2.1/taskArtifacts
 *.apk
 *.ap_
 *.dex
 bin/
 gen/
 .gradle
-

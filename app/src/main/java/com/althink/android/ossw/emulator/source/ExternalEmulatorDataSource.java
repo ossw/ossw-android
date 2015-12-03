@@ -1,6 +1,7 @@
 package com.althink.android.ossw.emulator.source;
 
 import com.althink.android.ossw.emulator.WatchEmulator;
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watchsets.DataSourceType;
 
@@ -21,7 +22,7 @@ public class ExternalEmulatorDataSource implements EmulatorDataSource {
     }
 
     @Override
-    public Object getData(DataSourceType type, int range) {
+    public Object getData(DataSourceType type, int range, EmulatorExecutionContext ctx) {
         Object value = emulator.getExternalProperty(property);
         switch (type) {
             case NUMBER:

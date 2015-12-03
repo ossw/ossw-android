@@ -1,6 +1,7 @@
 package com.althink.android.ossw.emulator.control;
 
 import com.althink.android.ossw.emulator.control.digits.DigitsRenderer;
+import com.althink.android.ossw.emulator.renderer.EmulatorExecutionContext;
 import com.althink.android.ossw.emulator.renderer.LowLevelRenderer;
 import com.althink.android.ossw.emulator.source.EmulatorDataSource;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -69,9 +70,9 @@ public class NumberEmulatorControl extends AbstractEmulatorControl {
         return result;
     }
 
-    public void draw(LowLevelRenderer renderer) {
+    public void draw(LowLevelRenderer renderer, EmulatorExecutionContext ctx) {
         int decimalSize = range.getValue() & 0xF;
-        Object value = getData(DataSourceType.NUMBER, range.getValue());
+        Object value = getData(DataSourceType.NUMBER, range.getValue(), ctx);
         if (value == null) {
             return;
         }
