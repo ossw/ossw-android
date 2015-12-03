@@ -70,7 +70,7 @@ public abstract class WatchSetsFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Log.i(TAG, "onActivityCreated called");
-        getActivity().setTitle(getTitle());
+        setTitle(buildTitle());
         setListAdapter(listAdapter);
         refreshWatchSetList();
     }
@@ -80,13 +80,13 @@ public abstract class WatchSetsFragment extends ListFragment {
         super.onCreateOptionsMenu(menu, inflater);
         Log.i(TAG, "onCreateOptionsMenu called");
         inflater.inflate(R.menu.watchsets, menu);
-        resetSelection();
+        updateMenuOptions();
     }
 
     private void refreshWatchSetList() {
         listAdapter.clear();
         if (isAdded())
-            for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getActivity()).listWatchSets(type)) {
+            for (WatchSetInfo info : OsswDatabaseHelper.getInstance(getContext()).listWatchSets(type)) {
                 listAdapter.addWatchSet(info);
             }
         listAdapter.notifyDataSetChanged();
@@ -95,18 +95,15 @@ public abstract class WatchSetsFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-//        int count = getListView().getCount();
-//        SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
-//        for (int i = 0; i < count; i++) {
-//            if (sparseBooleanArray.get(i)) {
-//                prompt += getListView().getItemAtPosition(i).toString() + "\n";
-//            }
-//        }
+        updateMenuOptions();
+    }
+
+    private void updateMenuOptions() {
         int checkedCount = getListView().getCheckedItemCount();
         setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
     }
 
-    private String getTitle() {
+    private String buildTitle() {
         switch (type) {
             case WATCH_FACE:
                 return getString(R.string.drawer_watch_faces);
@@ -123,7 +120,7 @@ public abstract class WatchSetsFragment extends ListFragment {
             return;
         int checkedCount = getListView().getCheckedItemCount();
         boolean hideTitle = checkedCount > 0 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
-        getActivity().setTitle(hideTitle ? "" : getTitle());
+        setTitle(hideTitle ? "" : buildTitle());
         Menu menu = ((MainActivity) getActivity()).getToolbar().getMenu();
         MenuItem uploadAction = menu.findItem(R.id.menu_upload_to_watch);
         MenuItem itemsRemoveAction = menu.findItem(R.id.menu_items_remove);
@@ -148,11 +145,9 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private void resetSelection() {
-        if (getView() != null) {
-            ListView listView = getListView();
-            listView.clearChoices();
-            listView.requestLayout();
-        }
+        ListView listView = getListView();
+        listView.clearChoices();
+        listView.requestLayout();
         setMenuOptions(Mode.NONE);
     }
 
@@ -160,22 +155,15 @@ public abstract class WatchSetsFragment extends ListFragment {
     public void onResume() {
         super.onResume();
         Log.i(TAG, "onResume called");
-//        MainActivity activity = ((MainActivity) getActivity());
-//        activity.resetBottomToolbar();
-//        bottomToolbar = activity.getToolbar();
-//        bottomToolbar.getMenu().clear();
-//        bottomToolbar.inflateMenu(R.menu.watchsets);
-//        bottomToolbar.setVisibility(View.VISIBLE);
-//        setMenuOptions(Mode.NONE);
-//        refreshWatchSetList();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getActivity());
+        OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(getContext());
         if (id == R.id.menu_import) {
             showFileChooser();
+            resetSelection();
             return true;
         } else if (id == R.id.menu_items_remove) {
             SparseBooleanArray sparseBooleanArray = getListView().getCheckedItemPositions();
@@ -195,10 +183,11 @@ public abstract class WatchSetsFragment extends ListFragment {
             for (int i = 0; i < count; i++) {
                 if (sparseBooleanArray.get(i) && isAdded()) {
                     WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
-                    Intent intent = new Intent(getActivity(), WatchSetPreviewActivity.class);
+                    Intent intent = new Intent(getContext(), WatchSetPreviewActivity.class);
                     intent.putExtra("id", info.getId());
                     intent.putExtra("type", type);
                     startActivity(intent);
+                    resetSelection();
                     return true;
                 }
             }
@@ -211,7 +200,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                         WatchSetInfo info = (WatchSetInfo) getListAdapter().getItem(i);
                         String source = db.getWatchSetSourceById(info.getId());
                         Integer extWatchSetId = db.getExtWatchSetId(info.getId());
-                        CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getActivity()).compile(source, extWatchSetId);
+                        CompiledWatchSet compiledWatchSet = new WatchSetCompiler(getContext()).compile(source, extWatchSetId);
                         OsswService osswBleService = OsswService.getInstance();
                         if (osswBleService != null) {
                             osswBleService.uploadData(buildDataType(type), compiledWatchSet.getName(), compiledWatchSet.getWatchData());
@@ -220,7 +209,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                         toastHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(getActivity(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), getString(R.string.toast_invalid_file), Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -255,7 +244,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                     FILE_SELECT_CODE);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(getActivity(), "Please install a File Manager.",
+            Toast.makeText(getContext(), "Please install a File Manager.",
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -269,7 +258,7 @@ public abstract class WatchSetsFragment extends ListFragment {
                     // Get the Uri of the selected file
                     Uri uri = data.getData();
                     //Log.i(TAG, "File Uri: " + uri.toString());
-                    Intent i = new Intent(getActivity(), WatchSetPreviewActivity.class);
+                    Intent i = new Intent(getContext(), WatchSetPreviewActivity.class);
                     i.putExtra("uri", uri.toString());
                     i.putExtra("type", type);
                     startActivityForResult(i, WATCH_FACE_IMPORTED);
@@ -288,6 +277,10 @@ public abstract class WatchSetsFragment extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
         //Log.i(TAG, "On destroy");
+    }
+
+    public void setTitle(String title) {
+        getActivity().setTitle(title);
     }
 
     private class WatchSetsListAdapter extends BaseAdapter {
