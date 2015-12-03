@@ -175,7 +175,9 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private boolean skipNotification(StatusBarNotification sbn) {
-        if ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName()))
+        String pName = sbn.getPackageName();
+        if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
+                || "com.sec.android.app.clockpackage".equals(pName))
             return false;
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);

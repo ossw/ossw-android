@@ -2,26 +2,21 @@ package com.althink.android.ossw.notifications.parser.api19;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
-import android.text.SpannableString;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.althink.android.ossw.R;
-import com.althink.android.ossw.notifications.NotificationListener;
 import com.althink.android.ossw.notifications.model.ListNotification;
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.NotificationCategory;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.notifications.model.Operation;
-import com.althink.android.ossw.notifications.model.SimpleListItem;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.model.SubjectMessageItem;
 import com.althink.android.ossw.notifications.parser.BaseNotificationParser;
@@ -57,7 +52,7 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
-        if (NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
+        if (NotificationType.INFO == type && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
             if (!sbn.getPackageName().equals("com.althink.android.ossw"))
                 Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
             return null;
