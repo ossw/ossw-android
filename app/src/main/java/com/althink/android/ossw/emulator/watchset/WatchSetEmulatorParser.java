@@ -241,6 +241,16 @@ public class WatchSetEmulatorParser {
                 int propertyId = is.read();
                 EmulatorDataSource dataSource = parseDataSource(is);
                 actions.add(new EmulatorModelAction(actionType, propertyId, dataSource));
+            }else if (WatchConstants.WATCHSET_FUNCTION_SET_TIME == actionType) {
+                int propertyNo = is.read()&0xFF;
+                for (int p=0; p<propertyNo; p++) {
+                    int propertyId = is.read()&0xFF;
+                    parseDataSource(is);
+                    // skip data
+                }
+            } else if (WatchConstants.WATCHSET_FUNCTION_SET_TEMPORARY_BACKLIGHT_TIMEOUT == actionType){
+                int value = is.read();
+                //skip data
             } else if (WatchConstants.WATCHSET_FUNCTION_CHOOSE == actionType) {
                 EmulatorDataSource dataSource = parseDataSource(is);
                 int optionsNo = is.read();

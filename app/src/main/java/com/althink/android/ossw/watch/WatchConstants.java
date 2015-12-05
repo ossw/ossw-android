@@ -110,6 +110,8 @@ public class WatchConstants {
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME = 16;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME = 17;
     public static final int INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT = 18;
+    public static final int INTERNAL_DATA_SOURCE_FIRMWARE_VERSION = 19;
+    public static final int INTERNAL_DATA_SOURCE_MAC_ADDRESS = 20;
 
     public static final int CONVERTER_MS_TO_HOURS = 1;
     public static final int CONVERTER_MS_TO_MINUTES_REMAINDER = 2;
@@ -133,8 +135,14 @@ public class WatchConstants {
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_SPEED = 0x11;
     //public static final int INTERNAL_DATA_SOURCE_SENSOR_CYCLING_CADENCE = 0x12;
 
-    public static final int WATCHSET_FUNCTION_TOGGLE_BACKLIGHT = 1;
+    public static final int WATCHSET_FUNCTION_BACKLIGHT_TOGGLE = 1;
     public static final int WATCHSET_FUNCTION_TOGGLE_COLORS = 2;
+    public static final int WATCHSET_FUNCTION_TEMPORARY_BACKLIGHT = 3;
+    public static final int WATCHSET_FUNCTION_SET_TEMPORARY_BACKLIGHT_TIMEOUT = 4;
+    public static final int WATCHSET_FUNCTION_SET_TIME = 5;
+
+    public static final int WATCHSET_FUNCTION_FORMAT_DATA = 0xE;
+    public static final int WATCHSET_FUNCTION_RESTART = 0xF;
 
     public static final int WATCHSET_FUNCTION_STOPWATCH_START = 0x10;
     public static final int WATCHSET_FUNCTION_STOPWATCH_RESET = 0x11;
@@ -150,6 +158,8 @@ public class WatchConstants {
 
     public static final int WATCHSET_FUNCTION_CHANGE_SCREEN = 0xE0;
     public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xE1;
+    public static final int WATCHSET_FUNCTION_SHOW_STATUS = 0xE2;
+    public static final int WATCHSET_FUNCTION_SHOW_NOTIFICATIONS = 0xE3;
 
     public static final int WATCHSET_FUNCTION_CLOSE = 0xEE;
     public static final int WATCHSET_FUNCTION_EXTENSION = 0xEF;

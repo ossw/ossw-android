@@ -630,7 +630,10 @@ public class WatchSetCompiler {
                 writeActionWithParam(os, WatchConstants.WATCHSET_FUNCTION_EXTENSION, addExtensionFunction(new WatchExtensionFunction(extensionId, function, parameter)));
                 break;
             case "toggleBacklight":
-                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT);
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_BACKLIGHT_TOGGLE);
+                break;
+            case "temporaryBacklight":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_TEMPORARY_BACKLIGHT);
                 break;
             case "stopwatch.start":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_STOPWATCH_START);
@@ -658,6 +661,23 @@ public class WatchSetCompiler {
                 break;
             case "settings":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_SETTINGS);
+                break;
+            case "status":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_STATUS);
+                break;
+            case "notifications":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_NOTIFICATIONS);
+                break;
+            case "restart":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_RESTART);
+                break;
+            case "setTime": {
+                DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
+                dsCtx.dataSourceType = DataSourceType.NUMBER;
+                writeMultiParamAction(os, WatchConstants.WATCHSET_FUNCTION_SET_TIME, config.getJSONObject("parameters"), dsCtx);
+            }    break;
+            case "format":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_FORMAT_DATA);
                 break;
             default:
                 if (action.startsWith("model.")) {
@@ -697,6 +717,39 @@ public class WatchSetCompiler {
                 }
         }
         return os.toByteArray();
+    }
+
+    private void writeMultiParamAction(ByteArrayOutputStream os, int functionId, JSONObject parameters, DataSourceResolutionContext dsCtx) throws Exception {
+        os.write(functionId);
+        os.write(parameters.length());
+        for(Iterator<String> iterator = parameters.keys();iterator.hasNext();) {
+            String key = iterator.next();
+            int keyId;
+            switch(key) {
+                case "year":
+                    keyId = 0;
+                    break;
+                case "month":
+                    keyId = 1;
+                    break;
+                case "day":
+                    keyId = 2;
+                    break;
+                case "hour":
+                    keyId = 3;
+                    break;
+                case "minutes":
+                    keyId = 4;
+                    break;
+                case "seconds":
+                    keyId = 5;
+                    break;
+                default:
+                    throw new KnownParseError("Invalid property: " + key);
+            }
+            os.write(keyId);
+            os.write(compileSource(parameters.getJSONObject(key), dsCtx));
+        }
     }
 
     private void writeModelAction(ByteArrayOutputStream os, int functionId, int fieldId, byte[] dataSource) throws Exception {
@@ -1288,7 +1341,7 @@ public class WatchSetCompiler {
     private void parseConverters(ByteArrayOutputStream os, Object converter) throws Exception {
         if(converter instanceof String) {
             os.write(1);
-            os.write(getConverterKey((String)converter));
+            os.write(getConverterKey((String) converter));
         } else if (converter instanceof JSONArray) {
             JSONArray arr = (JSONArray)converter;
             os.write(arr.length());
@@ -1327,49 +1380,56 @@ public class WatchSetCompiler {
     }
 
     private int getInternalSourceKey(String property, DataSourceType dataSourceType, int dataSourceRange) {
-        if (!DataSourceType.NUMBER.equals(dataSourceType)) {
-            throw new IllegalArgumentException("Unknown data source type");
-        }
-        switch (property) {
-            case "time":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_IN_SECONDS;
-            case "hour":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_24;
-            case "hour12":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12;
-            case "hour12designator":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR;
-            case "minutes":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_MINUTES;
-            case "seconds":
-                return WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS;
-            case "dayOfWeek":
-                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK;
-            case "dayOfMonth":
-                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH;
-            case "dayOfYear":
-                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR;
-            case "month":
-                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH;
-            case "year":
-                return WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR;
-            case "batteryLevel":
-                return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
+        if (DataSourceType.NUMBER.equals(dataSourceType)) {
+            switch (property) {
+                case "time":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_IN_SECONDS;
+                case "hour":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_24;
+                case "hour12":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12;
+                case "hour12designator":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_HOUR_12_DESIGNATOR;
+                case "minutes":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_MINUTES;
+                case "seconds":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_TIME_SECONDS;
+                case "dayOfWeek":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_WEEK;
+                case "dayOfMonth":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_MONTH;
+                case "dayOfYear":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_DATE_DAY_OF_YEAR;
+                case "month":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_DATE_MONTH;
+                case "year":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_DATE_YEAR;
+                case "batteryLevel":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL;
 
-            case "stopwatch.total.time":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME;
-            case "stopwatch.currentLap.number":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER;
-            case "stopwatch.currentLap.time":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME;
-            case "stopwatch.currentLap.split":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT;
-            case "stopwatch.recallLap.time":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME;
-            case "stopwatch.recallLap.split":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT;
-            case "stopwatch.lastLap.time":
-                return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME;
+                case "stopwatch.total.time":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_TOTAL_TIME;
+                case "stopwatch.currentLap.number":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_NUMBER;
+                case "stopwatch.currentLap.time":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_TIME;
+                case "stopwatch.currentLap.split":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_CURRENT_LAP_SPLIT;
+                case "stopwatch.recallLap.time":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_TIME;
+                case "stopwatch.recallLap.split":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_RECALL_LAP_SPLIT;
+                case "stopwatch.lastLap.time":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_STOPWATCH_LAST_LAP_TIME;
+            }
+
+        } else if (DataSourceType.STRING.equals(dataSourceType)) {
+            switch (property) {
+                case "firmwareVersion":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_FIRMWARE_VERSION;
+                case "macAddress":
+                    return WatchConstants.INTERNAL_DATA_SOURCE_MAC_ADDRESS;
+            }
         }
         throw new KnownParseError("Unknown internal property: " + property);
     }

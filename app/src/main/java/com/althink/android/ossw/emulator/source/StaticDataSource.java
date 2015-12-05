@@ -19,7 +19,7 @@ public class StaticDataSource implements EmulatorDataSource {
         if (type == DataSourceType.STRING) {
             return new String(data);
         } else if (type == DataSourceType.NUMBER) {
-            return new Integer(data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3]);
+            return new Integer((data[0]&0xFF) << 24 | (data[1]&0xFF) << 16 | (data[2]&0xFF) << 8 | (data[3]&0xFF));
         }
         return null;
     }

@@ -19,7 +19,7 @@ public class SimpleEmulatorAction implements EmulatorAction {
 
     public void performAction(EmulatorExecutionContext ctx) {
         switch (actionType) {
-            case WatchConstants.WATCHSET_FUNCTION_TOGGLE_BACKLIGHT:
+            case WatchConstants.WATCHSET_FUNCTION_BACKLIGHT_TOGGLE:
                 ctx.getEmulator().toggleBacklight();
                 break;
             case WatchConstants.WATCHSET_FUNCTION_TOGGLE_COLORS:

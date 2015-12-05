@@ -177,22 +177,30 @@ public class NotificationListener extends NotificationListenerService {
     private boolean skipNotification(StatusBarNotification sbn) {
         String pName = sbn.getPackageName();
         if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
-                || "com.sec.android.app.clockpackage".equals(pName))
+                || "com.sec.android.app.clockpackage".equals(pName)) {
             return false;
+        }
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         Set<String> selections = sharedPref.getStringSet("notification_applications", null);
-        if (selections == null)
+        if (selections == null) {
+            Log.i(TAG, "Empty notification filter configuration");
             return false;
+        }
         Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
-        if (selections.contains(sbn.getPackageName()))
+        if (selections.contains(sbn.getPackageName())) {
+            Log.i(TAG, "Notification are enabled for given app");
             return false;
+        }
+        Log.i(TAG, "Notification are disabled for given app");
         return true;
     }
 
     private Notification parseNotification(StatusBarNotification sbn, String notificationId, Notification existingNotification) {
-        if (skipNotification(sbn))
+        if (skipNotification(sbn)) {
+            Log.i(TAG, "Skip notifications");
             return null;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {

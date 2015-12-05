@@ -19,9 +19,11 @@ import com.althink.android.ossw.emulator.source.internal.BatteryLevelInternalEmu
 import com.althink.android.ossw.emulator.source.internal.DayOfMonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.DayOfWeekInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.DayOfYearInternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.FirmwareVersionInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.Hour12DesignatorInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.Hour12InternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.Hour24InternalEmulatorDataSource;
+import com.althink.android.ossw.emulator.source.internal.MacAddressInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MinutesInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.MonthInternalEmulatorDataSource;
 import com.althink.android.ossw.emulator.source.internal.SecondsInternalEmulatorDataSource;
@@ -68,6 +70,10 @@ public class EmulatorDataSourceFactory {
                 return new YearInternalEmulatorDataSource();
             case WatchConstants.INTERNAL_DATA_SOURCE_BATTERY_LEVEL:
                 return new BatteryLevelInternalEmulatorDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_FIRMWARE_VERSION:
+                return new FirmwareVersionInternalEmulatorDataSource();
+            case WatchConstants.INTERNAL_DATA_SOURCE_MAC_ADDRESS:
+                return new MacAddressInternalEmulatorDataSource();
             default:
                 return new ZeroDataSource();
         }

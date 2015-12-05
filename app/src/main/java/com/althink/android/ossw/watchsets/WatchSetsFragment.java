@@ -99,8 +99,10 @@ public abstract class WatchSetsFragment extends ListFragment {
     }
 
     private void updateMenuOptions() {
-        int checkedCount = getListView().getCheckedItemCount();
-        setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
+        if (getView() != null) {
+            int checkedCount = getListView().getCheckedItemCount();
+            setMenuOptions(checkedCount > 0 ? (checkedCount > 1 ? Mode.MULTI : Mode.SINGLE) : Mode.NONE);
+        }
     }
 
     private String buildTitle() {
