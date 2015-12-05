@@ -11,13 +11,18 @@
         android:layout_centerVertical="true"
         android:fillViewport="true">
 
-
         <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingBottom="40dp">
+            android:paddingBottom="0dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:src="@drawable/watch_back" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -26,13 +31,15 @@
                 android:textIsSelectable="false"
                 android:textSize="18dp"
                 android:gravity="center_horizontal"
-                android:paddingBottom="10dp"
+                android:paddingBottom="0dp"
                 android:paddingTop="10dp" />
 
             <RelativeLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/watchset_name">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp">
 
                 <LinearLayout
                     android:id="@+id/watch_emulator_screen_view_wrapper"
@@ -59,49 +66,50 @@
 
                     <android.support.v7.widget.AppCompatImageView
                         android:id="@+id/watch_emulator_button_up"
-                        android:layout_width="96dp"
-                        android:layout_height="96dp"
+                        android:layout_width="@dimen/watch_emulator_button_size"
+                        android:layout_height="@dimen/watch_emulator_button_size"
                         android:layout_alignParentStart="true"
                         android:layout_alignParentTop="true"
+                        android:layout_gravity="top"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/ic_button_up" />
+                        android:src="@drawable/button_up" />
 
                     <android.support.v7.widget.AppCompatImageView
                         android:id="@+id/watch_emulator_button_select"
-                        android:layout_width="96dp"
-                        android:layout_height="96dp"
+                        android:layout_width="@dimen/watch_emulator_button_size"
+                        android:layout_height="@dimen/watch_emulator_button_size"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:layout_gravity="center_vertical"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/ic_button_select" />
+                        android:src="@drawable/button_select" />
 
                     <android.support.v7.widget.AppCompatImageView
                         android:id="@+id/watch_emulator_button_down"
-                        android:layout_width="96dp"
-                        android:layout_height="96dp"
+                        android:layout_width="@dimen/watch_emulator_button_size"
+                        android:layout_height="@dimen/watch_emulator_button_size"
                         android:layout_alignParentBottom="true"
                         android:layout_alignParentStart="true"
+                        android:layout_gravity="bottom"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/ic_button_down" />
+                        android:src="@drawable/button_down" />
 
                 </RelativeLayout>
 
                 <RelativeLayout
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="@dimen/watch_emulator_view_height"
-                    android:layout_alignBottom="@+id/watch_emulator_screen_view_wrapper"
                     android:layout_toStartOf="@+id/watch_emulator_screen_view_wrapper"
                     android:orientation="vertical">
 
                     <android.support.v7.widget.AppCompatImageView
                         android:id="@+id/watch_emulator_button_back"
-                        android:layout_width="match_parent"
-                        android:layout_height="96dp"
+                        android:layout_width="@dimen/watch_emulator_button_size"
+                        android:layout_height="@dimen/watch_emulator_button_size"
                         android:layout_alignParentBottom="true"
                         android:layout_alignParentEnd="true"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/ic_button_back" />
+                        android:src="@drawable/button_back" />
 
                 </RelativeLayout>
 
