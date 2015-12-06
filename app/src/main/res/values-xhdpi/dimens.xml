@@ -2,5 +2,6 @@
 
     <dimen name="watch_emulator_view_width">432px</dimen>
     <dimen name="watch_emulator_view_height">504px</dimen>
+    <dimen name="watch_emulator_button_size">150px</dimen>
 
 </resources>

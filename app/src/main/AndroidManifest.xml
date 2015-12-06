@@ -38,7 +38,6 @@
             android:name=".MainActivity"
             android:label="@string/title_main"
             android:launchMode="singleTask" >
-            <!--android:configChanges="keyboardHidden|orientation|screenSize"-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -58,7 +57,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".watchsets.WatchSetPreviewActivity" >
+        <activity android:name=".watchsets.WatchSetPreviewActivity"
+            android:screenOrientation="sensorPortrait">
         </activity>
     </application>
 

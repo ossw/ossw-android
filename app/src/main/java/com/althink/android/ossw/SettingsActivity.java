@@ -149,20 +149,26 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             });
 
             // Application list for choosing notification sources
-            MultiSelectListPreference notificationApps = (MultiSelectListPreference) findPreference("notification_applications");
-            PackageManager pm = getActivity().getPackageManager();
-            Intent intentFilter = new Intent(Intent.ACTION_MAIN, null);
-            intentFilter.addCategory(Intent.CATEGORY_LAUNCHER);
-            List<ResolveInfo> appList = pm.queryIntentActivities(intentFilter, PackageManager.PERMISSION_GRANTED);
-            Collections.sort(appList, new ResolveInfo.DisplayNameComparator(pm));
-            List<CharSequence> entries = new ArrayList<CharSequence>();
-            List<CharSequence> entryValues = new ArrayList<CharSequence>();
-            for (ResolveInfo info : appList) {
-                entryValues.add(info.activityInfo.packageName);
-                entries.add(info.loadLabel(pm).toString());
-            }
-            notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
-            notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+            final MultiSelectListPreference notificationApps = (MultiSelectListPreference) findPreference("notification_applications");
+            Runnable loadInstalledApps = new Runnable() {
+                @Override
+                public void run() {
+                    PackageManager pm = getActivity().getPackageManager();
+                    Intent intentFilter = new Intent(Intent.ACTION_MAIN, null);
+                    intentFilter.addCategory(Intent.CATEGORY_LAUNCHER);
+                    List<ResolveInfo> appList = pm.queryIntentActivities(intentFilter, PackageManager.PERMISSION_GRANTED);
+                    Collections.sort(appList, new ResolveInfo.DisplayNameComparator(pm));
+                    List<CharSequence> entries = new ArrayList<CharSequence>();
+                    List<CharSequence> entryValues = new ArrayList<CharSequence>();
+                    for (ResolveInfo info : appList) {
+                        entryValues.add(info.activityInfo.packageName);
+                        entries.add(info.loadLabel(pm).toString());
+                    }
+                    notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
+                    notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+                }
+            };
+            new Thread(loadInstalledApps).start();
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
