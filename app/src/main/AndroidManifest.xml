@@ -57,8 +57,7 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".watchsets.WatchSetPreviewActivity"
-            android:screenOrientation="sensorPortrait">
+        <activity android:name=".watchsets.WatchSetPreviewActivity">
         </activity>
     </application>
 

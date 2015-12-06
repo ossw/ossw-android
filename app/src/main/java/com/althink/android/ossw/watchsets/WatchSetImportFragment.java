@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -85,7 +86,9 @@ public class WatchSetImportFragment extends Fragment {
 
                 WatchSetEmulatorModel model = emulator.parseWatchSet(watchSet);
                 emulator.showWatchSet(model);
-                ((TextView) getView().findViewById(R.id.watchset_name)).setText(watchSet.getName());
+
+                String watchsetName = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)? "": watchSet.getName();
+                ((TextView) getView().findViewById(R.id.watchset_name)).setText(watchsetName);
                 return true;
             } catch (KnownParseError e) {
                 Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
