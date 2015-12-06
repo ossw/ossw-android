@@ -160,6 +160,10 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_SHOW_SETTINGS = 0xE1;
     public static final int WATCHSET_FUNCTION_SHOW_STATUS = 0xE2;
     public static final int WATCHSET_FUNCTION_SHOW_NOTIFICATIONS = 0xE3;
+    public static final int WATCHSET_FUNCTION_SHOW_WATCH_FACES = 0xE4;
+    public static final int WATCHSET_FUNCTION_SHOW_APPLICATIONS = 0xE5;
+    public static final int WATCHSET_FUNCTION_SHOW_UTILS = 0xE6;
+    public static final int WATCHSET_FUNCTION_SHOW_NEXT_WATCH_FACE = 0xE7;
 
     public static final int WATCHSET_FUNCTION_CLOSE = 0xEE;
     public static final int WATCHSET_FUNCTION_EXTENSION = 0xEF;

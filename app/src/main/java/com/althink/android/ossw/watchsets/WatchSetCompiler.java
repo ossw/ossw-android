@@ -668,6 +668,18 @@ public class WatchSetCompiler {
             case "notifications":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_NOTIFICATIONS);
                 break;
+            case "watchfaces":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_WATCH_FACES);
+                break;
+            case "nextWatchface":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_NEXT_WATCH_FACE);
+                break;
+            case "applications":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_APPLICATIONS);
+                break;
+            case "utilities":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_UTILS);
+                break;
             case "restart":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_RESTART);
                 break;

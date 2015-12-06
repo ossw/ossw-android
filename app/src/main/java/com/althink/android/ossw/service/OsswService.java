@@ -933,7 +933,7 @@ public class OsswService extends Service {
                 path = "u/";
                 break;
         }
-        byte[] filePath = cutToBytes(path+fileName, 32);
+        byte[] filePath = cutToBytes(path+fileName, 31);
         int size = data.length;
         Log.i(TAG, "Init file upload: " + type + ", size: " + size);
         if (sendOsswCommand(concat(new byte[]{0x20, (byte)((size>>16)&0xFF), (byte)((size>>8)&0xFF), (byte)(size&0xFF)}, concat(filePath, new byte[]{0}))) != 0) {
