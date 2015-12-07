@@ -680,13 +680,25 @@ public class WatchSetCompiler {
             case "utilities":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_UTILS);
                 break;
+            case "application":{
+                DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
+                dsCtx.dataSourceType = DataSourceType.STRING;
+                writeSingleDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_APPLICATION, config.getJSONObject("file"), dsCtx);
+            }
+                break;
+            case "utility":{
+                DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
+                dsCtx.dataSourceType = DataSourceType.STRING;
+                writeSingleDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_UTILITY, config.getJSONObject("file"), dsCtx);
+            }
+                break;
             case "restart":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_RESTART);
                 break;
             case "setTime": {
                 DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
                 dsCtx.dataSourceType = DataSourceType.NUMBER;
-                writeMultiParamAction(os, WatchConstants.WATCHSET_FUNCTION_SET_TIME, config.getJSONObject("parameters"), dsCtx);
+                writeMultiDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SET_TIME, config.getJSONObject("parameters"), dsCtx);
             }    break;
             case "format":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_FORMAT_DATA);
@@ -731,7 +743,12 @@ public class WatchSetCompiler {
         return os.toByteArray();
     }
 
-    private void writeMultiParamAction(ByteArrayOutputStream os, int functionId, JSONObject parameters, DataSourceResolutionContext dsCtx) throws Exception {
+    private void writeSingleDataSourceAction(ByteArrayOutputStream os, int functionId, JSONObject dataSource, DataSourceResolutionContext dsCtx) throws Exception {
+        os.write(functionId);
+        os.write(compileSource(dataSource, dsCtx));
+    }
+
+    private void writeMultiDataSourceAction(ByteArrayOutputStream os, int functionId, JSONObject parameters, DataSourceResolutionContext dsCtx) throws Exception {
         os.write(functionId);
         os.write(parameters.length());
         for(Iterator<String> iterator = parameters.keys();iterator.hasNext();) {
