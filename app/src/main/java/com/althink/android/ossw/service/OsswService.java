@@ -708,6 +708,13 @@ public class OsswService extends Service {
                 }
                 break;
 
+            case WatchConstants.NOTIFICATIONS_FUNCTION_RESEND:
+                if (nl != null) {
+                    nl.resendNotifications();
+                }
+                break;
+
+
 
         }
     }

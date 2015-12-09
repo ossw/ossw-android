@@ -200,6 +200,7 @@ public class WatchConstants {
     public static final int FONT_OPTION_BIG = 0x11;
 
     public static final int NOTIFICATIONS_FUNCTION_DISMISS_ALL = 0x10;
+    public static final int NOTIFICATIONS_FUNCTION_RESEND = 0x11;
     public static final int NOTIFICATIONS_FUNCTION_ALERT_DISMISS = 0x20;
     public static final int NOTIFICATIONS_FUNCTION_ALERT_OPTION_1 = 0x21;
     public static final int NOTIFICATIONS_FUNCTION_ALERT_OPTION_2 = 0x22;
