@@ -146,28 +146,33 @@ public class NotificationListener extends NotificationListenerService {
                     if (isUpdate && !hasNewElements(notification, existingNotification)) {
                         updateNotificationList(false, 0, 0, false);
                     } else {
-                        boolean vibrate = sharedPref.getBoolean(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX, true);
-                        int vibrationPattern = 0;
-                        int vibrationLength = 0;
-                        if (vibrate) {
-                            Calendar c = Calendar.getInstance();
-                            int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
-                            String active = sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_time", "0:0-24:0");
-                            int dash = active.indexOf('-');
-                            int from_time = getMinutes(active.substring(0, dash));
-                            int till_time = getMinutes(active.substring(dash + 1));
-                            Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", "+till_time);
-                            if ((from_time <= minutes && minutes <= till_time) ||
-                                    (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
-                                vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
-                                vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(this);
-                            }
-                        }
-                        updateNotificationList(true, vibrationPattern, vibrationLength, false);
+                        sendNotifications();
                     }
             }
         }
         //printNotifications();
+    }
+
+    public void sendNotifications() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean vibrate = sharedPref.getBoolean(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX, true);
+        int vibrationPattern = 0;
+        int vibrationLength = 0;
+        if (vibrate) {
+            Calendar c = Calendar.getInstance();
+            int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
+            String active = sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_time", "0:0-24:0");
+            int dash = active.indexOf('-');
+            int from_time = getMinutes(active.substring(0, dash));
+            int till_time = getMinutes(active.substring(dash + 1));
+            Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", " + till_time);
+            if ((from_time <= minutes && minutes <= till_time) ||
+                    (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
+                vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
+                vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(this);
+            }
+        }
+        updateNotificationList(true, vibrationPattern, vibrationLength, false);
     }
 
     private boolean hasChanged(Notification notification, Notification existingNotification) {
@@ -485,7 +490,7 @@ public class NotificationListener extends NotificationListenerService {
         return 60 * Integer.parseInt(s.substring(0, colon)) + Integer.parseInt(s.substring(colon + 1));
     }
 
-    public void resendNotifications() {
+    public void openNotificationsScreen() {
         updateNotificationList(true, 0, 0, true);
     }
 }

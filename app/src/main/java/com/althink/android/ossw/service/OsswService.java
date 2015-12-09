@@ -119,6 +119,8 @@ public class OsswService extends Service {
 
     private AtomicInteger commandAck = new AtomicInteger();
 
+    private boolean dataSynced = true;
+
     private ConcurrentHashMap<Integer, Object> extParamsToSend = new ConcurrentHashMap<>();
     private Map<Integer, Object> sentExtParamsCache = new HashMap<>();
 
@@ -263,9 +265,7 @@ public class OsswService extends Service {
         @Override
         protected Void doInBackground(Object... params) {
 
-            if (!bleService.isConnected()) {
-
-                return null;
+            if (params[0] == NotificationOperation.UPLOAD) {
             }
 
             switch ((NotificationOperation) params[0]) {
@@ -298,6 +298,15 @@ public class OsswService extends Service {
     }
 
     private void internalUploadNotification(int notificationId, NotificationType type, byte[] data, int vibrationPattern, int timeout, NotificationHandler handler) {
+
+        if (type == NotificationType.UPDATE || type == NotificationType.INFO) {
+            dataSynced = false;
+        }
+
+        if (!bleService.isConnected()) {
+            return;
+        }
+
         switch (type) {
             case ALERT:
                 data = arrayConcatenate(new byte[]{
@@ -357,15 +366,21 @@ public class OsswService extends Service {
                 dataCommand[i + 1] = data[dataPtr++];
             }
 
-            sendOsswCommand(dataCommand, dataInPacket + 1);
+            if (sendOsswCommand(dataCommand, dataInPacket + 1) < 0) {
+                return;
+            }
 
             sizeLeft -= (MAX_COMMAND_SIZE - 1);
         }
-        sendOsswCommand(new byte[]{0x42});
+        if (sendOsswCommand(new byte[]{0x42}) < 0 ){
+            return;
+        }
         //Log.i(TAG, "Commit notification");
 
         if (NotificationType.ALERT == type) {
             lastNotificationHandler = handler;
+        } else {
+            dataSynced = true;
         }
     }
 
@@ -546,6 +561,10 @@ public class OsswService extends Service {
                                 if (syncTime) {
                                     sendCurrentTime();
                                 }
+
+                                if (!dataSynced) {
+                                    NotificationListener.getInstance().sendNotifications();
+                                }
                                 break;
                             case AUTO_RECONNECT:
                                 broadcastUpdate(ACTION_WATCH_AUTO_RECONNECT);
@@ -710,7 +729,7 @@ public class OsswService extends Service {
 
             case WatchConstants.NOTIFICATIONS_FUNCTION_RESEND:
                 if (nl != null) {
-                    nl.resendNotifications();
+                    nl.openNotificationsScreen();
                 }
                 break;
 
@@ -1003,6 +1022,10 @@ public class OsswService extends Service {
 
     public int sendOsswCommand(byte[] commandData, int length) {
         //Log.i(TAG, "Send command: " + bytesToHex(commandData));
+
+        if (!bleService.isConnected()) {
+            return -1;
+        }
 
         int dataPtr = 0;
         int sizeLeft = length;
