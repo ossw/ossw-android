@@ -847,6 +847,8 @@ public class WatchSetCompiler {
             case "button_back_long":
             case "buttons.back.long":
                 return WatchConstants.EVENT_BUTTON_BACK_LONG;
+            case "wrist.shake":
+                return WatchConstants.EVENT_WRIST_SHAKE;
         }
         throw new KnownParseError("Unknown event key: " + eventKey);
     }
