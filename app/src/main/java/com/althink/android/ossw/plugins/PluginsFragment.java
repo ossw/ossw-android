@@ -1,6 +1,11 @@
 package com.althink.android.ossw.plugins;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -10,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,12 +47,26 @@ public class PluginsFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Log.i(TAG, "On create");
-        PluginManager scanner = new PluginManager(getActivity());
         listAdaptor = new PluginListAdapter();
+        refreshPluginList();
+        //Log.i(TAG, "On create");
+    }
+
+    private void refreshPluginList() {
+        PluginManager scanner = new PluginManager(getActivity());
+        listAdaptor.clear();
+        listAdaptor.notifyDataSetChanged();
         for (PluginDefinition plugin : scanner.findPlugins()) {
             listAdaptor.addPlugin(plugin);
         }
+        String[] labels = getResources().getStringArray(R.array.plugin_title);
+        String[] packageNames = getResources().getStringArray(R.array.plugin_package);
+        for (int i = 0; i < packageNames.length; i++) {
+            String packageName = packageNames[i];
+            if (!listAdaptor.contains(packageName))
+                listAdaptor.addPlugin(new PluginDefinition(labels[i], packageName));
+        }
+        listAdaptor.notifyDataSetChanged();
     }
 
     @Override
@@ -58,9 +78,8 @@ public class PluginsFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
-
-//        Toolbar bottomToolbar = ((MainActivity) getActivity()).getToolbar();
-//        bottomToolbar.setVisibility(View.GONE);
+        Log.i(TAG, "OnResume");
+        refreshPluginList();
     }
 
     @Override
@@ -68,22 +87,30 @@ public class PluginsFragment extends ListFragment {
         super.onListItemClick(l, v, position, id);
         //Log.i(TAG, "Click: " + position);
         PluginDefinition plugin = (PluginDefinition) getListAdapter().getItem(position);
-        Intent configIntent = new Intent();
-        configIntent.setAction(plugin.getPluginId() + ".config");
+        if (plugin.getPluginId() != null) {
+            Intent configIntent = new Intent(plugin.getPluginId() + ".config");
 
-        Log.i(TAG, configIntent.getAction());
-        try {
-            startActivity(configIntent);
-        } catch (Exception e) {
-            Toast.makeText(getActivity(), getString(R.string.toast_nothing_to_configure), Toast.LENGTH_SHORT).show();
+            Log.i(TAG, configIntent.getAction());
+            try {
+                startActivity(configIntent);
+            } catch (Exception e) {
+                Toast.makeText(getActivity(), getString(R.string.toast_nothing_to_configure), Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            openPlayStore(plugin.getPackageName());
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         //Log.i(TAG, "On destroy");
+    }
+
+    private void openPlayStore(String packageName) {
+        Intent install = new Intent(Intent.ACTION_VIEW);
+        install.setData(Uri.parse("market://details?id=" + packageName));
+        startActivity(install);
     }
 
     private class PluginListAdapter extends BaseAdapter {
@@ -129,6 +156,31 @@ public class PluginsFragment extends ListFragment {
                 view = mInflator.inflate(R.layout.listitem_plugin, null);
                 viewHolder = new ViewHolder();
                 viewHolder.pluginName = (TextView) view.findViewById(R.id.plugin_name);
+                final String packageName = mPlugins.get(i).getPackageName();
+                if (mPlugins.get(i).getPluginId() != null) {
+                    Drawable icon = null;
+                    try {
+                        icon = getContext().getPackageManager().getApplicationIcon(mPlugins.get(i).getPackageName());
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    ImageView image = (ImageView) view.findViewById(R.id.imageView);
+                    image.setImageDrawable(icon);
+                    image.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openPlayStore(packageName);
+                        }
+                    });
+
+                    ImageView imageAction = (ImageView) view.findViewById(R.id.imageAction);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        icon = getResources().getDrawable(R.drawable.ic_settings, getContext().getTheme());
+                    } else {
+                        icon = getResources().getDrawable(R.drawable.ic_settings);
+                    }
+                    imageAction.setImageDrawable(icon);
+                }
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
@@ -138,6 +190,14 @@ public class PluginsFragment extends ListFragment {
             final String pluginName = plugin.getLabel();
             viewHolder.pluginName.setText(pluginName);
             return view;
+        }
+
+        public boolean contains(String packageName) {
+            for (PluginDefinition p : mPlugins) {
+                if (p.getPackageName().equals(packageName))
+                    return true;
+            }
+            return false;
         }
     }
 

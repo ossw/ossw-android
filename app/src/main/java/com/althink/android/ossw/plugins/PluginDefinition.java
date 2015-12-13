@@ -24,6 +24,11 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
         this.properties = properties;
     }
 
+    public PluginDefinition(String label, String packageName) {
+        this.label = label;
+        this.packageName = packageName;
+    }
+
     public String getPluginId() {
         return pluginId;
     }
