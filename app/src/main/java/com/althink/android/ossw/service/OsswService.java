@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -26,6 +27,7 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.telecom.Call;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -586,6 +588,8 @@ public class OsswService extends Service {
                 filter.addDataScheme("package");
                 registerReceiver(packageChangeReceiver, filter);
                 registerReceiver(fakeAlertReceiver, new IntentFilter(CLOSE_FAKE_ALARM_INTENT_ACTION));
+                registerReceiver(declineCallReceiver, new IntentFilter(CallReceiver.DECLINE_CALL_INTENT_ACTION));
+                registerReceiver(muteCallReceiver, new IntentFilter(CallReceiver.MUTE_CALL_INTENT_ACTION));
 
                 started = true;
                 INSTANCE = this;
@@ -603,6 +607,23 @@ public class OsswService extends Service {
 
         return super.onStartCommand(intent, flags, startId);
     }
+
+    private final BroadcastReceiver declineCallReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            CallReceiver.declineCall();
+        }
+    };
+
+    private final BroadcastReceiver muteCallReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            AudioManager am = (AudioManager)getBaseContext().getSystemService(Context.AUDIO_SERVICE);
+            PhoneCallReceiver.ringerMode = am.getRingerMode();
+            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            PhoneCallReceiver.muted = true;
+        }
+    };
 
     private void sendConnectionConfirmation() {
             if (!bleService.isConnected()) {
@@ -807,6 +828,8 @@ public class OsswService extends Service {
         contentObservers.clear();
         unregisterReceiver(packageChangeReceiver);
         unregisterReceiver(fakeAlertReceiver);
+        unregisterReceiver(declineCallReceiver);
+        unregisterReceiver(muteCallReceiver);
         close();
         started = false;
         INSTANCE = null;
