@@ -25,10 +25,10 @@
         <item>Tasker</item>
         <item>Weather</item>
     </string-array>
-    <string-array name="plugin_package">
-        <item>com.althink.android.ossw.plugins.ipsensorman</item>
-        <item>com.althink.android.ossw.plugins.musicplayer</item>
-        <item>com.althink.android.ossw.plugins.tasker</item>
-        <item>com.klapaucius.ossw.weather</item>
+    <string-array name="plugin_url">
+        <item>https://play.google.com/apps/testing/com.althink.android.ossw.plugins.ipsensorman</item>
+        <item>https://play.google.com/apps/testing/com.althink.android.ossw.plugins.musicplayer</item>
+        <item>https://play.google.com/apps/testing/com.althink.android.ossw.plugins.tasker</item>
+        <item>https://play.google.com/apps/testing/com.klapaucius.ossw.weather</item>
     </string-array>
 </resources>

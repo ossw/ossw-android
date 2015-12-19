@@ -12,6 +12,7 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
     private String pluginId;
     private String label;
     private String packageName;
+    private String url;
 
     private List<PluginFunctionDefinition> functions;
     private List<PluginPropertyDefinition> properties;
@@ -24,9 +25,10 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
         this.properties = properties;
     }
 
-    public PluginDefinition(String label, String packageName) {
+    public PluginDefinition(String label, String url) {
         this.label = label;
-        this.packageName = packageName;
+        this.url = url;
+        this.packageName = url.substring(url.lastIndexOf('/') + 1);
     }
 
     public String getPluginId() {
@@ -39,6 +41,14 @@ public class PluginDefinition implements Comparable<PluginDefinition> {
 
     public String getPackageName() {
         return packageName;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public List<PluginFunctionDefinition> getFunctions() {

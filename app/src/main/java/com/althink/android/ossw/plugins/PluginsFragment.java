@@ -24,6 +24,7 @@ import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by krzysiek on 13/06/15.
@@ -60,12 +61,24 @@ public class PluginsFragment extends ListFragment {
             listAdaptor.addPlugin(plugin);
         }
         String[] labels = getResources().getStringArray(R.array.plugin_title);
-        String[] packageNames = getResources().getStringArray(R.array.plugin_package);
-        for (int i = 0; i < packageNames.length; i++) {
-            String packageName = packageNames[i];
-            if (!listAdaptor.contains(packageName))
-                listAdaptor.addPlugin(new PluginDefinition(labels[i], packageName));
+        String[] urls = getResources().getStringArray(R.array.plugin_url);
+        List<PluginDefinition> newPlugins = new ArrayList<>();
+        for (int i = 0; i < urls.length; i++) {
+            String url = urls[i];
+            String packageName = url.substring(url.lastIndexOf('/') + 1);
+            boolean found = false;
+            for (PluginDefinition p : listAdaptor.mPlugins) {
+                if (p.getPackageName().equals(packageName)) {
+                    found = true;
+                    p.setUrl(url);
+                    break;
+                }
+            }
+            if (!found)
+                newPlugins.add(new PluginDefinition(labels[i], url));
         }
+        for (PluginDefinition p : newPlugins)
+            listAdaptor.addPlugin(p);
         listAdaptor.notifyDataSetChanged();
     }
 
@@ -97,7 +110,7 @@ public class PluginsFragment extends ListFragment {
                 Toast.makeText(getActivity(), getString(R.string.toast_nothing_to_configure), Toast.LENGTH_SHORT).show();
             }
         } else {
-            openPlayStore(plugin.getPackageName());
+            openPlayStore(plugin.getUrl());
         }
     }
 
@@ -107,9 +120,9 @@ public class PluginsFragment extends ListFragment {
         //Log.i(TAG, "On destroy");
     }
 
-    private void openPlayStore(String packageName) {
+    private void openPlayStore(String url) {
         Intent install = new Intent(Intent.ACTION_VIEW);
-        install.setData(Uri.parse("market://details?id=" + packageName));
+        install.setData(Uri.parse(url));
         startActivity(install);
     }
 
@@ -156,7 +169,7 @@ public class PluginsFragment extends ListFragment {
                 view = mInflator.inflate(R.layout.listitem_plugin, null);
                 viewHolder = new ViewHolder();
                 viewHolder.pluginName = (TextView) view.findViewById(R.id.plugin_name);
-                final String packageName = mPlugins.get(i).getPackageName();
+                final String url = mPlugins.get(i).getUrl();
                 if (mPlugins.get(i).getPluginId() != null) {
                     Drawable icon = null;
                     try {
@@ -169,7 +182,7 @@ public class PluginsFragment extends ListFragment {
                     image.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openPlayStore(packageName);
+                            openPlayStore(url);
                         }
                     });
 
@@ -190,14 +203,6 @@ public class PluginsFragment extends ListFragment {
             final String pluginName = plugin.getLabel();
             viewHolder.pluginName.setText(pluginName);
             return view;
-        }
-
-        public boolean contains(String packageName) {
-            for (PluginDefinition p : mPlugins) {
-                if (p.getPackageName().equals(packageName))
-                    return true;
-            }
-            return false;
         }
     }
 
