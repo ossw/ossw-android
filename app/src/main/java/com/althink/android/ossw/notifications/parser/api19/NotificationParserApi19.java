@@ -41,10 +41,6 @@ public class NotificationParserApi19 extends BaseNotificationParser {
 
     public Notification parse(String notificationId, StatusBarNotification sbn, Notification existingNotification) {
 
-        if (isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT) &&
-                ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())
-                        || "com.android.incallui".equals(sbn.getPackageName())))
-            return null;
         Bundle extras = sbn.getNotification().extras;
         if (extras == null) {
             return null;

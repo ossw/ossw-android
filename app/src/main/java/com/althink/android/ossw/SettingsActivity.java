@@ -161,8 +161,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     List<CharSequence> entries = new ArrayList<CharSequence>();
                     List<CharSequence> entryValues = new ArrayList<CharSequence>();
                     for (ResolveInfo info : appList) {
-                        entryValues.add(info.activityInfo.packageName);
-                        entries.add(info.loadLabel(pm).toString());
+                        if (!getActivity().getPackageName().equals(info.activityInfo.packageName)) {
+                            entryValues.add(info.activityInfo.packageName);
+                            entries.add(info.loadLabel(pm).toString());
+                        }
                     }
                     notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
                     notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
