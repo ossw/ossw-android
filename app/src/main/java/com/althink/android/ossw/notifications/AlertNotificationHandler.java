@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.althink.android.ossw.SettingsActivity;
+import com.althink.android.ossw.settings.SettingsActivity;
 import com.althink.android.ossw.notifications.message.AlertNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.Notification;

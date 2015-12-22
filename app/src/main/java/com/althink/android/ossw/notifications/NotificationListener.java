@@ -2,9 +2,7 @@ package com.althink.android.ossw.notifications;
 
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,7 +15,7 @@ import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.althink.android.ossw.SettingsActivity;
+import com.althink.android.ossw.settings.SettingsActivity;
 import com.althink.android.ossw.notifications.message.ListNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationSummaryMessageBuilder;
@@ -35,7 +33,6 @@ import com.althink.android.ossw.service.OsswService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
