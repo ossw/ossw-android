@@ -5,6 +5,7 @@ package com.althink.android.ossw.settings;
  */
 
 import android.annotation.TargetApi;
+import android.app.DialogFragment;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -23,11 +24,12 @@ import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceScreen;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.utils.TimeIntervalPreference;
+import com.althink.android.ossw.utils.TimeIntervalPreferenceFragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -167,4 +169,24 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             return true;
         }
     };
+
+    @Override
+    public void onDisplayPreferenceDialog(Preference preference)
+    {
+        DialogFragment dialogFragment = null;
+        if (preference instanceof TimeIntervalPreference)
+        {
+            dialogFragment = TimeIntervalPreferenceFragment.newInstance(preference.getKey());
+        }
+
+        if (dialogFragment != null)
+        {
+            dialogFragment.setTargetFragment(this, 0);
+            dialogFragment.show(this.getFragmentManager(), "android.support.v7.preference.PreferenceFragment.DIALOG");
+        }
+        else
+        {
+            super.onDisplayPreferenceDialog(preference);
+        }
+    }
 }

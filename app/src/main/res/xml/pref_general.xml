@@ -43,12 +43,10 @@
             android:title="Vibration"
             android:switchTextOff="@string/off"
             android:switchTextOn="@string/on"/>
-        <EditTextPreference
+        <com.althink.android.ossw.utils.TimeIntervalPreference
             android:key="notif_vibrate_time"
-            android:title="Active time interval"
-            android:inputType="phone"
-            android:digits="0123456789-:"
-            android:defaultValue="8:00-23:00"/>
+            android:title="Vibration active time"
+            android:defaultValue="0:00-23:59"/>
         <EditTextPreference
             android:key="notif_vibrate_repeat"
             android:title="Vibration repeat number"
@@ -95,12 +93,10 @@
                 android:title="Vibration"
                 android:switchTextOff="@string/off"
                 android:switchTextOn="@string/on"/>
-            <EditTextPreference
+            <com.althink.android.ossw.utils.TimeIntervalPreference
                 android:key="alert_notif_vibrate_time"
-                android:title="Active time interval"
-                android:inputType="phone"
-                android:digits="0123456789-:"
-                android:defaultValue="8:00-23:00"/>
+                android:title="Vibration active time"
+                android:defaultValue="0:0-23:59"/>
             <EditTextPreference
                 android:key="alert_notif_vibrate_duration"
                 android:title="Duration in milliseconds"
