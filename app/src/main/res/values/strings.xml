@@ -8,7 +8,7 @@
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
     <string name="auto_reconnect">Trying to reconnect</string>
-    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported</string>
 
     <string name="unknown_device">Unknown device</string>
     <string name="unknown_characteristic">Unknown characteristic</string>
@@ -58,6 +58,8 @@
 
     <string name="pref_title">Settings</string>
     <string name="select_font">Select font</string>
+    <string name="pref_notification_category">Watch notifications</string>
+    <string name="pref_phone_notification_category">Phone notifications</string>
     <string name="pref_notifications_title">Text notification</string>
     <string name="pref_notifications_desc">SMS, e-mail, missed call</string>
     <string name="pref_alert_notifications_title">Alert notification</string>
@@ -74,12 +76,17 @@
     <string name="toast_file_upload_failed">Data upload failed</string>
     <string name="action_disconnect">Disconnect</string>
 
-    <string name="default_notification_vibration_pattern">110010</string>
-    <string name="default_notification_vibration_duration">500</string>
-    <string name="default_notification_vibration_repeat_no">2</string>
-    <string name="default_alert_vibration_pattern">1010000000</string>
-    <string name="default_alert_vibration_duration">1000</string>
+    <string name="vibration_category">Vibration</string>
+    <string name="vibration_active_time">Vibration active time</string>
+    <string name="vibration_repeat">Repeat vibration</string>
+    <string name="vibration_duration">Duration in milliseconds</string>
+    <string name="vibration_pattern">Vibration pattern</string>
+    <string name="test_notification">Test notification</string>
     <string name="pref_notification_filter">Applications providing notifications</string>
+
+    <string name="pref_phone_discovery_title">Phone discovery</string>
+    <string name="pref_phone_discovery_audio_title">Audio track</string>
+
     <string name="off">Off</string>
     <string name="on">On</string>
     <string name="incall_title">Incoming call</string>

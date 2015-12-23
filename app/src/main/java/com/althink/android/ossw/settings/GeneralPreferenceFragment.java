@@ -5,12 +5,14 @@ package com.althink.android.ossw.settings;
  */
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -25,6 +27,7 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceScreen;
 import android.view.View;
+import android.widget.ListView;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
@@ -42,6 +45,7 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class GeneralPreferenceFragment extends PreferenceFragment {
     public static final String FRAGMENT_TAG = "GeneralPreferenceFragment";
+    public static final int SELECT_AUDIO_TRACK = 1;
 
     @Override
     public void onCreatePreferences(Bundle bundle, String rootKey) {
@@ -123,6 +127,31 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                 }
             });
         }
+
+        if ("preference_screen".equals(getPreferenceScreen().getKey())) {
+            Preference pref = findPreference("phone_discovery_audio");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(i, SELECT_AUDIO_TRACK);
+                    return true;
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SELECT_AUDIO_TRACK:
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    Uri audioUri = data.getData();
+                    Preference pref = findPreference("phone_discovery_audio");
+                    pref.setSummary(audioUri.toString());
+                }
+        }
     }
 
     static void visitPreferenceObject(Preference p) {
@@ -171,21 +200,16 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
     };
 
     @Override
-    public void onDisplayPreferenceDialog(Preference preference)
-    {
+    public void onDisplayPreferenceDialog(Preference preference) {
         DialogFragment dialogFragment = null;
-        if (preference instanceof TimeIntervalPreference)
-        {
+        if (preference instanceof TimeIntervalPreference) {
             dialogFragment = TimeIntervalPreferenceFragment.newInstance(preference.getKey());
         }
 
-        if (dialogFragment != null)
-        {
+        if (dialogFragment != null) {
             dialogFragment.setTargetFragment(this, 0);
             dialogFragment.show(this.getFragmentManager(), "android.support.v7.preference.PreferenceFragment.DIALOG");
-        }
-        else
-        {
+        } else {
             super.onDisplayPreferenceDialog(preference);
         }
     }

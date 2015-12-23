@@ -1,128 +1,149 @@
-<PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="preference_screen"
     android:title="@string/pref_title">
 
     <SwitchPreference
         android:defaultValue="true"
         android:key="synchronize_time"
-        android:title="@string/pref_synchronize_time_title"
         android:switchTextOff="@string/off"
-        android:switchTextOn="@string/on"/>
+        android:switchTextOn="@string/on"
+        android:title="@string/pref_synchronize_time_title" />
 
-    <PreferenceCategory android:title="Notifications">
-
-    <PreferenceScreen
-        android:key="notification_screen"
-        android:title="@string/pref_notifications_title"
-        android:summary="@string/pref_notifications_desc">
-        <SwitchPreference
-            android:key="notifications"
-            android:defaultValue="true"
-            android:title="@string/pref_notifications_title"
-            android:switchTextOff="@string/off"
-            android:switchTextOn="@string/on"/>
-        <MultiSelectListPreference
-            android:key="notification_applications"
-            android:title="@string/pref_notification_filter"
-            android:dialogTitle="@string/pref_notification_filter"
-            android:entries="@array/empty_array"
-            android:entryValues="@array/empty_array"
-            android:defaultValue="@array/empty_array"/>
-        <ListPreference
-            android:defaultValue="normalBold"
-            android:dialogTitle="@string/select_font"
-            android:entries="@array/notifications_font_keys"
-            android:entryValues="@array/notification_font_values"
-            android:key="notifications_font"
-            android:title="@string/pref_notifications_font"/>
-        <PreferenceCategory android:title="Vibration">
-        <SwitchPreference
-            android:key="notif_vibrate"
-            android:defaultValue="true"
-            android:title="Vibration"
-            android:switchTextOff="@string/off"
-            android:switchTextOn="@string/on"/>
-        <com.althink.android.ossw.utils.TimeIntervalPreference
-            android:key="notif_vibrate_time"
-            android:title="Vibration active time"
-            android:defaultValue="0:00-23:59"/>
-        <EditTextPreference
-            android:key="notif_vibrate_repeat"
-            android:title="Vibration repeat number"
-            android:inputType="numberDecimal"
-            android:defaultValue="@string/default_notification_vibration_repeat_no"/>
-        <EditTextPreference
-            android:key="notif_vibrate_duration"
-            android:title="Duration in milliseconds"
-            android:inputType="numberDecimal"
-            android:defaultValue="@string/default_notification_vibration_duration"/>
-        <EditTextPreference
-            android:key="notif_vibrate_pattern"
-            android:title="Vibration pattern"
-            android:defaultValue="@string/default_notification_vibration_pattern"
-            android:inputType="phone"
-            android:digits="01"
-            android:maxLength="16"/>
-        <Preference android:title="Test notifications"
-            android:key="button_test_notif_vibration"/>
-        </PreferenceCategory>
-    </PreferenceScreen>
-
-    <PreferenceScreen
-        android:key="alert_screen"
-        android:title="@string/pref_alert_notifications_title"
-        android:summary="@string/pref_alert_notifications_desc">
-        <SwitchPreference
-            android:key="alert_notifications"
-            android:defaultValue="true"
-            android:title="@string/pref_alert_notifications_title"
-            android:switchTextOff="@string/off"
-            android:switchTextOn="@string/on"/>
-        <ListPreference
-            android:defaultValue="optionNormal"
-            android:dialogTitle="@string/select_font"
-            android:entries="@array/notifications_font_keys"
-            android:entryValues="@array/notification_font_values"
-            android:key="alert_notifications_font"
-            android:title="@string/pref_alert_notification_font"/>
-        <PreferenceCategory android:title="Vibration">
+    <PreferenceCategory android:title="@string/pref_notification_category">
+        <PreferenceScreen
+            android:key="notification_screen"
+            android:summary="@string/pref_notifications_desc"
+            android:title="@string/pref_notifications_title">
             <SwitchPreference
-                android:key="alert_notif_vibrate"
                 android:defaultValue="true"
-                android:title="Vibration"
+                android:key="notifications"
                 android:switchTextOff="@string/off"
-                android:switchTextOn="@string/on"/>
-            <com.althink.android.ossw.utils.TimeIntervalPreference
-                android:key="alert_notif_vibrate_time"
-                android:title="Vibration active time"
-                android:defaultValue="0:0-23:59"/>
-            <EditTextPreference
-                android:key="alert_notif_vibrate_duration"
-                android:title="Duration in milliseconds"
-                android:inputType="numberDecimal"
-                android:defaultValue="@string/default_alert_vibration_duration"/>
-            <EditTextPreference
-                android:key="alert_notif_vibrate_pattern"
-                android:title="Vibration pattern"
-                android:defaultValue="@string/default_alert_vibration_pattern"
-                android:inputType="phone"
-                android:digits="01"
-                android:maxLength="16"/>
-            <Preference android:title="Test alert notifications"
-                android:key="button_test_alert_vibration"/>
-        </PreferenceCategory>
-    </PreferenceScreen>
-    <SwitchPreference
-        android:key="disconnect_alert"
-        android:defaultValue="true"
-        android:title="@string/pref_disconnect_notif_title"
-        android:switchTextOff="@string/off"
-        android:switchTextOn="@string/on"/>
-    <PreferenceScreen
-        android:title="@string/pref_notifications_access_title">
-        <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
-    </PreferenceScreen>
+                android:switchTextOn="@string/on"
+                android:title="@string/pref_notifications_title" />
+            <MultiSelectListPreference
+                android:defaultValue="@array/empty_array"
+                android:dialogTitle="@string/pref_notification_filter"
+                android:entries="@array/empty_array"
+                android:entryValues="@array/empty_array"
+                android:key="notification_applications"
+                android:title="@string/pref_notification_filter" />
+            <ListPreference
+                android:defaultValue="normalBold"
+                android:dialogTitle="@string/select_font"
+                android:entries="@array/notifications_font_keys"
+                android:entryValues="@array/notification_font_values"
+                android:key="notifications_font"
+                android:title="@string/pref_notifications_font" />
+
+            <PreferenceCategory android:title="@string/vibration_category">
+                <SwitchPreference
+                    android:defaultValue="true"
+                    android:key="notif_vibrate"
+                    android:switchTextOff="@string/off"
+                    android:switchTextOn="@string/on"
+                    android:title="@string/vibration_category" />
+                <com.althink.android.ossw.utils.TimeIntervalPreference
+                    android:defaultValue="0:00-23:59"
+                    android:key="notif_vibrate_time"
+                    android:title="@string/vibration_active_time" />
+                <EditTextPreference
+                    android:defaultValue="@string/default_notification_vibration_repeat_no"
+                    android:inputType="numberDecimal"
+                    android:key="notif_vibrate_repeat"
+                    android:title="@string/vibration_repeat" />
+                <EditTextPreference
+                    android:defaultValue="@string/default_notification_vibration_duration"
+                    android:inputType="numberDecimal"
+                    android:key="notif_vibrate_duration"
+                    android:title="@string/vibration_duration" />
+                <EditTextPreference
+                    android:defaultValue="@string/default_notification_vibration_pattern"
+                    android:digits="01"
+                    android:inputType="phone"
+                    android:key="notif_vibrate_pattern"
+                    android:maxLength="16"
+                    android:title="@string/vibration_pattern" />
+                <Preference
+                    android:key="button_test_notif_vibration"
+                    android:title="@string/test_notification" />
+            </PreferenceCategory>
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:key="alert_screen"
+            android:summary="@string/pref_alert_notifications_desc"
+            android:title="@string/pref_alert_notifications_title">
+            <SwitchPreference
+                android:defaultValue="true"
+                android:key="alert_notifications"
+                android:switchTextOff="@string/off"
+                android:switchTextOn="@string/on"
+                android:title="@string/pref_alert_notifications_title" />
+            <ListPreference
+                android:defaultValue="optionNormal"
+                android:dialogTitle="@string/select_font"
+                android:entries="@array/notifications_font_keys"
+                android:entryValues="@array/notification_font_values"
+                android:key="alert_notifications_font"
+                android:title="@string/pref_alert_notification_font" />
+            <PreferenceCategory android:title="@string/vibration_category">
+                <SwitchPreference
+                    android:defaultValue="true"
+                    android:key="alert_notif_vibrate"
+                    android:switchTextOff="@string/off"
+                    android:switchTextOn="@string/on"
+                    android:title="@string/vibration_category" />
+                <com.althink.android.ossw.utils.TimeIntervalPreference
+                    android:defaultValue="0:0-23:59"
+                    android:key="alert_notif_vibrate_time"
+                    android:title="@string/vibration_active_time" />
+                <EditTextPreference
+                    android:defaultValue="@string/default_alert_vibration_duration"
+                    android:inputType="numberDecimal"
+                    android:key="alert_notif_vibrate_duration"
+                    android:title="@string/vibration_duration" />
+                <EditTextPreference
+                    android:defaultValue="@string/default_alert_vibration_pattern"
+                    android:digits="01"
+                    android:inputType="phone"
+                    android:key="alert_notif_vibrate_pattern"
+                    android:maxLength="16"
+                    android:title="@string/vibration_pattern" />
+                <Preference
+                    android:key="button_test_alert_vibration"
+                    android:title="@string/test_notification" />
+            </PreferenceCategory>
+        </PreferenceScreen>
+
+        <PreferenceScreen android:title="@string/pref_notifications_access_title">
+            <intent android:action="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" />
+        </PreferenceScreen>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_phone_notification_category">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="disconnect_alert"
+            android:switchTextOff="@string/off"
+            android:switchTextOn="@string/on"
+            android:title="@string/pref_disconnect_notif_title" />
+
+        <PreferenceScreen android:key="phone_discovery"
+            android:title="@string/pref_phone_discovery_title">
+            <SwitchPreference
+                android:defaultValue="true"
+                android:key="phone_discovery_vibrate"
+                android:switchTextOff="@string/off"
+                android:switchTextOn="@string/on"
+                android:title="@string/vibration_category" />
+            <Preference
+                android:key="phone_discovery_audio"
+                android:title="@string/pref_phone_discovery_audio_title"
+                android:summary="nothing selected"/>
+
+        </PreferenceScreen>
 
     </PreferenceCategory>
+
 </PreferenceScreen>
