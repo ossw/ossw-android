@@ -548,7 +548,7 @@ public class OsswService extends Service {
                                             }
                                         }
                                     });
-//                            //Log.i(TAG, "FW version: "+new String(fwVerChar.getValue()));
+//                            //Log.i(TAG, "FW version: "+new String(fwVerChar.getUriValue()));
                                 } else {
                                     Log.i(TAG, "Firmware version check not possible, too old firmware");
                                     handleTooOldFirmware();

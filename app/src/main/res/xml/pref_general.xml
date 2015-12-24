@@ -7,20 +7,21 @@
         android:key="synchronize_time"
         android:switchTextOff="@string/off"
         android:switchTextOn="@string/on"
-        android:title="@string/pref_synchronize_time_title" />
+        android:title="@string/pref_synchronize_time_title"
+        android:widgetLayout="@layout/preference_widget_switch_compat" />
 
     <PreferenceCategory android:title="@string/pref_notification_category">
         <PreferenceScreen
             android:key="notification_screen"
             android:summary="@string/pref_notifications_desc"
-            android:title="@string/pref_notifications_title"
-            android:widgetLayout="@layout/preference_widget_switch">
+            android:title="@string/pref_notifications_title">
             <SwitchPreference
                 android:defaultValue="true"
                 android:key="notifications"
                 android:switchTextOff="@string/off"
                 android:switchTextOn="@string/on"
-                android:title="@string/pref_notifications_title" />
+                android:title="@string/pref_notifications_title"
+                android:widgetLayout="@layout/preference_widget_switch_compat" />
             <MultiSelectListPreference
                 android:defaultValue="@array/empty_array"
                 android:dialogTitle="@string/pref_notification_filter"
@@ -42,7 +43,8 @@
                     android:key="notif_vibrate"
                     android:switchTextOff="@string/off"
                     android:switchTextOn="@string/on"
-                    android:title="@string/vibration_category" />
+                    android:title="@string/vibration_category"
+                    android:widgetLayout="@layout/preference_widget_switch_compat" />
                 <com.althink.android.ossw.utils.TimeIntervalPreference
                     android:defaultValue="0:00-23:59"
                     android:key="notif_vibrate_time"
@@ -73,14 +75,14 @@
         <PreferenceScreen
             android:key="alert_screen"
             android:summary="@string/pref_alert_notifications_desc"
-            android:title="@string/pref_alert_notifications_title"
-            android:widgetLayout="@layout/preference_widget_switch">
+            android:title="@string/pref_alert_notifications_title">
             <SwitchPreference
                 android:defaultValue="true"
                 android:key="alert_notifications"
                 android:switchTextOff="@string/off"
                 android:switchTextOn="@string/on"
-                android:title="@string/pref_alert_notifications_title" />
+                android:title="@string/pref_alert_notifications_title"
+                android:widgetLayout="@layout/preference_widget_switch_compat" />
             <ListPreference
                 android:defaultValue="optionNormal"
                 android:dialogTitle="@string/select_font"
@@ -94,7 +96,8 @@
                     android:key="alert_notif_vibrate"
                     android:switchTextOff="@string/off"
                     android:switchTextOn="@string/on"
-                    android:title="@string/vibration_category" />
+                    android:title="@string/vibration_category"
+                    android:widgetLayout="@layout/preference_widget_switch_compat" />
                 <com.althink.android.ossw.utils.TimeIntervalPreference
                     android:defaultValue="0:0-23:59"
                     android:key="alert_notif_vibrate_time"
@@ -129,7 +132,8 @@
             android:key="disconnect_alert"
             android:switchTextOff="@string/off"
             android:switchTextOn="@string/on"
-            android:title="@string/pref_disconnect_notif_title" />
+            android:title="@string/pref_disconnect_notif_title"
+            android:widgetLayout="@layout/preference_widget_switch_compat" />
 
         <PreferenceScreen android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
@@ -138,11 +142,12 @@
                 android:key="phone_discovery_vibrate"
                 android:switchTextOff="@string/off"
                 android:switchTextOn="@string/on"
-                android:title="@string/vibration_category" />
-            <Preference
+                android:title="@string/vibration_category"
+                android:widgetLayout="@layout/preference_widget_switch_compat"/>
+            <com.althink.android.ossw.settings.AudioPickerPreference
                 android:key="phone_discovery_audio"
                 android:title="@string/pref_phone_discovery_audio_title"
-                android:summary="nothing selected"
+                android:summary="@string/pref_phone_discovery_file_uri"
                 android:widgetLayout="@layout/pref_image_play"/>
 
         </PreferenceScreen>

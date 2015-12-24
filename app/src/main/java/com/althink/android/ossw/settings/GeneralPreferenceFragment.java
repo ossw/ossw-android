@@ -27,10 +27,6 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceScreen;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
@@ -151,8 +147,10 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             case SELECT_AUDIO_TRACK:
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     Uri audioUri = data.getData();
-                    Preference pref = findPreference("phone_discovery_audio");
-                    pref.setSummary(audioUri.toString());
+                    AudioPickerPreference pref = (AudioPickerPreference) findPreference("phone_discovery_audio");
+                    String newValue = audioUri.toString();
+                    if (pref.callChangeListener(newValue))
+                        pref.setUriValue(newValue);
                 }
         }
     }
@@ -163,7 +161,7 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             for (int i = 0; i < cat.getPreferenceCount(); i++) {
                 visitPreferenceObject(cat.getPreference(i));
             }
-        } else if (p instanceof ListPreference || p instanceof EditTextPreference)
+        } else if (p instanceof ListPreference || p instanceof EditTextPreference || p instanceof AudioPickerPreference)
             bindPreferenceSummaryToValue(p);
     }
 

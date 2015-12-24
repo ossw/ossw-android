@@ -86,6 +86,7 @@
 
     <string name="pref_phone_discovery_title">Phone discovery</string>
     <string name="pref_phone_discovery_audio_title">Audio track</string>
+    <string name="pref_phone_discovery_file_uri">Nothing selected</string>
 
     <string name="off">OFF</string>
     <string name="on">ON</string>

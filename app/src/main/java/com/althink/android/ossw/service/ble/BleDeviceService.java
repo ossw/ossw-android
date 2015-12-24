@@ -200,7 +200,7 @@ public class BleDeviceService {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
 
-            //Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid() + ", " + Arrays.toString(characteristic.getValue()));
+            //Log.i(TAG, "onCharacteristicWrite: " + characteristic.getUuid() + ", " + Arrays.toString(characteristic.getUriValue()));
             synchronized (bleOperationLock) {
                 bleOperationLock.notify();
             }
