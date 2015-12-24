@@ -27,7 +27,10 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceScreen;
 import android.view.View;
-import android.widget.ListView;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
@@ -128,12 +131,12 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             });
         }
 
-        if ("preference_screen".equals(getPreferenceScreen().getKey())) {
+        if ("phone_discovery_screen".equals(getPreferenceScreen().getKey())) {
             Preference pref = findPreference("phone_discovery_audio");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+                    Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/*");
                     startActivityForResult(i, SELECT_AUDIO_TRACK);
                     return true;
                 }

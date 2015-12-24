@@ -87,10 +87,10 @@
     <string name="pref_phone_discovery_title">Phone discovery</string>
     <string name="pref_phone_discovery_audio_title">Audio track</string>
 
-    <string name="off">Off</string>
-    <string name="on">On</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
     <string name="incall_title">Incoming call</string>
 
-    <string name="time_interval_picker_ok">Ok</string>
+    <string name="time_interval_picker_ok">OK</string>
     <string name="time_interval_picker_cancel">Cancel</string>
 </resources>

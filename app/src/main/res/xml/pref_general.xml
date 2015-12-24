@@ -13,7 +13,8 @@
         <PreferenceScreen
             android:key="notification_screen"
             android:summary="@string/pref_notifications_desc"
-            android:title="@string/pref_notifications_title">
+            android:title="@string/pref_notifications_title"
+            android:widgetLayout="@layout/preference_widget_switch">
             <SwitchPreference
                 android:defaultValue="true"
                 android:key="notifications"
@@ -72,7 +73,8 @@
         <PreferenceScreen
             android:key="alert_screen"
             android:summary="@string/pref_alert_notifications_desc"
-            android:title="@string/pref_alert_notifications_title">
+            android:title="@string/pref_alert_notifications_title"
+            android:widgetLayout="@layout/preference_widget_switch">
             <SwitchPreference
                 android:defaultValue="true"
                 android:key="alert_notifications"
@@ -129,7 +131,7 @@
             android:switchTextOn="@string/on"
             android:title="@string/pref_disconnect_notif_title" />
 
-        <PreferenceScreen android:key="phone_discovery"
+        <PreferenceScreen android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
             <SwitchPreference
                 android:defaultValue="true"
@@ -140,7 +142,8 @@
             <Preference
                 android:key="phone_discovery_audio"
                 android:title="@string/pref_phone_discovery_audio_title"
-                android:summary="nothing selected"/>
+                android:summary="nothing selected"
+                android:widgetLayout="@layout/pref_image_play"/>
 
         </PreferenceScreen>
 
