@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 
 
 import com.althink.android.ossw.R;
+import com.althink.android.ossw.service.OsswService;
 
 import java.io.IOException;
 
@@ -21,7 +22,6 @@ import java.io.IOException;
  * Created by Pavel Vasilyev on 24/12/2015.
  */
 public class AudioPickerPreference extends Preference {
-    private static MediaPlayer mediaPlayer;
     private String uriValue;
     private String title;
 
@@ -59,9 +59,7 @@ public class AudioPickerPreference extends Preference {
         ll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mediaPlayer == null) {
-                    mediaPlayer = new MediaPlayer();
-                }
+                final MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
 
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.stop();
@@ -82,11 +80,11 @@ public class AudioPickerPreference extends Preference {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
                             imageView.setImageResource(R.drawable.ic_play);
+                            mediaPlayer.setOnCompletionListener(null);
                         }
                     });
                 }
             }
         });
     }
-
 }

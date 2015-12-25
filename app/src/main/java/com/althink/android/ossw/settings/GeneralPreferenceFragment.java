@@ -30,8 +30,6 @@ import android.view.View;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.utils.TimeIntervalPreference;
-import com.althink.android.ossw.utils.TimeIntervalPreferenceFragment;
 
 import java.util.ArrayList;
 import java.util.Collections;

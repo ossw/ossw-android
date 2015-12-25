@@ -45,7 +45,7 @@
                     android:switchTextOn="@string/on"
                     android:title="@string/vibration_category"
                     android:widgetLayout="@layout/preference_widget_switch_compat" />
-                <com.althink.android.ossw.utils.TimeIntervalPreference
+                <com.althink.android.ossw.settings.TimeIntervalPreference
                     android:defaultValue="0:00-23:59"
                     android:key="notif_vibrate_time"
                     android:title="@string/vibration_active_time" />
@@ -98,7 +98,7 @@
                     android:switchTextOn="@string/on"
                     android:title="@string/vibration_category"
                     android:widgetLayout="@layout/preference_widget_switch_compat" />
-                <com.althink.android.ossw.utils.TimeIntervalPreference
+                <com.althink.android.ossw.settings.TimeIntervalPreference
                     android:defaultValue="0:0-23:59"
                     android:key="alert_notif_vibrate_time"
                     android:title="@string/vibration_active_time" />

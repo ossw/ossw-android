@@ -1,4 +1,4 @@
-package com.althink.android.ossw.utils;
+package com.althink.android.ossw.settings;
 
 /**
  * Created by Pavel on 23/12/2015.

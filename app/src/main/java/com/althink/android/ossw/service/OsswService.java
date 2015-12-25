@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -47,6 +48,7 @@ import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.service.ble.BleConnectionStatusHandler;
 import com.althink.android.ossw.service.ble.CharacteristicChangeHandler;
 import com.althink.android.ossw.service.ble.ReadCharacteristicHandler;
+import com.althink.android.ossw.utils.FunctionHandler;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.althink.android.ossw.watchsets.DataSourceType;
@@ -80,6 +82,8 @@ public class OsswService extends Service {
 
     public static final int TEST_NOTIFICATION_ID = 0x10;
     public static final int TEST_ALERT_ID = 0x11;
+
+    public static final String BASE_ID = "com.althink.android.ossw";
     public static final String FULLSCREEN_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.fullScreen";
     public static final String CLOSE_FAKE_ALARM_INTENT_ACTION = "com.althink.android.ossw.test.alert.close";
     public static final String CLOSE_FAKE_NOTIFICATION_INTENT_ACTION = "com.althink.android.ossw.test.notification.close";
@@ -100,6 +104,14 @@ public class OsswService extends Service {
     public static final String LAST_WATCH_ADDRESS = "last_watch_address";
 
     private static OsswService INSTANCE;
+
+    private static MediaPlayer mediaPlayer;
+
+    public static MediaPlayer getMediaPlayer() {
+        if (mediaPlayer == null)
+            mediaPlayer = new MediaPlayer();
+        return mediaPlayer;
+    }
 
     private boolean started = false;
 
@@ -753,9 +765,6 @@ public class OsswService extends Service {
                     nl.openNotificationsScreen();
                 }
                 break;
-
-
-
         }
     }
 
@@ -764,6 +773,8 @@ public class OsswService extends Service {
             return;
         }
         WatchExtensionFunction function = watchContext.getExternalFunctions().get(extFunctionId);
+        if (BASE_ID.equals(function.getPluginId()))
+            FunctionHandler.handleFunction(function.getFunctionId(), function.getParameter());
         invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
     }
 
