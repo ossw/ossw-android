@@ -130,7 +130,7 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/*");
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("audio/*");
                     startActivityForResult(i, SELECT_AUDIO_TRACK);
                     return true;
                 }

@@ -1,17 +1,19 @@
 package com.althink.android.ossw.settings;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
@@ -27,14 +29,21 @@ public class AudioPickerPreference extends Preference {
 
     public void setUriValue(String uriValue) {
         this.uriValue = uriValue;
+        Uri uri = Uri.parse(uriValue);
         persistString(uriValue);
-        Cursor musicCursor = getContext().getContentResolver().query(Uri.parse(uriValue), null, null, null, null);
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            title = musicCursor.getString(musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.TITLE));
+        Log.i("audio picker", uriValue);
+        ContentResolver cr = getContext().getContentResolver();
+        try {
+            Cursor musicCursor = cr.query(uri, null, null, null, null);
+            if (musicCursor != null && musicCursor.moveToFirst()) {
+                int index = musicCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
+                title = musicCursor.getString(index);
+            }
+            if (musicCursor != null)
+                musicCursor.close();
+        } catch (SecurityException e) {
+            e.printStackTrace();
         }
-        if (musicCursor != null)
-            musicCursor.close();
     }
 
     @Override
