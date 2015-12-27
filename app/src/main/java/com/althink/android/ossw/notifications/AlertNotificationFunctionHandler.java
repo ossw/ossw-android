@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.NotificationCategory;
+import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.PhoneCallReceiver;
@@ -39,22 +40,19 @@ public class AlertNotificationFunctionHandler implements NotificationHandler {
                         if (intent != null) {
                             Log.i(TAG, "handleFunction: UP BUTTON " + intent.toString());
                             intent.send();
-                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-                                if (notification.getCategory() == NotificationCategory.INCOMING_CALL) {
-                                    SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(osswService);
-                                    boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
-                                    if (enabled) {
-//                                        TODO: get the caller number
-//                                        Bundle extras = intent.getExtras();
-//                                        if (extras != null) {
-//                                            String message = shPref.getString("pref_reject_call_message", "");
-//                                            String number = extras.getString(CallReceiver.INCOMING_CALL_NUMBER);
-//                                            CallReceiver.sendSMS(number, message);
-//                                        }
-                                    }
-
-                                }
-                            }
+                            // TODO: use this code if basic decline call does not work
+//                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+//                                if (notification.getCategory() == NotificationCategory.INCOMING_CALL) {
+//                                    SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(osswService);
+//                                    boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
+//                                    if (enabled && notification instanceof SimpleNotification) {
+//                                        String message = shPref.getString("pref_reject_call_message", "");
+//                                        String number = ((SimpleNotification) notification).getTitle();
+//                                        CallReceiver.sendSMS(number, message);
+//                                    }
+//
+//                                }
+//                            }
                         } else if (notification.getCategory() == NotificationCategory.INCOMING_CALL) {
                             Log.i(TAG, "handleFunction: UP BUTTON -> decline call");
                             PhoneCallReceiver.declineCall();

@@ -208,15 +208,15 @@ public class NotificationListener extends NotificationListenerService {
             Log.i(TAG, "Skip notifications");
             return null;
         }
+        if (BaseNotificationParser.isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT) &&
+                ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())
+                        || "com.android.incallui".equals(sbn.getPackageName())))
+            return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
             // WARNING: following check blocks incoming call notifications from the system app
             // in KitKat a special notification should be generated
-            if (BaseNotificationParser.isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT) &&
-                    ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())
-                            || "com.android.incallui".equals(sbn.getPackageName())))
-                return null;
             return new NotificationParserApi19(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         }
         return null;

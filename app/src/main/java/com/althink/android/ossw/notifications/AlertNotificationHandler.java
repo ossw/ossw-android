@@ -50,7 +50,7 @@ public class AlertNotificationHandler {
             if (vibrate) {
                 Calendar c = Calendar.getInstance();
                 int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
-                String active = sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_time", "0:0-24:0");
+                String active = sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_time", "0:0-23:59");
                 int dash = active.indexOf('-');
                 int from_time = NotificationListener.getMinutes(active.substring(0, dash));
                 int till_time = NotificationListener.getMinutes(active.substring(dash + 1));

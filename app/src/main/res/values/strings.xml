@@ -88,7 +88,7 @@
     <string name="pref_phone_discovery_audio_title">Audio track</string>
     <string name="pref_phone_discovery_file_uri">Nothing selected</string>
     <string name="notif_decline_call">Decline</string>
-    <string name="notif_decline_call_sms">Decline with SMS</string>
+    <string name="notif_decline_call_sms">Decline+SMS</string>
     <string name="notif_mute_call">Mute</string>
 
     <string name="off">OFF</string>
