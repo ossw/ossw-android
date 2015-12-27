@@ -7,10 +7,7 @@ import android.support.v7.preference.EditTextPreference;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.support.v7.widget.SwitchCompat;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.althink.android.ossw.R;
 
@@ -41,13 +38,5 @@ public class TextSwitchPreference extends EditTextPreference {
                 shPref.edit().putBoolean(getKey() + KEY_SUFFIX, isChecked).apply();
             }
         });
-//        LinearLayout ll = (LinearLayout) holder.itemView.findViewById(android.R.id.widget_frame);
-//        ll.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                enabled = !enabled;
-//                shPref.getString(getKey() + KEY_SUFFIX, String.valueOf(enabled));
-//            }
-//        });
     }
 }

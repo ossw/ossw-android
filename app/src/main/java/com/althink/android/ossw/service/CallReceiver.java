@@ -2,12 +2,9 @@ package com.althink.android.ossw.service;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -61,7 +58,7 @@ public class CallReceiver extends PhoneCallReceiver {
         Log.i(TAG, "incoming call answered: " + number);
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(ctx);
         notifyManager.cancel(CALL_NOTIFICATION_ID);
-        restoreMutedMode(ctx);
+        restoreFromMutedMode(ctx);
     }
 
     @Override
@@ -76,7 +73,7 @@ public class CallReceiver extends PhoneCallReceiver {
         Log.i(TAG, "missed call: " + number);
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(ctx);
         notifyManager.cancel(CALL_NOTIFICATION_ID);
-        restoreMutedMode(ctx);
+        restoreFromMutedMode(ctx);
     }
 
     @Override

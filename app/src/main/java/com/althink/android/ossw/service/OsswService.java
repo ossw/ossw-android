@@ -640,10 +640,7 @@ public class OsswService extends Service {
     private final BroadcastReceiver muteCallReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            PhoneCallReceiver.ringerMode = am.getRingerMode();
-            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            PhoneCallReceiver.muted = true;
+            PhoneCallReceiver.setMutedMode(context);
         }
     };
 

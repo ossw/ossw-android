@@ -11,11 +11,15 @@ import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.provider.ContactsContract;
+import android.service.notification.NotificationListenerService;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
+import com.althink.android.ossw.notifications.NotificationListener;
 
 /**
  * Created by Pavel on 19/12/2015.
@@ -27,6 +31,7 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
     private static boolean isIncoming;
     private static String savedNumber;
     static boolean muted = false;
+    static int interruptionFilter;
     static int ringerMode;
 
     @Override
@@ -126,12 +131,33 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         return contactName;
     }
 
-    public static void restoreMutedMode(Context ctx) {
-        if (muted) {
+    public static void setMutedMode(Context ctx) {
+        if (muted)
+            return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            NotificationListener notifListener = NotificationListener.getInstance();
+            interruptionFilter = notifListener.getCurrentInterruptionFilter();
+            Log.i(TAG, "Saving interruption filter: " + interruptionFilter);
+            notifListener.requestInterruptionFilter(NotificationListenerService.INTERRUPTION_FILTER_NONE);
+        } else {
+            AudioManager am = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
+            PhoneCallReceiver.ringerMode = am.getRingerMode();
+            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        }
+        muted = true;
+    }
+
+    public static void restoreFromMutedMode(Context ctx) {
+        if (!muted)
+            return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            NotificationListener notifListener = NotificationListener.getInstance();
+            notifListener.requestInterruptionFilter(interruptionFilter);
+        } else {
             AudioManager am = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
             am.setRingerMode(ringerMode);
-            muted = false;
         }
+        muted = false;
     }
 
     public static void declineCall() {
