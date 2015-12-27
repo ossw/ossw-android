@@ -34,7 +34,7 @@
         <item name="android:windowBackground">@color/myWindowBackground</item>
 
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
-     </style>
+    </style>
 
     <!-- ActionBar styles -->
     <color name="actionbar_bg">#FFc0392b</color>
@@ -78,6 +78,5 @@
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
         <item name="theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
     </style>
-
 
 </resources>

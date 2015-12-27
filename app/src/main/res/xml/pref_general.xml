@@ -135,6 +135,11 @@
             android:title="@string/pref_disconnect_notif_title"
             android:widgetLayout="@layout/preference_widget_switch_compat" />
 
+        <com.althink.android.ossw.settings.TextSwitchPreference
+            android:key="pref_reject_call_message"
+            android:title="@string/pref_reject_call_message"
+            android:widgetLayout="@layout/pref_switch"/>
+
         <PreferenceScreen android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
             <SwitchPreference

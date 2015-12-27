@@ -48,6 +48,7 @@ import com.althink.android.ossw.service.ble.BleConnectionStatus;
 import com.althink.android.ossw.service.ble.BleConnectionStatusHandler;
 import com.althink.android.ossw.service.ble.CharacteristicChangeHandler;
 import com.althink.android.ossw.service.ble.ReadCharacteristicHandler;
+import com.althink.android.ossw.settings.TextSwitchPreference;
 import com.althink.android.ossw.utils.FunctionHandler;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -386,7 +387,7 @@ public class OsswService extends Service {
 
             sizeLeft -= (MAX_COMMAND_SIZE - 1);
         }
-        if (sendOsswCommand(new byte[]{0x42}) < 0 ){
+        if (sendOsswCommand(new byte[]{0x42}) < 0) {
             return;
         }
         //Log.i(TAG, "Commit notification");
@@ -493,9 +494,9 @@ public class OsswService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
                 new Intent(getApplicationContext(), MainActivity.class), 0);
-        int image =  R.drawable.ic_watch_off;
+        int image = R.drawable.ic_watch_off;
         if (bleService != null && bleService.getConnectionStatus() == BleConnectionStatus.CONNECTED)
-                image = R.drawable.ic_watch_dial;
+            image = R.drawable.ic_watch_dial;
         builder.setSmallIcon(image)
                 .setContentTitle(getString(R.string.title_main))
                 .setContentText(message)
@@ -568,7 +569,6 @@ public class OsswService extends Service {
 
                                 bleService.setCharacteristicNotification(getOsswRxCharacteristic(), true);
 
-
                                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswService.this);
                                 boolean syncTime = sharedPref.getBoolean("synchronize_time", true);
 
@@ -624,13 +624,23 @@ public class OsswService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             CallReceiver.declineCall();
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
+            if (enabled) {
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    String message = shPref.getString("pref_reject_call_message", "");
+                    String number = extras.getString(CallReceiver.INCOMING_CALL_NUMBER);
+                    CallReceiver.sendSMS(number, message);
+                }
+            }
         }
     };
 
     private final BroadcastReceiver muteCallReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            AudioManager am = (AudioManager)getBaseContext().getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
             PhoneCallReceiver.ringerMode = am.getRingerMode();
             am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
             PhoneCallReceiver.muted = true;
@@ -638,16 +648,16 @@ public class OsswService extends Service {
     };
 
     private void sendConnectionConfirmation() {
-            if (!bleService.isConnected()) {
-                return;
-            }
+        if (!bleService.isConnected()) {
+            return;
+        }
 
-            BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
-            if (txCharact == null) {
-                return;
-            }
+        BluetoothGattCharacteristic txCharact = getOsswTxCharacteristic();
+        if (txCharact == null) {
+            return;
+        }
 
-            writeCharacteristic(txCharact, new byte[]{0x01});
+        writeCharacteristic(txCharact, new byte[]{0x01});
     }
 
     private void connectToPlugin(PluginDefinition plugin) {
@@ -854,26 +864,32 @@ public class OsswService extends Service {
     public static class BluetoothDeviceSummary {
         String name = "Unknown";
         String address = "";
-//        String sync = "";
+        //        String sync = "";
         int rssi = 0;
+
         public BluetoothDeviceSummary(String name, String address, /*String sync, */int rssi) {
             this.name = name;
             this.address = address;
 //            this.sync = sync;
             this.rssi = rssi;
         }
+
         public String getAddress() {
             return address;
         }
+
         public String getName() {
             return name;
         }
+
         public BleConnectionStatus getSync() {
             return INSTANCE.getStatus(address);
         }
+
         public int getRSSI() {
             return rssi;
         }
+
         @Override
         public boolean equals(Object o) {
             if (o instanceof BluetoothDeviceSummary) {
@@ -882,6 +898,7 @@ public class OsswService extends Service {
             }
             return false;
         }
+
         @Override
         public int hashCode() {
             return address.hashCode();
@@ -957,7 +974,7 @@ public class OsswService extends Service {
 
         @Override
         protected Void doInBackground(Object... params) {
-            internalUploadData((UploadDataType) params[0], (String)params[1], (byte[]) params[2]);
+            internalUploadData((UploadDataType) params[0], (String) params[1], (byte[]) params[2]);
             return null;
         }
     }
@@ -982,7 +999,7 @@ public class OsswService extends Service {
         notifyManager.notify(FILE_UPLOAD_NOTIFICATION_ID, builder.build());
 
         String path = "";
-        switch(type) {
+        switch (type) {
             case APPLICATION:
                 path = "a/";
                 break;
@@ -993,10 +1010,10 @@ public class OsswService extends Service {
                 path = "u/";
                 break;
         }
-        byte[] filePath = cutToBytes(path+fileName, 31);
+        byte[] filePath = cutToBytes(path + fileName, 31);
         int size = data.length;
         Log.i(TAG, "Init file upload: " + type + ", size: " + size);
-        if (sendOsswCommand(concat(new byte[]{0x20, (byte)((size>>16)&0xFF), (byte)((size>>8)&0xFF), (byte)(size&0xFF)}, concat(filePath, new byte[]{0}))) != 0) {
+        if (sendOsswCommand(concat(new byte[]{0x20, (byte) ((size >> 16) & 0xFF), (byte) ((size >> 8) & 0xFF), (byte) (size & 0xFF)}, concat(filePath, new byte[]{0}))) != 0) {
             handleUploadFailed();
             return;
         }

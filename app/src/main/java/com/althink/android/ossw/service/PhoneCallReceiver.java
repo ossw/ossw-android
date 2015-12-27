@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.provider.ContactsContract;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -165,5 +166,11 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             Log.e(TAG, "FATAL ERROR: could not connect to telephony subsystem: " + e, e);
         }
+    }
+
+    public static void sendSMS(String number, String msg) {
+        SmsManager sm = SmsManager.getDefault();
+        Log.i(TAG, "Sending SMS: '" + msg + "' to " + number);
+        sm.sendTextMessage(number, null, msg, null, null);
     }
 }

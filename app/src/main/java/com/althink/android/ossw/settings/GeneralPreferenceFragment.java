@@ -159,7 +159,8 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             for (int i = 0; i < cat.getPreferenceCount(); i++) {
                 visitPreferenceObject(cat.getPreference(i));
             }
-        } else if (p instanceof ListPreference || p instanceof EditTextPreference || p instanceof AudioPickerPreference)
+        } else if (p instanceof ListPreference || p instanceof EditTextPreference
+                || p instanceof AudioPickerPreference || p instanceof TextSwitchPreference)
             bindPreferenceSummaryToValue(p);
     }
 
