@@ -2,6 +2,7 @@ package com.althink.android.ossw;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -9,7 +10,9 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -34,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-//    private static final String TAG = MainActivity.class.getSimpleName();
+    //    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String DRAWER_SELECTED_POSITION = "drawerSelectedItem";
     private static int MENU_COUNT = 5;
     private static List<MenuItem> items;
@@ -134,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
 
         mDrawer = (DrawerLayout) findViewById(R.id.drawer);
-        drawerToggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.drawer_open,  R.string.drawer_close);
+        drawerToggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.drawer_open, R.string.drawer_close);
         mDrawer.setDrawerListener(drawerToggle);
 
         navigationView = (NavigationView) findViewById(R.id.navigation_view);
@@ -174,8 +177,7 @@ public class MainActivity extends AppCompatActivity {
 //            Log.i(TAG, "SAVED STATE EMPTY");
             mPosition = 0; //savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
             onDrawerItemSelected(navigationView.getMenu().getItem(mPosition));
-        }
-        else {
+        } else {
             mPosition = savedInstanceState.getInt(DRAWER_SELECTED_POSITION);
         }
 
@@ -252,6 +254,23 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
         refreshConnectionAlert();
+
+        // @vaspa: show a snackbar if notification access is not granted
+        ContentResolver contentResolver = getContentResolver();
+        String enabledNotificationListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners");
+        String packageName = getPackageName();
+        if (enabledNotificationListeners == null || !enabledNotificationListeners.contains(packageName)) {
+            Snackbar.make(navigationView, getString(R.string.notification_permission_title), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.notification_permission_button), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                            startActivity(i);
+                        }
+                    })
+                    .setActionTextColor(getResources().getColor(R.color.myPrimaryAlternativeColor))
+                    .show();
+        }
     }
 
     private void refreshConnectionAlert() {

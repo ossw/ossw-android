@@ -58,7 +58,7 @@
     <string name="pref_title">Settings</string>
     <string name="select_font">Select font</string>
     <string name="pref_notification_category">Watch notifications</string>
-    <string name="pref_phone_notification_category">Phone notifications</string>
+    <string name="pref_phone_notification_category">Phone features</string>
     <string name="pref_notifications_title">Text notification</string>
     <string name="pref_notifications_desc">SMS, e-mail, missed call</string>
     <string name="pref_alert_notifications_title">Alert notification</string>
@@ -83,13 +83,16 @@
     <string name="test_notification">Test notification</string>
     <string name="pref_notification_filter">Applications providing notifications</string>
 
-    <string name="pref_reject_call_message">Reject call message</string>
+    <string name="pref_reject_call_message">Reject call with SMS</string>
     <string name="pref_phone_discovery_title">Phone discovery</string>
     <string name="pref_phone_discovery_audio_title">Audio track</string>
     <string name="pref_phone_discovery_file_uri">Nothing selected</string>
     <string name="notif_decline_call">Decline</string>
     <string name="notif_decline_call_sms">Decline+SMS</string>
     <string name="notif_mute_call">Mute</string>
+
+    <string name="notification_permission_title">Need special permission for receiving notifications</string>
+    <string name="notification_permission_button">Grant access</string>
 
     <string name="off">OFF</string>
     <string name="on">ON</string>
