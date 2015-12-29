@@ -1,7 +1,0 @@
-<resources>
-    <string name="title_activity_settings">Settings</string>
-
-    <string name="pref_synchronize_time_title">Synchronize time</string>
-    <string name="pref_synchronize_time_desc">Send current time to the watch when connected
-    </string>
-</resources>

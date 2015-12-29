@@ -49,7 +49,7 @@
         </activity>
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/title_activity_settings" />
+            android:label="@string/pref_title" />
 
         <service
             android:name=".notifications.NotificationListener"
