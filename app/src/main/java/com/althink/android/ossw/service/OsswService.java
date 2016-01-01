@@ -778,6 +778,7 @@ public class OsswService extends Service {
             return;
         }
         WatchExtensionFunction function = watchContext.getExternalFunctions().get(extFunctionId);
+        Log.i(TAG, "Function invoked: " + function);
         if (BASE_ID.equals(function.getPluginId()))
             FunctionHandler.handleFunction(function.getFunctionId(), function.getParameter());
         invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());

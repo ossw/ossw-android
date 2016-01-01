@@ -138,6 +138,7 @@
         <com.althink.android.ossw.settings.TextSwitchPreference
             android:key="pref_reject_call_message"
             android:title="@string/pref_reject_call_message"
+            android:defaultValue="@string/pref_reject_default_message"
             android:widgetLayout="@layout/pref_switch"/>
 
         <PreferenceScreen android:key="phone_discovery_screen"

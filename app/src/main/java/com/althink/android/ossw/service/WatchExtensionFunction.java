@@ -50,4 +50,9 @@ public class WatchExtensionFunction {
         result = 31 * result + (parameter != null ? parameter.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return pluginId + "/" + functionId + "(" + parameter + ")";
+    }
 }
