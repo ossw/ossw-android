@@ -85,6 +85,7 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
             Runnable loadInstalledApps = new Runnable() {
                 @Override
                 public void run() {
+                    String osswPackageName = getActivity().getPackageName();
                     PackageManager pm = getActivity().getPackageManager();
                     Intent intentFilter = new Intent(Intent.ACTION_MAIN, null);
                     intentFilter.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -93,7 +94,7 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                     List<CharSequence> entries = new ArrayList<CharSequence>();
                     List<CharSequence> entryValues = new ArrayList<CharSequence>();
                     for (ResolveInfo info : appList) {
-                        if (!getActivity().getPackageName().equals(info.activityInfo.packageName)) {
+                        if (!osswPackageName.equals(info.activityInfo.packageName)) {
                             entryValues.add(info.activityInfo.packageName);
                             entries.add(info.loadLabel(pm).toString());
                         }
