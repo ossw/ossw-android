@@ -105,7 +105,9 @@ public class NotificationParserApi21 extends BaseNotificationParser {
                     int dismissId = dialerRes.getIdentifier("com.android.dialer:string/description_dismiss", null, null);
                     String dismiss = dialerRes.getString(dismissId);
                     operations.add(new Operation(dismiss, null));
+                    Log.i(TAG, "Empty operation list - dismiss operation added");
                 } catch (PackageManager.NameNotFoundException e) {
+                    Log.e(TAG, e.getMessage(), e);
                 }
             }
         }

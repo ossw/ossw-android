@@ -2,9 +2,7 @@ package com.althink.android.ossw.notifications;
 
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,7 +15,7 @@ import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.althink.android.ossw.SettingsActivity;
+import com.althink.android.ossw.settings.SettingsActivity;
 import com.althink.android.ossw.notifications.message.ListNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationSummaryMessageBuilder;
@@ -26,6 +24,7 @@ import com.althink.android.ossw.notifications.model.ListNotification;
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
+import com.althink.android.ossw.notifications.parser.BaseNotificationParser;
 import com.althink.android.ossw.notifications.parser.NotificationIdBuilder;
 import com.althink.android.ossw.notifications.parser.api19.NotificationParserApi19;
 import com.althink.android.ossw.notifications.parser.api21.NotificationParserApi21;
@@ -34,7 +33,6 @@ import com.althink.android.ossw.service.OsswService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -181,6 +179,10 @@ public class NotificationListener extends NotificationListenerService {
 
     private boolean skipNotification(StatusBarNotification sbn) {
         String pName = sbn.getPackageName();
+        // always allow self-created notifications
+        if (getPackageName().equals(pName))
+            return false;
+
         if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
                 || "com.sec.android.app.clockpackage".equals(pName)) {
             return false;
@@ -206,9 +208,15 @@ public class NotificationListener extends NotificationListenerService {
             Log.i(TAG, "Skip notifications");
             return null;
         }
+        if (BaseNotificationParser.isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT) &&
+                ("com.android.dialer".equals(sbn.getPackageName()) || "com.android.phone".equals(sbn.getPackageName())
+                        || "com.android.incallui".equals(sbn.getPackageName())))
+            return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new NotificationParserApi21(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+            // WARNING: following check blocks incoming call notifications from the system app
+            // in KitKat a special notification should be generated
             return new NotificationParserApi19(getApplicationContext()).parse(notificationId, sbn, existingNotification);
         }
         return null;

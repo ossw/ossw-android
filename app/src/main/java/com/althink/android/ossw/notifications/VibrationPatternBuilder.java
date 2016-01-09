@@ -6,7 +6,7 @@ import android.content.res.Resources;
 import android.preference.PreferenceManager;
 
 import com.althink.android.ossw.R;
-import com.althink.android.ossw.SettingsActivity;
+import com.althink.android.ossw.settings.SettingsActivity;
 
 /**
  * Created by krzysiek on 05/11/15.

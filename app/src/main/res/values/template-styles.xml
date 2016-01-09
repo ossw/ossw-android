@@ -32,7 +32,9 @@
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
 
         <item name="android:windowBackground">@color/myWindowBackground</item>
-     </style>
+
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+    </style>
 
     <!-- ActionBar styles -->
     <color name="actionbar_bg">#FFc0392b</color>
@@ -76,6 +78,5 @@
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
         <item name="theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
     </style>
-
 
 </resources>
