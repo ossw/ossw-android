@@ -30,10 +30,10 @@
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
-            android:title="Settings" />
+            android:title="@string/drawer_settings" />
         <item
             android:id="@+id/nav_exit"
             android:icon="@drawable/ic_exit"
-            android:title="Exit" />
+            android:title="@string/drawer_exit" />
     </group>
 </menu>

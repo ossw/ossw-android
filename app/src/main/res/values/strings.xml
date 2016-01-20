@@ -37,6 +37,8 @@
     <string name="drawer_watches">Watches</string>
     <string name="drawer_preview">Preview</string>
     <string name="drawer_settings">Settings</string>
+    <string name="drawer_exit">Exit</string>
+
     <string name="toast_watch_is_connected">Watch is connected</string>
 
     <string name="no_watch_found">No watch found.</string>
