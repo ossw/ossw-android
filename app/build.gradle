@@ -8,7 +8,7 @@ android {
         applicationId "com.althink.android.ossw"
         minSdkVersion 18
         targetSdkVersion 23
-        versionCode 14
+        versionCode 15
         versionName "0.5.0-snapshot"
     }
     buildTypes {
@@ -16,6 +16,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
     }
 }
 
