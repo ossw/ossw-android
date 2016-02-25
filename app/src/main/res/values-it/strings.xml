@@ -1,0 +1,108 @@
+<resources>
+    <string name="ble_not_supported">BLE non supportato</string>
+    <string name="label_data">Dato:</string>
+    <string name="label_device_address">Indirizzo dispositivo:</string>
+    <string name="label_state">Stato:</string>
+    <string name="no_data">Nessun dato</string>
+    <string name="connecting">Connessione…</string>
+    <string name="connected">Connesso</string>
+    <string name="disconnected">Disconnesso</string>
+    <string name="auto_reconnect">Tentativo di riconnessione</string>
+    <string name="error_bluetooth_not_supported">Bluetooth non supportato</string>
+
+    <string name="unknown_device">Dispositivo sconosciuto</string>
+    <string name="unknown_characteristic">Caratteristiche sconosciute</string>
+    <string name="unknown_service">Servizio sconosciuto</string>
+
+    <!-- Menu items -->
+    <string name="menu_connect">Connettere</string>
+    <string name="menu_disconnect">Disconnettere</string>
+    <string name="menu_scan">Scansione</string>
+    <string name="menu_stop">Stop</string>
+    <string name="title_main">OSSW</string>
+
+    <string name="action_find_watch">Connessione all\'orologio</string>
+
+    <string name="action_run_ipantman">Esegui ipSensorMan</string>
+    <string name="action_settings">Impostazioni</string>
+
+    <string name="drawer_open">Menu aperto</string>
+    <string name="drawer_close">Menu chiuso</string>
+    <string name="drawer_home_screen">Schermata iniziale</string>
+
+    <string name="drawer_watch_faces">Facce orologio</string>
+    <string name="drawer_applications">Applicazioni</string>
+    <string name="drawer_utilities">Utilità</string>
+    <string name="drawer_plugins">Estensioni</string>
+    <string name="drawer_watches">Orologi</string>
+    <string name="drawer_preview">Anteprima</string>
+    <string name="drawer_settings">Impostazioni</string>
+    <string name="drawer_exit">Uscita</string>
+
+    <string name="toast_watch_is_connected">Orologio connesso</string>
+
+    <string name="no_watch_found">Nessun orologio trovato</string>
+    <string name="no_extension_found">Nessuna estensione trovata, installare dal Play Store</string>
+    <string name="toast_nothing_to_configure">Niente da configurare</string>
+    <string name="toast_invalid_file">File non valido</string>
+    <string name="toast_file_uploaded_successfully">File caricato sull\'orologio</string>
+    <string name="no_watchsets_found">Nessuna faccia orologio</string>
+    <string name="menu_import">Importazione</string>
+    <string name="title_select_watch">Sceglio orologio</string>
+    <string name="menu_watchset_reload">Ricaricare</string>
+    <string name="menu_cancel">Annullare</string>
+    <string name="menu_items_remove">Cancellare</string>
+    <string name="menu_preview">Anteprima</string>
+    <string name="menu_upload_to_watch">Caricare</string>
+    <string name="menu_refresh">Aggiornare</string>
+    <string name="action_close">Chiudere</string>
+
+    <string name="pref_title">Impostazioni</string>
+    <string name="pref_synchronize_time_title">Sincronizza orario</string>
+    <string name="pref_synchronize_time_desc">Imposta ora corrente sull\'orologio quando connesso</string>
+    <string name="select_font">Scelta caratteri</string>
+    <string name="pref_notification_category">Notifiche dell\'orologio</string>
+    <string name="pref_phone_notification_category">Caratteristiche telefono</string>
+    <string name="pref_notifications_title">Notifiche di testo</string>
+    <string name="pref_notifications_desc">SMS, e-mail, chiamate perse</string>
+    <string name="pref_alert_notifications_title">Notifiche prioritarie</string>
+    <string name="pref_alert_notifications_desc">Chiamata in arrivo, sveglia</string>
+    <string name="pref_notifications_font">Caratteri delle notifiche</string>
+    <string name="pref_notifications_font_desc">Scegliere carattere per le notifiche</string>
+    <string name="pref_alert_notification_font">Carattere per le notifiche prioritarie</string>
+    <string name="pref_alert_notification_font_desc">Scegliere carettere per le notifiche prioritarie</string>
+    <string name="pref_notifications_access_desc">Gestione accesso alle notifiche</string>
+    <string name="pref_notifications_access_title">Accesso alle notifiche</string>
+    <string name="pref_disconnect_notif_title">Avviso di disconnessione</string>
+
+    <string name="toast_not_supported_firmware">Versione del firmware non supportata (necessita almeno 0.4.0)</string>
+    <string name="toast_file_upload_failed">Caricamento dati fallito</string>
+    <string name="action_disconnect">Disconnetti</string>
+
+    <string name="vibration_category">Vibrazione</string>
+    <string name="vibration_active_time">Tempo di attivazione vibrazione</string>
+    <string name="vibration_repeat">Ripeti vibrazione</string>
+    <string name="vibration_duration">Durata in millisecondi</string>
+    <string name="vibration_pattern">Pattern di vibrazione</string>
+    <string name="test_notification">Prova notifica</string>
+    <string name="pref_notification_filter">Applicazioni che generano notifiche</string>
+
+    <string name="pref_reject_call_message">Rifiuta chiamata con SMS</string>
+    <string name="pref_reject_default_message">In riunione, richiamo dopo</string>
+    <string name="pref_phone_discovery_title">Ricerca telefono</string>
+    <string name="pref_phone_discovery_audio_title">Traccia audio</string>
+    <string name="pref_phone_discovery_file_uri">Nessuna selezione</string>
+    <string name="notif_decline_call">Rifiuta</string>
+    <string name="notif_decline_call_sms">Rifiuta+SMS</string>
+    <string name="notif_mute_call">Muto</string>
+
+    <string name="notification_permission_title">Sono richiesti permessi speciali per ricevere notifiche</string>
+    <string name="notification_permission_button">Concedere accesso</string>
+
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+    <string name="incall_title">Chiamata entrante</string>
+
+    <string name="time_interval_picker_ok">OK</string>
+    <string name="time_interval_picker_cancel">Annulla</string>
+</resources>

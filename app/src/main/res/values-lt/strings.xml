@@ -1,0 +1,108 @@
+﻿<resources>
+    <string name="ble_not_supported">BLE nepalaikomas</string>
+    <string name="label_data">Duomenys:</string>
+    <string name="label_device_address">Įrenginio adresas:</string>
+    <string name="label_state">Būsena:</string>
+    <string name="no_data">Nėra duomenų</string>
+    <string name="connecting">Jungiamasi…</string>
+    <string name="connected">Prijungta</string>
+    <string name="disconnected">Atjungta</string>
+    <string name="auto_reconnect">Jungiama vėl</string>
+    <string name="error_bluetooth_not_supported">Bluetooth nepalaikomas</string>
+
+    <string name="unknown_device">Nežinomas įrenginys</string>
+    <string name="unknown_characteristic">Nežinoma savybė</string>
+    <string name="unknown_service">Nežinoma paslauga</string>
+
+    <!-- Menu items -->
+    <string name="menu_connect">Prisijungti</string>
+    <string name="menu_disconnect">Atsijungti</string>
+    <string name="menu_scan">Ieškoti</string>
+    <string name="menu_stop">Stop</string>
+    <string name="title_main">OSSW</string>
+
+    <string name="action_find_watch">Prijungti laikrodį</string>
+
+    <string name="action_run_ipantman">Paleisti ipSensorMan</string>
+    <string name="action_settings">Nustatymai</string>
+
+    <string name="drawer_open">Meniu atidarytas</string>
+    <string name="drawer_close">Meniu uždarytas</string>
+    <string name="drawer_home_screen">Pradinis ekranas</string>
+
+    <string name="drawer_watch_faces">Laiko vaizdai</string>
+    <string name="drawer_applications">Aplikacijos</string>
+    <string name="drawer_utilities">Įrankiai</string>
+    <string name="drawer_plugins">Plėtiniai</string>
+    <string name="drawer_watches">Laikrodžiai</string>
+    <string name="drawer_preview">Peržiūra</string>
+    <string name="drawer_settings">Nustatymai</string>
+    <string name="drawer_exit">Išeiti</string>
+
+    <string name="toast_watch_is_connected">Laikrodis prijungtas</string>
+
+    <string name="no_watch_found">Laikrodis nerastas.</string>
+    <string name="no_extension_found">Plėtinių nėra, juos galite parsisiųsti iš Play Store.</string>
+    <string name="toast_nothing_to_configure">Nustatymų nėra</string>
+    <string name="toast_invalid_file">Klaidingas failas</string>
+    <string name="toast_file_uploaded_successfully">Failas įkeltas į laikrodį</string>
+    <string name="no_watchsets_found">Grupė tuščia.</string>
+    <string name="menu_import">Importuoti</string>
+    <string name="title_select_watch">Pasirinkti laikrodį</string>
+    <string name="menu_watchset_reload">Perkrauti</string>
+    <string name="menu_cancel">Atšaukti</string>
+    <string name="menu_items_remove">Pašalinti</string>
+    <string name="menu_preview">Peržiūrėti</string>
+    <string name="menu_upload_to_watch">Įkelti</string>
+    <string name="menu_refresh">Atnaujinti</string>
+    <string name="action_close">Uždaryti</string>
+
+    <string name="pref_title">Nustatymai</string>
+    <string name="pref_synchronize_time_title">Sinchronizuoti laiką</string>
+    <string name="pref_synchronize_time_desc">Atnaujinti laiką laikrodyje prisijungimo metu</string>
+    <string name="select_font">Pasirinkti šriftą</string>
+    <string name="pref_notification_category">Laikrodžio pranešimai</string>
+    <string name="pref_phone_notification_category">Telefono funkcijos</string>
+    <string name="pref_notifications_title">Tekstiniai pranešimai</string>
+    <string name="pref_notifications_desc">SMS, el. paštas, praleistas skambutis</string>
+    <string name="pref_alert_notifications_title">Įspėjimų pranešimai</string>
+    <string name="pref_alert_notifications_desc">Įeinantis skambutis, žadintuvas</string>
+    <string name="pref_notifications_font">Pranešimo šriftas</string>
+    <string name="pref_notifications_font_desc">Pasirinkite pranešimo šriftą</string>
+    <string name="pref_alert_notification_font">Įspėjimo šriftas</string>
+    <string name="pref_alert_notification_font_desc">Pasirinkite įspėjimo šriftą</string>
+    <string name="pref_notifications_access_desc">Valdyti prieigą prie pranešimų</string>
+    <string name="pref_notifications_access_title">Pranešimų prieiga</string>
+    <string name="pref_disconnect_notif_title">Įspėti kai atsijungiama</string>
+
+    <string name="toast_not_supported_firmware">Mikroprograma nepalaikoma. Pirma atnaujinkite iki 0.4.0 versijos.</string>
+    <string name="toast_file_upload_failed">Duomenų įkėlimas nepavyko</string>
+    <string name="action_disconnect">Atjungti</string>
+
+    <string name="vibration_category">Vibravimas</string>
+    <string name="vibration_active_time">Vibravimo veikimo laikas</string>
+    <string name="vibration_repeat">Vibravimo kartojimas</string>
+    <string name="vibration_duration">Trukmė milisekundėmis</string>
+    <string name="vibration_pattern">Vibravimo būdas</string>
+    <string name="test_notification">Bandomasis pranešimas</string>
+    <string name="pref_notification_filter">Programos teikiančios pranešimus</string>
+
+    <string name="pref_reject_call_message">Atmesti skambutį su SMS žinute</string>
+    <string name="pref_reject_default_message">Esu susitikime, perskambinsiu vėliau.</string>
+    <string name="pref_phone_discovery_title">Telefono aptikimas</string>
+    <string name="pref_phone_discovery_audio_title">Garso takelis</string>
+    <string name="pref_phone_discovery_file_uri">Nieko nepasirinkta</string>
+    <string name="notif_decline_call">Atmesti</string>
+    <string name="notif_decline_call_sms">Atmesti+SMS</string>
+    <string name="notif_mute_call">Nutildyti</string>
+
+    <string name="notification_permission_title">Pranešimams gauti reikalingas specialus leidimas</string>
+    <string name="notification_permission_button">Suteikti prieigą</string>
+
+    <string name="off">Išjungta</string>
+    <string name="on">Įjungta</string>
+    <string name="incall_title">Įeinantis skambutis</string>
+
+    <string name="time_interval_picker_ok">Gerai</string>
+    <string name="time_interval_picker_cancel">Atšaukti</string>
+</resources>
