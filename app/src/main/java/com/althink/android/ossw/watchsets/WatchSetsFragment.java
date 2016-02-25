@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -55,6 +56,10 @@ public abstract class WatchSetsFragment extends ListFragment {
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watchsets, container, false);
         setHasOptionsMenu(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{"android.permission.READ_EXTERNAL_STORAGE"}, 0);
+        }
         // Inflate the layout for this fragment
         return v;
     }

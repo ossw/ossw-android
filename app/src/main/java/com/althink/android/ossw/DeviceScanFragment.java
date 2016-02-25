@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
@@ -100,11 +101,21 @@ public class DeviceScanFragment extends ListFragment {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{"android.permission.ACCESS_COARSE_LOCATION"}, 0);
+        }
+
         scanLeDevice(true);
         return v;
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        scanLeDevice(true);
+    }
+
+        @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.scan, menu);
         updateOptionsMenu(menu);
