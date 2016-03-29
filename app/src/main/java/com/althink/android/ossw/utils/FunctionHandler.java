@@ -1,17 +1,30 @@
 package com.althink.android.ossw.utils;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.provider.CallLog;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.althink.android.ossw.notifications.DialogSelectHandler;
+import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
+import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
+import com.althink.android.ossw.notifications.model.NotificationType;
+import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Pavel on 25/12/2015.
@@ -19,6 +32,7 @@ import java.io.IOException;
 public class FunctionHandler {
     private final static String TAG = FunctionHandler.class.getSimpleName();
     public static final String FUNCTION_PHONE_DISCOVERY = "phone.discovery";
+    public static final String FUNCTION_SEND_SMS = "send.sms";
     public static final String PREFERENCE_PHONE_DISCOVERY_AUDIO = "phone_discovery_audio";
     public static final String PREFERENCE_PHONE_DISCOVERY_VIBRATE = "phone_discovery_vibrate";
     private static final long[] discoveryVibration = {200, 500};
@@ -28,7 +42,7 @@ public class FunctionHandler {
         if (FUNCTION_PHONE_DISCOVERY.equals(functionId)) {
             MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
             OsswService osswService = OsswService.getInstance();
-            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService);
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
             Vibrator v = (Vibrator) osswService.getSystemService(Context.VIBRATOR_SERVICE);
             if (phoneDiscoveryStarted) {
                 Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", stopping");
@@ -57,6 +71,95 @@ public class FunctionHandler {
                     v.vibrate(discoveryVibration, 0);
                 }
             }
+        } else if (FUNCTION_SEND_SMS.equals(functionId)) {
+            selectCallLogNumber(new DialogSelectHandler() {
+                @Override
+                public void handleFunction(int position) {
+                    final String number = getItem(position);
+                    selectSms(new DialogSelectHandler() {
+                        @Override
+                        public void handleFunction(int position) {
+                            CallReceiver.sendSMS(number, getItem(position));
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    public static void selectSms(DialogSelectHandler dsHandler) {
+        OsswService osswService = OsswService.getInstance();
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
+        final String message = shPref.getString("pref_reject_call_message", "");
+        List<String> items = new ArrayList<>();
+        if (message.contains("|"))
+            items = Arrays.asList(message.split("\\|"));
+        else
+            items.add(message);
+
+        if (items.size() == 0)
+            return;
+        dsHandler.setItems(items);
+        if (items.size() == 1) {
+            dsHandler.handleFunction(0);
+            return;
+        }
+        Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items);
+        osswService.uploadNotification(1, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
+    }
+
+    public static void selectCallLogNumber(DialogSelectHandler dsHandler) {
+        //Fetches the complete call log in descending order. i.e recent calls appears first.
+        String[] projection = new String[]{
+                CallLog.Calls._ID,
+                CallLog.Calls.NUMBER,
+                CallLog.Calls.DATE,
+                CallLog.Calls.DURATION,
+                CallLog.Calls.TYPE
+        };
+        Context context = OsswService.getInstance().getApplicationContext();
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, null,
+                null, CallLog.Calls.DATE + " DESC");
+        List<String> items = new ArrayList<>();
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+            do {
+                String callerID = c.getString(c.getColumnIndex(CallLog.Calls._ID));
+                String callerNumber = c.getString(c.getColumnIndex(CallLog.Calls.NUMBER));
+                long callDateandTime = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+                long callDuration = c.getLong(c.getColumnIndex(CallLog.Calls.DURATION));
+                int callType = c.getInt(c.getColumnIndex(CallLog.Calls.TYPE));
+                if (callType == CallLog.Calls.INCOMING_TYPE) {
+                    //incoming call
+                } else if (callType == CallLog.Calls.OUTGOING_TYPE) {
+                    //outgoing call
+                } else if (callType == CallLog.Calls.MISSED_TYPE) {
+                    //missed call
+                }
+                if (!items.contains(callerNumber))
+                    items.add(callerNumber);
+            } while (c.moveToNext());
+            if (items.size() == 0)
+                return;
+            dsHandler.setItems(items);
+            if (items.size() == 1) {
+                dsHandler.handleFunction(0);
+                return;
+            }
+            Log.d(TAG, "Choose between numbers in call log: " + items.toString());
+            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose number", items);
+            OsswService.getInstance().uploadNotification(2, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
         }
     }
 }

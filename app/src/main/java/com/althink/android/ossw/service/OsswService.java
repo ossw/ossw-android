@@ -34,8 +34,11 @@ import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDatabaseHelper;
+import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.NotificationHandler;
 import com.althink.android.ossw.notifications.NotificationListener;
+import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
+import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
@@ -346,6 +349,7 @@ public class OsswService extends Service {
                         data);
                 break;
             case UPDATE:
+            case DIALOG_SELECT:
                 data = arrayConcatenate(new byte[]{
                                 (byte) type.getValue()},
                         data);
@@ -353,7 +357,7 @@ public class OsswService extends Service {
         }
         int size = data.length;
 
-        //Log.i(TAG, "Notification data to upload: " + Arrays.toString(data));
+        Log.d(TAG, "Notification data to upload: " + Arrays.toString(data));
 
         boolean allow;
 
@@ -390,7 +394,7 @@ public class OsswService extends Service {
         }
         //Log.i(TAG, "Commit notification");
 
-        if (NotificationType.ALERT == type) {
+        if (NotificationType.ALERT == type || NotificationType.DIALOG_SELECT == type) {
             lastNotificationHandler = handler;
         } else {
             dataSynced = true;
@@ -625,11 +629,26 @@ public class OsswService extends Service {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
             if (enabled) {
-                Bundle extras = intent.getExtras();
+                Log.d(TAG, "Send an SMS after call declined.");
+                final Bundle extras = intent.getExtras();
                 if (extras != null) {
-                    String message = shPref.getString("pref_reject_call_message", "");
-                    String number = extras.getString(CallReceiver.INCOMING_CALL_NUMBER);
-                    CallReceiver.sendSMS(number, message);
+                    final String number = extras.getString(CallReceiver.INCOMING_CALL_NUMBER);
+                    final String message = shPref.getString("pref_reject_call_message", "");
+                    List<String> items = Arrays.asList(message.split("\\|"));
+                    if (items.size() == 0)
+                        return;
+                    if (items.size() == 1) {
+                        CallReceiver.sendSMS(number, items.get(0));
+                        return;
+                    }
+                    Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
+                    NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items);
+                    uploadNotification(1, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, new DialogSelectHandler() {
+                        @Override
+                        public void handleFunction(int position) {
+                            CallReceiver.sendSMS(number, getItem(position));
+                        }
+                    }.setItems(items));
                 }
             }
         }
@@ -720,7 +739,11 @@ public class OsswService extends Service {
                     lastNotificationHandler.handleFunction(functionId);
                 }
                 break;
-
+            case WatchConstants.DIALOG_RESULT:
+                if (lastNotificationHandler != null) {
+                    lastNotificationHandler.handleFunction(data[0]);
+                }
+                break;
             case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
                 //Log.i(TAG, "NOTIFICATIONS_FIRST");
 

@@ -161,6 +161,7 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
     }
 
     public static void declineCall() {
+        Log.d(TAG, "Declining the call");
         try {
             String serviceManagerName = "android.os.ServiceManager";
             String serviceManagerNativeName = "android.os.ServiceManagerNative";
@@ -187,8 +188,6 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
             telephonyObject = serviceMethod.invoke(null, retbinder);
             telephonyEndCall = telephonyClass.getMethod("endCall");
             telephonyEndCall.invoke(telephonyObject);
-
-            //Log.d(TAG, "Call rejected");
         } catch (Exception e) {
             Log.e(TAG, "FATAL ERROR: could not connect to telephony subsystem: " + e, e);
         }

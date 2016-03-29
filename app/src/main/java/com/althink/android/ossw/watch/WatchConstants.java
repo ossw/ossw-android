@@ -211,4 +211,6 @@ public class WatchConstants {
     public static final int NOTIFICATIONS_NEXT = 0x32;
     public static final int NOTIFICATIONS_PREV_PART = 0x33;
     public static final int NOTIFICATIONS_OPEN = 0x34;
+
+    public static final int DIALOG_RESULT = 0x35;
 }

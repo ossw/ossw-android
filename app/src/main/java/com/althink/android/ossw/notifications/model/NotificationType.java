@@ -4,7 +4,7 @@ package com.althink.android.ossw.notifications.model;
  * Created by krzysiek on 24/07/15.
  */
 public enum NotificationType {
-    ALERT(1), INFO(2), UPDATE(3);
+    ALERT(1), INFO(2), UPDATE(3), DIALOG_SELECT(4);
 
     private int value;
 
