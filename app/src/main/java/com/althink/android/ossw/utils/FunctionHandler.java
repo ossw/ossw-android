@@ -1,6 +1,7 @@
 package com.althink.android.ossw.utils;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -10,7 +11,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
 import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
@@ -75,16 +78,29 @@ public class FunctionHandler {
             selectCallLogNumber(new DialogSelectHandler() {
                 @Override
                 public void handleFunction(int position) {
+                    if (position == 0xff)
+                        return;
                     final String number = getItem(position);
+                    Log.d(TAG, "Number selected: " + number + ", position: " + position);
                     selectSms(new DialogSelectHandler() {
                         @Override
                         public void handleFunction(int position) {
-                            CallReceiver.sendSMS(number, getItem(position));
+                            if (position == 0xff)
+                                return;
+                            closeDialog();
+                            final String sms = getItem(position);
+                            Log.d(TAG, "SMS selected: " + sms + ", position: " + position);
+                            CallReceiver.sendSMS(number, sms);
                         }
                     });
                 }
             });
         }
+    }
+
+    public static void closeDialog() {
+        Log.i(TAG, "Closing dialog");
+        OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_CLOSE, new byte[0], 0, 0, null);
     }
 
     public static void selectSms(DialogSelectHandler dsHandler) {
@@ -106,7 +122,7 @@ public class FunctionHandler {
         }
         Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
         NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items);
-        osswService.uploadNotification(1, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
+        osswService.uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
     }
 
     public static void selectCallLogNumber(DialogSelectHandler dsHandler) {
@@ -131,35 +147,53 @@ public class FunctionHandler {
         }
         Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, null,
                 null, CallLog.Calls.DATE + " DESC");
-        List<String> items = new ArrayList<>();
+        List<String> numbers = new ArrayList<>();
         if (c.getCount() > 0) {
             c.moveToFirst();
             do {
-                String callerID = c.getString(c.getColumnIndex(CallLog.Calls._ID));
                 String callerNumber = c.getString(c.getColumnIndex(CallLog.Calls.NUMBER));
-                long callDateandTime = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                long callDuration = c.getLong(c.getColumnIndex(CallLog.Calls.DURATION));
-                int callType = c.getInt(c.getColumnIndex(CallLog.Calls.TYPE));
-                if (callType == CallLog.Calls.INCOMING_TYPE) {
-                    //incoming call
-                } else if (callType == CallLog.Calls.OUTGOING_TYPE) {
-                    //outgoing call
-                } else if (callType == CallLog.Calls.MISSED_TYPE) {
-                    //missed call
-                }
-                if (!items.contains(callerNumber))
-                    items.add(callerNumber);
+                if (!numbers.contains(callerNumber))
+                    numbers.add(callerNumber);
             } while (c.moveToNext());
-            if (items.size() == 0)
+            if (numbers.size() == 0)
                 return;
+            List<String> items = new ArrayList<>();
+            for (String number : numbers) {
+                if (items.size() >= 10)
+                    break;
+                items.add(getContactDisplayNameByNumber(context, number) + " " + number);
+            }
             dsHandler.setItems(items);
             if (items.size() == 1) {
                 dsHandler.handleFunction(0);
                 return;
             }
             Log.d(TAG, "Choose between numbers in call log: " + items.toString());
-            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose number", items);
-            OsswService.getInstance().uploadNotification(2, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
+            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items);
+            OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
         }
+    }
+
+    public static String getContactDisplayNameByNumber(Context context, String number) {
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+        String name = "?";
+
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor contactLookup = contentResolver.query(uri, new String[]{BaseColumns._ID,
+                ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+
+        try {
+            if (contactLookup != null && contactLookup.getCount() > 0) {
+                contactLookup.moveToNext();
+                name = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+                //String contactId = contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
+            }
+        } finally {
+            if (contactLookup != null) {
+                contactLookup.close();
+            }
+        }
+
+        return name;
     }
 }

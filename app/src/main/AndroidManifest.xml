@@ -65,7 +65,9 @@
         <activity android:name=".watchsets.WatchSetPreviewActivity">
         </activity>
 
-        <receiver android:name=".service.CallReceiver" >
+        <receiver android:name=".service.CallReceiver"
+            android:enabled="true"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>

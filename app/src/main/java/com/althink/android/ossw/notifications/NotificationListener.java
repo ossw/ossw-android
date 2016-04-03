@@ -148,7 +148,7 @@ public class NotificationListener extends NotificationListenerService {
                     }
             }
         }
-        //printNotifications();
+        printNotifications();
     }
 
     public void sendNotifications() {

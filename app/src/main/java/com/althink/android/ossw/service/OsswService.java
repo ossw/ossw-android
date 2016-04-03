@@ -350,6 +350,8 @@ public class OsswService extends Service {
                 break;
             case UPDATE:
             case DIALOG_SELECT:
+            case DIALOG_OPTIONS:
+            case DIALOG_CLOSE:
                 data = arrayConcatenate(new byte[]{
                                 (byte) type.getValue()},
                         data);
@@ -394,7 +396,7 @@ public class OsswService extends Service {
         }
         //Log.i(TAG, "Commit notification");
 
-        if (NotificationType.ALERT == type || NotificationType.DIALOG_SELECT == type) {
+        if (NotificationType.ALERT == type || NotificationType.DIALOG_SELECT == type || NotificationType.DIALOG_OPTIONS == type) {
             lastNotificationHandler = handler;
         } else {
             dataSynced = true;
@@ -741,7 +743,7 @@ public class OsswService extends Service {
                 break;
             case WatchConstants.DIALOG_RESULT:
                 if (lastNotificationHandler != null) {
-                    lastNotificationHandler.handleFunction(data[0]);
+                    lastNotificationHandler.handleFunction((int) 0xff & data[0]);
                 }
                 break;
             case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
