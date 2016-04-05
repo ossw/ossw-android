@@ -20,6 +20,8 @@ public class DialogSelectMessageBuilder extends AbstractNotificationMessageBuild
         // list size
         out.write(items.size());
         out.write(font);
+        // list style
+        out.write(0);
         out.write(StringNormalizer.removeAccents(title).getBytes(), 0, title.length());
         out.write(0);
         for (String item: items) {
