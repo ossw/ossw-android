@@ -49,9 +49,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/pref_title" />
+            android:label="@string/pref_title">
+        </activity>
 
         <service
             android:name=".notifications.NotificationListener"
@@ -63,6 +65,13 @@
         </service>
 
         <activity android:name=".watchsets.WatchSetPreviewActivity">
+        </activity>
+
+        <activity android:name=".settings.PredefinedMessagesActivity">
+            <intent-filter>
+                <action android:name="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <receiver android:name=".service.CallReceiver"

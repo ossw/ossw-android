@@ -141,6 +141,12 @@
             android:defaultValue="@string/pref_reject_default_message"
             android:widgetLayout="@layout/pref_switch"/>
 
+        <Preference
+            android:title="@string/pref_predefined_messages" >
+            <intent android:action="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
+        </Preference>
+
+
         <PreferenceScreen android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
             <SwitchPreference

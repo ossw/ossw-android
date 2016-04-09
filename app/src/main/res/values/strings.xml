@@ -55,6 +55,8 @@
     <string name="menu_preview">Preview</string>
     <string name="menu_upload_to_watch">Upload</string>
     <string name="menu_refresh">Refresh</string>
+    <string name="menu_items_add">Add</string>
+    <string name="menu_items_edit">Edit</string>
     <string name="action_close">Close</string>
 
     <string name="pref_title">Settings</string>
@@ -74,6 +76,7 @@
     <string name="pref_notifications_access_desc">Manage access to notifications</string>
     <string name="pref_notifications_access_title">Notification access</string>
     <string name="pref_disconnect_notif_title">Disconnection alert</string>
+    <string name="pref_predefined_messages">Predefined messages</string>
 
     <string name="toast_not_supported_firmware">This firmware version is not supported. Upgrade to at least 0.4.0.</string>
     <string name="toast_file_upload_failed">Data upload failed</string>

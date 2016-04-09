@@ -19,7 +19,6 @@ public class WatchSetPreviewActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        setContentView(R.layout.activity_watch_set_preview);
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
         mToolbar.setClickable(true);
         setSupportActionBar(mToolbar);

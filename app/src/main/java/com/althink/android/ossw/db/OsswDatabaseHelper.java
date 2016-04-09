@@ -1,5 +1,6 @@
 package com.althink.android.ossw.db;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +12,7 @@ import com.althink.android.ossw.watchsets.WatchSetType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,10 +23,12 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
 
     // Database Info
     private static final String DATABASE_NAME = "OsswDB";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static OsswDatabaseHelper sInstance;
 
-    // ...
+    private static final String TABLE_WATCHSETS = "watchSets";
+    private static final String TABLE_MESSAGES = "messages";
+    private static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS ";
 
     public static synchronized OsswDatabaseHelper getInstance(Context context) {
         // Use the application context, which will ensure that you
@@ -52,12 +56,14 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
     // If a database already exists on disk with the same DATABASE_NAME, this method will NOT be called.
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-        if (isTableExists(db, "watchSets")) {
+        if (isTableExists(db, TABLE_WATCHSETS)) {
             // migration from not versioned database to v2
-            db.execSQL("ALTER TABLE watchSets ADD COLUMN type TEXT NOT NULL DEFAULT 'WATCH_FACE'");
+            db.execSQL("ALTER TABLE " + TABLE_WATCHSETS + " ADD COLUMN type TEXT NOT NULL DEFAULT 'WATCH_FACE';");
         } else {
-            db.execSQL("CREATE TABLE IF NOT EXISTS watchSets(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL,source BLOB NOT NULL, context BLOB NOT NULL, extWatchSetId INTEGER NOT NULL, type TEXT NOT NULL DEFAULT 'WATCH_FACE');");
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_WATCHSETS + " (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL,source BLOB NOT NULL, context BLOB NOT NULL, extWatchSetId INTEGER NOT NULL, type TEXT NOT NULL DEFAULT 'WATCH_FACE');");
+        }
+        if (!isTableExists(db, TABLE_MESSAGES)) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_MESSAGES + " (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, message TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0);");
         }
     }
 
@@ -66,9 +72,84 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
     // but the DATABASE_VERSION is different than the version of the database that exists on disk.
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL(SQL_DELETE_ENTRIES + TABLE_WATCHSETS);
+        db.execSQL(SQL_DELETE_ENTRIES + TABLE_MESSAGES);
+        onCreate(db);
     }
 
+    // predefined messages operations
+    public List<Integer> getPredefinedMessageIds() {
+        String sql = "SELECT id from " + TABLE_MESSAGES + " order by 'count' desc";
+        Cursor cursor = getReadableDatabase().rawQuery(sql, new String[0]);
 
+        List<Integer> list = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            list.add(cursor.getInt(0));
+        }
+        cursor.close();
+        return list;
+    }
+
+    public List<String> getPredefinedMessages() {
+        String sql = "SELECT message from " + TABLE_MESSAGES + " order by 'count' desc";
+        Cursor cursor = getReadableDatabase().rawQuery(sql, new String[0]);
+
+        List<String> list = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            list.add(cursor.getString(0));
+        }
+        cursor.close();
+        return list;
+    }
+
+    public String getPredefinedMessageText(int id) {
+        String sql = "SELECT message from " + TABLE_MESSAGES + " where id=?";
+        Cursor cursor = getReadableDatabase().rawQuery(sql, new String[]{Integer.toString(id)});
+
+        String result = null;
+        if (cursor.moveToNext()) {
+            result = cursor.getString(0);
+        }
+        cursor.close();
+        return result;
+    }
+
+    public Integer getPredefinedMessageCount(int id) {
+        String sql = "SELECT count from " + TABLE_MESSAGES + " where id=?";
+        Cursor cursor = getReadableDatabase().rawQuery(sql, new String[]{Integer.toString(id)});
+
+        Integer result = null;
+        if (cursor.moveToNext()) {
+            result = cursor.getInt(0);
+        }
+        cursor.close();
+        return result;
+    }
+
+    public boolean insertPredefinedMessage(String msg) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("message", msg);
+        db.insert(TABLE_MESSAGES, null, contentValues);
+        return true;
+    }
+
+    public boolean updatePredefinedMessage(Integer id, String msg) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("message", msg);
+        db.update(TABLE_MESSAGES, contentValues, "id=?", new String[]{Integer.toString(id)});
+        return true;
+    }
+
+    public Integer deletePredefinedMessage(Integer id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete(TABLE_MESSAGES,
+                "id=?",
+                new String[]{Integer.toString(id)});
+    }
+
+    // watch sets operations
     public WatchOperationContext getWatchContextByExtWatchSetId(int extWatchSetId) {
         String sql = "SELECT context from watchSets WHERE extWatchSetId = ?";
         Cursor cursor = getReadableDatabase().rawQuery(sql, new String[]{Integer.toString(extWatchSetId)});
@@ -150,7 +231,6 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
             insertStmt.executeInsert();
             //Log.i(TAG, "Watchset \"" + name + "\" successfully created");
         }
-
     }
 
     public boolean deleteWatchSet(int watchSetInternalId) {
@@ -162,9 +242,9 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean isTableExists(SQLiteDatabase db, String tableName) {
-        Cursor cursor = db.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '"+tableName+"'", null);
-        if(cursor!=null) {
-            if(cursor.getCount()>0) {
+        Cursor cursor = db.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '" + tableName + "'", null);
+        if (cursor != null) {
+            if (cursor.getCount() > 0) {
                 cursor.close();
                 return true;
             }
