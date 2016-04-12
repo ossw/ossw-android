@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
+import com.althink.android.ossw.R;
+import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.WatchOperationContext;
 import com.althink.android.ossw.watchsets.WatchSetType;
 import com.google.gson.Gson;
@@ -64,6 +66,10 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
         }
         if (!isTableExists(db, TABLE_MESSAGES)) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_MESSAGES + " (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, message TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0);");
+            Context ctx = OsswService.getInstance().getApplicationContext();
+            insertPredefinedMessage(ctx.getString(R.string.predefined_message1));
+            insertPredefinedMessage(ctx.getString(R.string.predefined_message2));
+            insertPredefinedMessage(ctx.getString(R.string.predefined_message3));
         }
     }
 
@@ -139,6 +145,12 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put("message", msg);
         db.update(TABLE_MESSAGES, contentValues, "id=?", new String[]{Integer.toString(id)});
+        return true;
+    }
+
+    public boolean incrementPredefinedMessageCount(Integer id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("update " + TABLE_MESSAGES + " set count=count+1 where id=?", new String[]{Integer.toString(id)});
         return true;
     }
 

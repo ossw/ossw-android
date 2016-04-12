@@ -11,7 +11,6 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.althink.android.ossw.R;
-import com.althink.android.ossw.settings.TextSwitchPreference;
 
 import java.util.Date;
 
@@ -29,15 +28,15 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onIncomingCallStarted(Context ctx, String number, Date start) {
-        Log.i(TAG, "incoming call started: " + number);
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(ctx);
         String title1;
-        boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
+        boolean enabled = shPref.getBoolean("pref_reject_call_message", false);
         if (enabled)
             title1 = ctx.getString(R.string.notif_decline_call_sms);
         else
             title1 = ctx.getString(R.string.notif_decline_call);
         String title2 = ctx.getString(R.string.notif_mute_call);
+        Log.i(TAG, "Starting incoming call alert: " + number);
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(ctx);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(ctx);
         Intent declineCallIntent = new Intent(DECLINE_CALL_INTENT_ACTION);

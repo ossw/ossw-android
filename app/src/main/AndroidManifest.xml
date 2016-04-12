@@ -74,9 +74,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".service.CallReceiver"
-            android:enabled="true"
-            android:exported="true" >
+        <receiver android:name=".service.CallReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>

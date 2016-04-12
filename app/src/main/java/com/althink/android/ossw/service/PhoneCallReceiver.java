@@ -19,6 +19,7 @@ import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.notifications.NotificationListener;
 
 /**
@@ -116,10 +117,10 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         ContentResolver cr = context.getContentResolver();
         Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
         Cursor cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+        String contactName = context.getString(R.string.unknown_contact);
         if (cursor == null) {
-            return null;
+            return contactName;
         }
-        String contactName = null;
         if (cursor.moveToFirst()) {
             contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
         }

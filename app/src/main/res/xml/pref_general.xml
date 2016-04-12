@@ -135,19 +135,21 @@
             android:title="@string/pref_disconnect_notif_title"
             android:widgetLayout="@layout/preference_widget_switch_compat" />
 
-        <com.althink.android.ossw.settings.TextSwitchPreference
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="pref_reject_call_message"
+            android:switchTextOff="@string/off"
+            android:switchTextOn="@string/on"
             android:title="@string/pref_reject_call_message"
-            android:defaultValue="@string/pref_reject_default_message"
-            android:widgetLayout="@layout/pref_switch"/>
+            android:widgetLayout="@layout/preference_widget_switch_compat" />
 
-        <Preference
-            android:title="@string/pref_predefined_messages" >
+        <Preference android:title="@string/pref_predefined_messages">
             <intent android:action="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
         </Preference>
 
 
-        <PreferenceScreen android:key="phone_discovery_screen"
+        <PreferenceScreen
+            android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
             <SwitchPreference
                 android:defaultValue="true"
@@ -155,12 +157,12 @@
                 android:switchTextOff="@string/off"
                 android:switchTextOn="@string/on"
                 android:title="@string/vibration_category"
-                android:widgetLayout="@layout/preference_widget_switch_compat"/>
+                android:widgetLayout="@layout/preference_widget_switch_compat" />
             <com.althink.android.ossw.settings.AudioPickerPreference
                 android:key="phone_discovery_audio"
-                android:title="@string/pref_phone_discovery_audio_title"
                 android:summary="@string/pref_phone_discovery_file_uri"
-                android:widgetLayout="@layout/pref_image_play"/>
+                android:title="@string/pref_phone_discovery_audio_title"
+                android:widgetLayout="@layout/pref_image_play" />
 
         </PreferenceScreen>
 

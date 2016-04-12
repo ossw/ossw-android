@@ -17,6 +17,7 @@ import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
@@ -26,7 +27,6 @@ import com.althink.android.ossw.service.OsswService;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -82,17 +82,7 @@ public class FunctionHandler {
                         return;
                     final String number = getItem(position);
                     Log.d(TAG, "Number selected: " + number + ", position: " + position);
-                    selectSms(new DialogSelectHandler() {
-                        @Override
-                        public void handleFunction(int position) {
-                            if (position == 0xff)
-                                return;
-                            closeDialog();
-                            final String sms = getItem(position);
-                            Log.d(TAG, "SMS selected: " + sms + ", position: " + position);
-                            CallReceiver.sendSMS(number, sms);
-                        }
-                    });
+                    selectPredefinedSmsSend(number);
                 }
             });
         }
@@ -103,17 +93,28 @@ public class FunctionHandler {
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_CLOSE, new byte[0], 0, 0, null);
     }
 
-    public static void selectSms(DialogSelectHandler dsHandler) {
-        OsswService osswService = OsswService.getInstance();
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
-        final String message = shPref.getString("pref_reject_call_message", "");
-        List<String> items = new ArrayList<>();
-        if (message.contains("|"))
-            items = Arrays.asList(message.split("\\|"));
-        else
-            items.add(message);
+    public static void selectPredefinedSmsSend(final String number) {
+        selectPredefinedSms(new DialogSelectHandler() {
+            @Override
+            public void handleFunction(int position) {
+                if (position == 0xff)
+                    return;
+                closeDialog();
+                final String sms = getItem(position);
+                Log.d(TAG, "SMS selected: " + sms + ", position: " + position);
+                CallReceiver.sendSMS(number, sms);
+                OsswService osswService = OsswService.getInstance();
+                OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(osswService.getApplicationContext());
+                List<Integer> ids = db.getPredefinedMessageIds();
+                db.incrementPredefinedMessageCount(ids.get(position));
+            }
+        });
+    }
 
-        if (items.size() == 0)
+    public static void selectPredefinedSms(DialogSelectHandler dsHandler) {
+        OsswService osswService = OsswService.getInstance();
+        List<String> items = OsswDatabaseHelper.getInstance(osswService.getApplicationContext()).getPredefinedMessages();
+        if (items == null || items.size() == 0)
             return;
         dsHandler.setItems(items);
         if (items.size() == 1) {
@@ -159,7 +160,7 @@ public class FunctionHandler {
                 return;
             List<String> items = new ArrayList<>();
             for (String number : numbers) {
-                if (items.size() >= 10)
+                if (items.size() >= 13)
                     break;
                 items.add(getContactDisplayNameByNumber(context, number) + " " + number);
             }

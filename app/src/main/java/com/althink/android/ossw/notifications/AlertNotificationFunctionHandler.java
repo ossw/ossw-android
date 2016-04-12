@@ -1,19 +1,12 @@
 package com.althink.android.ossw.notifications;
 
 import android.app.PendingIntent;
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.NotificationCategory;
-import com.althink.android.ossw.notifications.model.SimpleNotification;
-import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.PhoneCallReceiver;
-import com.althink.android.ossw.settings.TextSwitchPreference;
 
 /**
  * Created by krzysiek on 19/07/15.

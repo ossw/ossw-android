@@ -96,7 +96,7 @@ public class NotificationListener extends NotificationListenerService {
         //Log.i(TAG, "**********  onNotificationPosted");
         Log.i(TAG, "ID :" + sbn.getId() + " <> " + sbn.getNotification().tickerText + " <> " + sbn.getPackageName() + " <> " + sbn.getNotification().priority + " <> " + sbn.getNotification().flags);
 
-        RemoteViews bigContentView = sbn.getNotification().bigContentView;
+//        RemoteViews bigContentView = sbn.getNotification().bigContentView;
 
 
         //Log.d(TAG, "Incoming notification!");
@@ -317,7 +317,7 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void printNotifications() {
-        Log.i(TAG, "Notifications list:");
+//        Log.i(TAG, "Notifications list:");
         ArrayList<Notification> list = new ArrayList<Notification>(notifications.values());
         Collections.sort(list);
         for (Notification notification : list) {

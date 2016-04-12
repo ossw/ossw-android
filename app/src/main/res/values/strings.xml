@@ -91,7 +91,9 @@
     <string name="pref_notification_filter">Applications providing notifications</string>
 
     <string name="pref_reject_call_message">Reject call with SMS</string>
-    <string name="pref_reject_default_message">In a meeting, call you later.</string>
+    <string name="predefined_message1">In a meeting, call you later.</string>
+    <string name="predefined_message2">On my way.</string>
+    <string name="predefined_message3">Will be in place in 10 minutes.</string>
     <string name="pref_phone_discovery_title">Phone discovery</string>
     <string name="pref_phone_discovery_audio_title">Audio track</string>
     <string name="pref_phone_discovery_file_uri">Nothing selected</string>
@@ -108,4 +110,5 @@
 
     <string name="time_interval_picker_ok">OK</string>
     <string name="time_interval_picker_cancel">Cancel</string>
+    <string name="unknown_contact">Unknown</string>
 </resources>

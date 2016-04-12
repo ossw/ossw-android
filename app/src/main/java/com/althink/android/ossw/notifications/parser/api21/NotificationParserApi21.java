@@ -38,6 +38,7 @@ public class NotificationParserApi21 extends BaseNotificationParser {
     public Notification parse(String notificationId, StatusBarNotification sbn, Notification existingNotification) {
 
         Bundle extras = sbn.getNotification().extras;
+        Log.i(TAG, "Parsing notification (API21): "+sbn.getNotification());
         if (extras == null) {
             return null;
         }

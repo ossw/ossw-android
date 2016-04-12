@@ -3,7 +3,7 @@ package com.althink.android.ossw.notifications;
 import java.util.List;
 
 /**
- * Created by Pavel
+ * Created by Pavel Vasilyev
  */
 public abstract class DialogSelectHandler implements NotificationHandler {
 

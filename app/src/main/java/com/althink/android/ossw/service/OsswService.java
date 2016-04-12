@@ -34,11 +34,8 @@ import com.althink.android.ossw.MainActivity;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.UploadDataType;
 import com.althink.android.ossw.db.OsswDatabaseHelper;
-import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.NotificationHandler;
 import com.althink.android.ossw.notifications.NotificationListener;
-import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
-import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.plugins.PluginDefinition;
 import com.althink.android.ossw.plugins.PluginFunctionDefinition;
@@ -49,7 +46,6 @@ import com.althink.android.ossw.service.ble.BleConnectionStatusHandler;
 import com.althink.android.ossw.service.ble.BleDeviceService;
 import com.althink.android.ossw.service.ble.CharacteristicChangeHandler;
 import com.althink.android.ossw.service.ble.ReadCharacteristicHandler;
-import com.althink.android.ossw.settings.TextSwitchPreference;
 import com.althink.android.ossw.utils.FunctionHandler;
 import com.althink.android.ossw.utils.StringNormalizer;
 import com.althink.android.ossw.watch.WatchConstants;
@@ -629,28 +625,13 @@ public class OsswService extends Service {
         public void onReceive(Context context, Intent intent) {
             CallReceiver.declineCall();
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean enabled = shPref.getBoolean("pref_reject_call_message" + TextSwitchPreference.KEY_SUFFIX, false);
+            boolean enabled = shPref.getBoolean("pref_reject_call_message", false);
             if (enabled) {
                 Log.d(TAG, "Send an SMS after call declined.");
                 final Bundle extras = intent.getExtras();
                 if (extras != null) {
                     final String number = extras.getString(CallReceiver.INCOMING_CALL_NUMBER);
-                    final String message = shPref.getString("pref_reject_call_message", "");
-                    List<String> items = Arrays.asList(message.split("\\|"));
-                    if (items.size() == 0)
-                        return;
-                    if (items.size() == 1) {
-                        CallReceiver.sendSMS(number, items.get(0));
-                        return;
-                    }
-                    Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
-                    NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items);
-                    uploadNotification(1, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, new DialogSelectHandler() {
-                        @Override
-                        public void handleFunction(int position) {
-                            CallReceiver.sendSMS(number, getItem(position));
-                        }
-                    }.setItems(items));
+                    FunctionHandler.selectPredefinedSmsSend(number);
                 }
             }
         }
