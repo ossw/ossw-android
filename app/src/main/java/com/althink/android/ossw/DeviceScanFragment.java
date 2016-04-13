@@ -1,5 +1,6 @@
 package com.althink.android.ossw;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -11,7 +12,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -72,7 +75,7 @@ public class DeviceScanFragment extends ListFragment {
         mInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_watches, container, false);
         setHasOptionsMenu(true);
-        MainActivity faActivity  = (MainActivity)getActivity();
+        MainActivity faActivity = (MainActivity) getActivity();
 //        Toolbar toolbar = faActivity.getToolbar();
 //        faActivity.setSupportActionBar(toolbar);
         faActivity.setTitle(R.string.drawer_watches);
@@ -101,10 +104,13 @@ public class DeviceScanFragment extends ListFragment {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{"android.permission.ACCESS_COARSE_LOCATION"}, 0);
+        if (ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    0);
         }
-
         scanLeDevice(true);
         return v;
     }
@@ -115,7 +121,7 @@ public class DeviceScanFragment extends ListFragment {
         scanLeDevice(true);
     }
 
-        @Override
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.scan, menu);
         updateOptionsMenu(menu);
@@ -243,7 +249,7 @@ public class DeviceScanFragment extends ListFragment {
 
         public void addDevice(BluetoothDevice device, ScanRecord scanRecord, int rssi) {
             if (scanRecord == null || scanRecord.getServiceUuids() == null ||
-                    !scanRecord.getServiceUuids().contains(new ParcelUuid(OsswService.OSSW_SERVICE_UUID)) ) {
+                    !scanRecord.getServiceUuids().contains(new ParcelUuid(OsswService.OSSW_SERVICE_UUID))) {
                 return;
             }
             OsswService.BluetoothDeviceSummary bd = new OsswService.BluetoothDeviceSummary(
@@ -327,12 +333,12 @@ public class DeviceScanFragment extends ListFragment {
                 public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
                     if (isAdded())
                         getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLeDeviceListAdapter.addDevice(device, ScanRecord.parseFromBytes(scanRecord), rssi);
-                            mLeDeviceListAdapter.notifyDataSetChanged();
-                        }
-                    });
+                            @Override
+                            public void run() {
+                                mLeDeviceListAdapter.addDevice(device, ScanRecord.parseFromBytes(scanRecord), rssi);
+                                mLeDeviceListAdapter.notifyDataSetChanged();
+                            }
+                        });
                 }
             };
 

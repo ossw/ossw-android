@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
+import com.althink.android.ossw.OsswApp;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.service.WatchOperationContext;
@@ -66,10 +67,16 @@ public class OsswDatabaseHelper extends SQLiteOpenHelper {
         }
         if (!isTableExists(db, TABLE_MESSAGES)) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_MESSAGES + " (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, message TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0);");
-            Context ctx = OsswService.getInstance().getApplicationContext();
-            insertPredefinedMessage(ctx.getString(R.string.predefined_message1));
-            insertPredefinedMessage(ctx.getString(R.string.predefined_message2));
-            insertPredefinedMessage(ctx.getString(R.string.predefined_message3));
+            Context ctx = OsswApp.getContext();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("message", ctx.getString(R.string.predefined_message1));
+            db.insert(TABLE_MESSAGES, null, contentValues);
+            contentValues = new ContentValues();
+            contentValues.put("message", ctx.getString(R.string.predefined_message2));
+            db.insert(TABLE_MESSAGES, null, contentValues);
+            contentValues = new ContentValues();
+            contentValues.put("message", ctx.getString(R.string.predefined_message3));
+            db.insert(TABLE_MESSAGES, null, contentValues);
         }
     }
 
