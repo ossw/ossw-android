@@ -108,17 +108,16 @@ public class DeviceScanFragment extends ListFragment {
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.READ_CONTACTS},
-                    0);
-        }
-        scanLeDevice(true);
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+        } else
+            scanLeDevice(true);
         return v;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-        scanLeDevice(true);
     }
 
     @Override
@@ -194,7 +193,7 @@ public class DeviceScanFragment extends ListFragment {
         }
     };
 
-    private void scanLeDevice(final boolean enable) {
+    public void scanLeDevice(final boolean enable) {
         if (enable) {
             if (mScanning)
                 return;

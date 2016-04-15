@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 2;
     private static final int PERMISSIONS_REQUEST_CALL_PHONE = 3;
     private static final int PERMISSIONS_REQUEST_SEND_SMS = 4;
+    public static final int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 5;
     private static int MENU_COUNT = 5;
     private static List<MenuItem> items;
 
@@ -324,8 +325,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
-            // other 'case' lines to check for other
-            // permissions this app might request
+            case PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION:
+                mWatchesFragment.scanLeDevice(true);
         }
     }
 

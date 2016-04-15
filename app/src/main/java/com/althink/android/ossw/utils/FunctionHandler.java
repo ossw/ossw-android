@@ -184,10 +184,6 @@ public class FunctionHandler {
                 items.add(getContactDisplayNameByNumber(context, number) + " " + number);
             }
             dsHandler.setItems(items);
-            if (items.size() == 1) {
-                dsHandler.handleFunction(0);
-                return;
-            }
             Log.d(TAG, "Choose between numbers in call log: " + items.toString());
             NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items);
             OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
