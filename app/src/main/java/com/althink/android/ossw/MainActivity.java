@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String DRAWER_SELECTED_POSITION = "drawerSelectedItem";
     private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 2;
+    private static final int PERMISSIONS_REQUEST_CALL_PHONE = 3;
+    private static final int PERMISSIONS_REQUEST_SEND_SMS = 4;
     private static int MENU_COUNT = 5;
     private static List<MenuItem> items;
 
@@ -290,6 +292,20 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_CONTACTS},
                     PERMISSIONS_REQUEST_READ_CONTACTS);
+        }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CALL_PHONE},
+                    PERMISSIONS_REQUEST_CALL_PHONE);
+        }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    PERMISSIONS_REQUEST_SEND_SMS);
         }
     }
 

@@ -684,14 +684,12 @@ public class WatchSetCompiler {
                 DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
                 dsCtx.dataSourceType = DataSourceType.STRING;
                 writeSingleDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_APPLICATION, config.getJSONObject("file"), dsCtx);
-            }
-                break;
+            }   break;
             case "utility":{
                 DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
                 dsCtx.dataSourceType = DataSourceType.STRING;
                 writeSingleDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SHOW_UTILITY, config.getJSONObject("file"), dsCtx);
-            }
-                break;
+            }   break;
             case "restart":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_RESTART);
                 break;
@@ -699,9 +697,21 @@ public class WatchSetCompiler {
                 DataSourceResolutionContext dsCtx = new DataSourceResolutionContext(screenContext);
                 dsCtx.dataSourceType = DataSourceType.NUMBER;
                 writeMultiDataSourceAction(os, WatchConstants.WATCHSET_FUNCTION_SET_TIME, config.getJSONObject("parameters"), dsCtx);
-            }    break;
+            }   break;
             case "format":
                 writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_FORMAT_DATA);
+                break;
+            case "phone.discovery":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_PHONE_DISCOVERY);
+                break;
+            case "send.sms":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_SEND_SMS);
+                break;
+            case "call.contact":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_CALL_CONTACT);
+                break;
+            case "google.tasks":
+                writeSimpleAction(os, WatchConstants.WATCHSET_FUNCTION_GTASKS);
                 break;
             default:
                 if (action.startsWith("model.")) {

@@ -150,6 +150,11 @@ public class WatchConstants {
     public static final int WATCHSET_FUNCTION_STOPWATCH_START_STOP = 0x13;
     public static final int WATCHSET_FUNCTION_STOPWATCH_NEXT_LAP = 0x14;
 
+    public static final int WATCHSET_FUNCTION_PHONE_DISCOVERY = 0x20;
+    public static final int WATCHSET_FUNCTION_SEND_SMS = 0x21;
+    public static final int WATCHSET_FUNCTION_CALL_CONTACT = 0x22;
+    public static final int WATCHSET_FUNCTION_GTASKS = 0x23;
+
     public static final int WATCHSET_FUNCTION_MODEL_SET = 0xA0;
     public static final int WATCHSET_FUNCTION_MODEL_ADD = 0xA1;
     public static final int WATCHSET_FUNCTION_MODEL_SUBTRACT = 0xA2;
@@ -213,4 +218,9 @@ public class WatchConstants {
     public static final int NOTIFICATIONS_OPEN = 0x34;
 
     public static final int DIALOG_RESULT = 0x35;
+
+    public static final int PHONE_FUNCTION_PHONE_DISCOVERY = 0x40;
+    public static final int PHONE_FUNCTION_SEND_SMS = 0x41;
+    public static final int PHONE_FUNCTION_CALL_CONTACT = 0x42;
+    public static final int PHONE_FUNCTION_GTASKS = 0x43;
 }

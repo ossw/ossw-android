@@ -3,6 +3,7 @@ package com.althink.android.ossw.utils;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -17,6 +18,7 @@ import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.althink.android.ossw.OsswApp;
 import com.althink.android.ossw.db.OsswDatabaseHelper;
 import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
@@ -24,6 +26,7 @@ import com.althink.android.ossw.notifications.message.NotificationMessageBuilder
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.watch.WatchConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,15 +37,13 @@ import java.util.List;
  */
 public class FunctionHandler {
     private final static String TAG = FunctionHandler.class.getSimpleName();
-    public static final String FUNCTION_PHONE_DISCOVERY = "phone.discovery";
-    public static final String FUNCTION_SEND_SMS = "send.sms";
     public static final String PREFERENCE_PHONE_DISCOVERY_AUDIO = "phone_discovery_audio";
     public static final String PREFERENCE_PHONE_DISCOVERY_VIBRATE = "phone_discovery_vibrate";
     private static final long[] discoveryVibration = {200, 500};
     private static boolean phoneDiscoveryStarted = false;
 
-    public static void handleFunction(String functionId, String parameter) {
-        if (FUNCTION_PHONE_DISCOVERY.equals(functionId)) {
+    public static void handleFunction(int functionId) {
+        if (WatchConstants.PHONE_FUNCTION_PHONE_DISCOVERY == functionId) {
             MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
             OsswService osswService = OsswService.getInstance();
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
@@ -57,12 +58,13 @@ public class FunctionHandler {
                 Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", starting");
                 phoneDiscoveryStarted = true;
                 String uriValue = sharedPref.getString(PREFERENCE_PHONE_DISCOVERY_AUDIO, null);
-                if (uriValue != null) {
+                if (uriValue != null && !uriValue.isEmpty()) {
                     Uri uri = Uri.parse(uriValue);
+                    Log.i(TAG, "Phone discovery, audio track: " + uri);
                     mediaPlayer.reset();
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     try {
-                        mediaPlayer.setDataSource(osswService.getApplicationContext(), uri);
+                        mediaPlayer.setDataSource(OsswApp.getContext(), uri);
                         mediaPlayer.prepare();
                         mediaPlayer.start();
                     } catch (IOException e) {
@@ -74,18 +76,35 @@ public class FunctionHandler {
                     v.vibrate(discoveryVibration, 0);
                 }
             }
-        } else if (FUNCTION_SEND_SMS.equals(functionId)) {
+        } else if (WatchConstants.PHONE_FUNCTION_SEND_SMS == functionId) {
             selectCallLogNumber(new DialogSelectHandler() {
                 @Override
                 public void handleFunction(int position) {
                     if (position == 0xff)
                         return;
-                    final String number = getItem(position);
+                    final String number = extractNumber(getItem(position));
                     Log.d(TAG, "Number selected: " + number + ", position: " + position);
                     selectPredefinedSmsSend(number);
                 }
             });
+        } else if (WatchConstants.PHONE_FUNCTION_CALL_CONTACT == functionId) {
+            selectCallLogNumber(new DialogSelectHandler() {
+                @Override
+                public void handleFunction(int position) {
+                    if (position == 0xff)
+                        return;
+                    closeDialog();
+                    final String number = extractNumber(getItem(position));
+                    Log.d(TAG, "Number selected: " + number + ", position: " + position);
+                    CallReceiver.callNumber(number);
+                }
+            });
         }
+    }
+
+    private static String extractNumber(String contact) {
+        String[] ss = contact.split("\\s+");
+        return ss[ss.length-1];
     }
 
     public static void closeDialog() {

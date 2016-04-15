@@ -3,10 +3,12 @@ package com.althink.android.ossw.service;
 import java.lang.reflect.Method;
 import java.util.Date;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -15,10 +17,12 @@ import android.os.Build;
 import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.service.notification.NotificationListenerService;
+import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.althink.android.ossw.OsswApp;
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.notifications.NotificationListener;
 
@@ -195,8 +199,23 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
     }
 
     public static void sendSMS(String number, String msg) {
-        SmsManager sm = SmsManager.getDefault();
-        Log.i(TAG, "Sending SMS: '" + msg + "' to " + number);
-        sm.sendTextMessage(number, null, msg, null, null);
+        if (ContextCompat.checkSelfPermission(OsswApp.getContext(),
+                Manifest.permission.SEND_SMS)
+                == PackageManager.PERMISSION_GRANTED) {
+            SmsManager sm = SmsManager.getDefault();
+            Log.i(TAG, "Sending SMS: '" + msg + "' to " + number);
+            sm.sendTextMessage(number, null, msg, null, null);
+        }
+    }
+
+    public static void callNumber(String number) {
+        if (ContextCompat.checkSelfPermission(OsswApp.getContext(),
+                Manifest.permission.CALL_PHONE)
+                == PackageManager.PERMISSION_GRANTED) {
+            Uri uri = Uri.parse("tel:" + number);
+            Intent callIntent = new Intent(Intent.ACTION_CALL, uri);
+            callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            OsswApp.getContext().startActivity(callIntent);
+        }
     }
 }

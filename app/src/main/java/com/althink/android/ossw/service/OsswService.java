@@ -776,6 +776,8 @@ public class OsswService extends Service {
                     nl.openNotificationsScreen();
                 }
                 break;
+            default:
+                FunctionHandler.handleFunction(functionId);
         }
     }
 
@@ -785,8 +787,6 @@ public class OsswService extends Service {
         }
         WatchExtensionFunction function = watchContext.getExternalFunctions().get(extFunctionId);
         Log.i(TAG, "Function invoked: " + function);
-        if (BASE_ID.equals(function.getPluginId()))
-            FunctionHandler.handleFunction(function.getFunctionId(), function.getParameter());
         invokeExtensionFunction(function.getPluginId(), function.getFunctionId(), function.getParameter());
     }
 
