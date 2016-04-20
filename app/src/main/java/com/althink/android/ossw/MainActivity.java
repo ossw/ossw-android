@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CALL_PHONE = 3;
     private static final int PERMISSIONS_REQUEST_SEND_SMS = 4;
     public static final int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 5;
+    public static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 6;
     private static int MENU_COUNT = 5;
     private static List<MenuItem> items;
 
