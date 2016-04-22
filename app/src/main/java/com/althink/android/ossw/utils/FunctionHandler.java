@@ -3,7 +3,6 @@ package com.althink.android.ossw.utils;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -20,6 +19,7 @@ import android.util.Log;
 
 import com.althink.android.ossw.OsswApp;
 import com.althink.android.ossw.db.OsswDatabaseHelper;
+import com.althink.android.ossw.gtasks.TasksManager;
 import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
@@ -42,69 +42,79 @@ public class FunctionHandler {
     private static final long[] discoveryVibration = {200, 500};
     private static boolean phoneDiscoveryStarted = false;
 
-    public static void handleFunction(int functionId) {
-        if (WatchConstants.PHONE_FUNCTION_PHONE_DISCOVERY == functionId) {
-            MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
-            OsswService osswService = OsswService.getInstance();
-            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
-            Vibrator v = (Vibrator) osswService.getSystemService(Context.VIBRATOR_SERVICE);
-            if (phoneDiscoveryStarted) {
-                Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", stopping");
-                phoneDiscoveryStarted = false;
-                if (mediaPlayer.isPlaying())
-                    mediaPlayer.stop();
-                v.cancel();
-            } else {
-                Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", starting");
-                phoneDiscoveryStarted = true;
-                String uriValue = sharedPref.getString(PREFERENCE_PHONE_DISCOVERY_AUDIO, null);
-                if (uriValue != null && !uriValue.isEmpty()) {
-                    Uri uri = Uri.parse(uriValue);
-                    Log.i(TAG, "Phone discovery, audio track: " + uri);
-                    mediaPlayer.reset();
-                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    try {
-                        mediaPlayer.setDataSource(OsswApp.getContext(), uri);
-                        mediaPlayer.prepare();
-                        mediaPlayer.start();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+    public static void handleFunction(int functionId, byte[] data) {
+        switch (functionId) {
+            case WatchConstants.PHONE_FUNCTION_PHONE_DISCOVERY: {
+                MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
+                OsswService osswService = OsswService.getInstance();
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
+                Vibrator v = (Vibrator) osswService.getSystemService(Context.VIBRATOR_SERVICE);
+                if (phoneDiscoveryStarted) {
+                    Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", stopping");
+                    phoneDiscoveryStarted = false;
+                    if (mediaPlayer.isPlaying())
+                        mediaPlayer.stop();
+                    v.cancel();
+                } else {
+                    Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", starting");
+                    phoneDiscoveryStarted = true;
+                    String uriValue = sharedPref.getString(PREFERENCE_PHONE_DISCOVERY_AUDIO, null);
+                    if (uriValue != null && !uriValue.isEmpty()) {
+                        Uri uri = Uri.parse(uriValue);
+                        Log.i(TAG, "Phone discovery, audio track: " + uri);
+                        mediaPlayer.reset();
+                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                        try {
+                            mediaPlayer.setDataSource(OsswApp.getContext(), uri);
+                            mediaPlayer.prepare();
+                            mediaPlayer.start();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    boolean vibrate = sharedPref.getBoolean(PREFERENCE_PHONE_DISCOVERY_VIBRATE, true);
+                    if (vibrate) {
+                        v.vibrate(discoveryVibration, 0);
                     }
                 }
-                boolean vibrate = sharedPref.getBoolean(PREFERENCE_PHONE_DISCOVERY_VIBRATE, true);
-                if (vibrate) {
-                    v.vibrate(discoveryVibration, 0);
-                }
+                break;
             }
-        } else if (WatchConstants.PHONE_FUNCTION_SEND_SMS == functionId) {
-            selectCallLogNumber(new DialogSelectHandler() {
-                @Override
-                public void handleFunction(int position) {
-                    if (position == 0xff)
-                        return;
-                    final String number = extractNumber(getItem(position));
-                    Log.d(TAG, "Number selected: " + number + ", position: " + position);
-                    selectPredefinedSmsSend(number);
-                }
-            });
-        } else if (WatchConstants.PHONE_FUNCTION_CALL_CONTACT == functionId) {
-            selectCallLogNumber(new DialogSelectHandler() {
-                @Override
-                public void handleFunction(int position) {
-                    if (position == 0xff)
-                        return;
-                    closeDialog();
-                    final String number = extractNumber(getItem(position));
-                    Log.d(TAG, "Number selected: " + number + ", position: " + position);
-                    CallReceiver.callNumber(number);
-                }
-            });
+            case WatchConstants.PHONE_FUNCTION_SEND_SMS: {
+                selectCallLogNumber(new DialogSelectHandler() {
+                    @Override
+                    public void handleFunction(int position) {
+                        final String number = extractNumber(getItem(position));
+                        Log.d(TAG, "Number selected: " + number + ", position: " + position);
+                        selectPredefinedSmsSend(number);
+                    }
+                });
+                break;
+            }
+            case WatchConstants.PHONE_FUNCTION_CALL_CONTACT: {
+                selectCallLogNumber(new DialogSelectHandler() {
+                    @Override
+                    public void handleFunction(int position) {
+                        closeDialog();
+                        final String number = extractNumber(getItem(position));
+                        Log.d(TAG, "Number selected: " + number + ", position: " + position);
+                        CallReceiver.callNumber(number);
+                    }
+                });
+                break;
+            }
+            case WatchConstants.PHONE_FUNCTION_GTASKS: {
+                if (data.length == 2)
+                    TasksManager.getInstance().handle(data[0], data[1]);
+                else
+                    TasksManager.getInstance().handle(0, 0);
+                break;
+            }
         }
     }
 
     private static String extractNumber(String contact) {
         String[] ss = contact.split("\\s+");
-        return ss[ss.length-1];
+        return ss[ss.length - 1];
     }
 
     public static void closeDialog() {
@@ -116,8 +126,6 @@ public class FunctionHandler {
         selectPredefinedSms(new DialogSelectHandler() {
             @Override
             public void handleFunction(int position) {
-                if (position == 0xff)
-                    return;
                 closeDialog();
                 final String sms = getItem(position);
                 Log.d(TAG, "SMS selected: " + sms + ", position: " + position);
@@ -141,7 +149,7 @@ public class FunctionHandler {
             return;
         }
         Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items, 0, WatchConstants.DIALOG_RESULT, 0);
         osswService.uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
     }
 
@@ -185,7 +193,7 @@ public class FunctionHandler {
             }
             dsHandler.setItems(items);
             Log.d(TAG, "Choose between numbers in call log: " + items.toString());
-            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items);
+            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items, 0, WatchConstants.DIALOG_RESULT, 0);
             OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
         }
     }

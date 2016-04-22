@@ -720,11 +720,13 @@ public class OsswService extends Service {
             case WatchConstants.NOTIFICATIONS_FUNCTION_ALERT_OPTION_2:
                 if (lastNotificationHandler != null) {
                     lastNotificationHandler.handleFunction(functionId);
+                    lastNotificationHandler = null;
                 }
                 break;
             case WatchConstants.DIALOG_RESULT:
                 if (lastNotificationHandler != null) {
-                    lastNotificationHandler.handleFunction((int) 0xff & data[0]);
+                    lastNotificationHandler.handleFunction((int) 0xff & data[1]);
+                    lastNotificationHandler = null;
                 }
                 break;
             case WatchConstants.NOTIFICATIONS_SHOW_FIRST:
@@ -777,7 +779,7 @@ public class OsswService extends Service {
                 }
                 break;
             default:
-                FunctionHandler.handleFunction(functionId);
+                FunctionHandler.handleFunction(functionId, data);
         }
     }
 

@@ -147,6 +147,9 @@
             <intent android:action="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
         </Preference>
 
+        <Preference android:title="@string/pref_google_tasks">
+            <intent android:action="com.althink.android.ossw.settings.EDIT_GTASKS" />
+        </Preference>
 
         <PreferenceScreen
             android:key="phone_discovery_screen"
