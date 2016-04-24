@@ -223,8 +223,15 @@ public class WatchConstants {
     public static final int PHONE_FUNCTION_SEND_SMS = 0x41;
     public static final int PHONE_FUNCTION_CALL_CONTACT = 0x42;
     public static final int PHONE_FUNCTION_GTASKS = 0x43;
+    public static final int PHONE_FUNCTION_REJECT_SMS = 0x44;
 
     public static final int STYLE_RADIO_BUTTON = 0x01;
     public static final int STYLE_CHECK_BOX = 0x02;
     public static final int STYLE_STRIKE = 0x04;
+
+    public static final int BUTTON_UP = 1;
+    public static final int BUTTON_DOWN = 2;
+    public static final int BUTTON_SELECT = 4;
+    public static final int BUTTON_BACK = 8;
+    public static final int BUTTON_HOLD = 16;
 }

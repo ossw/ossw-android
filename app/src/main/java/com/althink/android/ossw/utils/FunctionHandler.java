@@ -27,9 +27,11 @@ import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.watch.WatchConstants;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -40,9 +42,15 @@ public class FunctionHandler {
     public static final String PREFERENCE_PHONE_DISCOVERY_AUDIO = "phone_discovery_audio";
     public static final String PREFERENCE_PHONE_DISCOVERY_VIBRATE = "phone_discovery_vibrate";
     private static final long[] discoveryVibration = {200, 500};
+    private static final int PHONE_NUMBER_MAX = 26;
     private static boolean phoneDiscoveryStarted = false;
+    private static LinkedHashSet<String> lastNumbers = Sets.newLinkedHashSet();
+    private static int sendSmsPage = 0;
+    private static String sendSmsNumber;
+    private static List<String> sendSmsMessages;
 
     public static void handleFunction(int functionId, byte[] data) {
+        Log.d(TAG, "Function handler, id: " + functionId + ", data" + data);
         switch (functionId) {
             case WatchConstants.PHONE_FUNCTION_PHONE_DISCOVERY: {
                 MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
@@ -79,37 +87,78 @@ public class FunctionHandler {
                 }
                 break;
             }
-            case WatchConstants.PHONE_FUNCTION_SEND_SMS: {
-                selectCallLogNumber(new DialogSelectHandler() {
-                    @Override
-                    public void handleFunction(int position) {
-                        final String number = extractNumber(getItem(position));
-                        Log.d(TAG, "Number selected: " + number + ", position: " + position);
-                        selectPredefinedSmsSend(number);
+            case WatchConstants.PHONE_FUNCTION_REJECT_SMS: {
+                int buttons = 0;
+                int item = 0;
+                if (data.length == 2) {
+                    buttons = data[0];
+                    item = data[1];
+                    closeDialog();
+                    if ((buttons & WatchConstants.BUTTON_SELECT) != 0) {
+                        CallReceiver.sendSMS(sendSmsNumber, sendSmsMessages.get(item));
                     }
-                });
+                }
+                break;
+            }
+            case WatchConstants.PHONE_FUNCTION_SEND_SMS: {
+                int buttons = 0;
+                int item = 0;
+                if (data.length == 2) {
+                    buttons = data[0];
+                    item = data[1];
+                    if ((buttons & WatchConstants.BUTTON_SELECT) != 0) {
+                        if (sendSmsPage == 0) {
+                            sendSmsNumber = new ArrayList<>(lastNumbers).get(item);
+                            Log.d(TAG, "Number selected: " + sendSmsNumber + ", position: " + item);
+                            selectPredefinedSms(WatchConstants.PHONE_FUNCTION_SEND_SMS);
+                            sendSmsPage = 1;
+                        } else if (sendSmsPage == 1) {
+                            closeDialog();
+                            CallReceiver.sendSMS(sendSmsNumber, sendSmsMessages.get(item));
+                        }
+                    } else if ((buttons & WatchConstants.BUTTON_BACK) != 0) {
+                        if (sendSmsPage == 0) {
+                            closeDialog();
+                        } else if (sendSmsPage == 1) {
+                            sendSmsPage = 0;
+                            selectCallLogNumber(WatchConstants.PHONE_FUNCTION_SEND_SMS);
+                        }
+                    }
+                } else {
+                    sendSmsPage = 0;
+                    selectCallLogNumber(WatchConstants.PHONE_FUNCTION_SEND_SMS);
+                }
                 break;
             }
             case WatchConstants.PHONE_FUNCTION_CALL_CONTACT: {
-                selectCallLogNumber(new DialogSelectHandler() {
-                    @Override
-                    public void handleFunction(int position) {
-                        closeDialog();
-                        final String number = extractNumber(getItem(position));
-                        Log.d(TAG, "Number selected: " + number + ", position: " + position);
+                int buttons = 0;
+                int item = 0;
+                Log.d(TAG, "Call contact function, buttons: " + buttons + ", position: " + item);
+                if (data.length == 2) {
+                    buttons = data[0];
+                    item = data[1];
+                    closeDialog();
+                    if ((buttons & WatchConstants.BUTTON_SELECT) != 0) {
+                        String number = new ArrayList<>(lastNumbers).get(item);
+                        Log.d(TAG, "Number selected: " + number + ", position: " + item);
                         CallReceiver.callNumber(number);
                     }
-                });
+                } else
+                    selectCallLogNumber(WatchConstants.PHONE_FUNCTION_CALL_CONTACT);
                 break;
             }
             case WatchConstants.PHONE_FUNCTION_GTASKS: {
-                if (data.length == 2)
-                    TasksManager.getInstance().handle(data[0], data[1]);
-                else
-                    TasksManager.getInstance().handle(0, 0);
+                int buttons = 0;
+                int item = 0;
+                if (data.length == 2) {
+                    buttons = data[0];
+                    item = data[1];
+                }
+                TasksManager.getInstance().handle(buttons, item);
                 break;
             }
         }
+
     }
 
     private static String extractNumber(String contact) {
@@ -122,79 +171,49 @@ public class FunctionHandler {
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_CLOSE, new byte[0], 0, 0, null);
     }
 
-    public static void selectPredefinedSmsSend(final String number) {
-        selectPredefinedSms(new DialogSelectHandler() {
-            @Override
-            public void handleFunction(int position) {
-                closeDialog();
-                final String sms = getItem(position);
-                Log.d(TAG, "SMS selected: " + sms + ", position: " + position);
-                CallReceiver.sendSMS(number, sms);
-                OsswService osswService = OsswService.getInstance();
-                OsswDatabaseHelper db = OsswDatabaseHelper.getInstance(osswService.getApplicationContext());
-                List<Integer> ids = db.getPredefinedMessageIds();
-                db.incrementPredefinedMessageCount(ids.get(position));
-            }
-        });
+    public static void selectPredefinedSmsSend(String number) {
+        sendSmsNumber = number;
+        selectPredefinedSms(WatchConstants.PHONE_FUNCTION_REJECT_SMS);
     }
 
-    public static void selectPredefinedSms(DialogSelectHandler dsHandler) {
+    public static void selectPredefinedSms(int token) {
         OsswService osswService = OsswService.getInstance();
-        List<String> items = OsswDatabaseHelper.getInstance(osswService.getApplicationContext()).getPredefinedMessages();
-        if (items == null || items.size() == 0)
+        sendSmsMessages = OsswDatabaseHelper.getInstance(osswService.getApplicationContext()).getPredefinedMessages();
+        if (sendSmsMessages == null || sendSmsMessages.size() == 0)
             return;
-        dsHandler.setItems(items);
-        if (items.size() == 1) {
-            dsHandler.handleFunction(0);
-            return;
-        }
-        Log.d(TAG, "Choose between several predefined SMS: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", items, 0, WatchConstants.DIALOG_RESULT, 0);
-        osswService.uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
+        Log.d(TAG, "Choose between several predefined SMS: " + sendSmsMessages.toString());
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", sendSmsMessages, 0, token, 0);
+        osswService.uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
-    public static void selectCallLogNumber(DialogSelectHandler dsHandler) {
-        //Fetches the complete call log in descending order. i.e recent calls appears first.
-        String[] projection = new String[]{
-                CallLog.Calls._ID,
-                CallLog.Calls.NUMBER,
-                CallLog.Calls.DATE,
-                CallLog.Calls.DURATION,
-                CallLog.Calls.TYPE
-        };
+    public static void selectCallLogNumber(int token) {
+        // Fetches the complete call log in descending order. i.e recent calls appears first.
+        String[] projection = new String[]{CallLog.Calls.NUMBER, CallLog.Calls.DATE};
         Context context = OsswService.getInstance().getApplicationContext();
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, null,
                 null, CallLog.Calls.DATE + " DESC");
-        List<String> numbers = new ArrayList<>();
+        lastNumbers.clear();
         if (c.getCount() > 0) {
             c.moveToFirst();
+            int count = 0;
+            int colIndex = c.getColumnIndex(CallLog.Calls.NUMBER);
             do {
-                String callerNumber = c.getString(c.getColumnIndex(CallLog.Calls.NUMBER));
-                if (!numbers.contains(callerNumber))
-                    numbers.add(callerNumber);
-            } while (c.moveToNext());
-            if (numbers.size() == 0)
+                String callerNumber = c.getString(colIndex);
+                if (lastNumbers.add(callerNumber))
+                    count++;
+            } while (c.moveToNext() && count < PHONE_NUMBER_MAX);
+            if (lastNumbers.size() == 0)
                 return;
             List<String> items = new ArrayList<>();
-            for (String number : numbers) {
-                if (items.size() >= 13)
-                    break;
+            for (String number : lastNumbers) {
                 items.add(getContactDisplayNameByNumber(context, number) + " " + number);
             }
-            dsHandler.setItems(items);
             Log.d(TAG, "Choose between numbers in call log: " + items.toString());
-            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items, 0, WatchConstants.DIALOG_RESULT, 0);
-            OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, dsHandler);
+            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items, 0, token, 0);
+            OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
         }
     }
 

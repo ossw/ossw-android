@@ -63,12 +63,6 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    static final int BUTTON_UP = 1;
-    static final int BUTTON_DOWN = 2;
-    static final int BUTTON_SELECT = 4;
-    static final int BUTTON_BACK = 8;
-    static final int BUTTON_HOLD = 16;
-
     private static final String[] SCOPES = {TasksScopes.TASKS};
 
     List<Account> accountList;
@@ -106,7 +100,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             else if (level == 2)
                 showTasks();
         } else {
-            if (buttons == BUTTON_BACK) {
+            if (buttons == WatchConstants.BUTTON_BACK) {
                 if (level == 0) {
                     FunctionHandler.closeDialog();
                 } else if (level == 1) {
@@ -116,9 +110,9 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                     level--;
                     showTaskLists();
                 }
-            } else if (buttons == (BUTTON_BACK | BUTTON_HOLD)) {
+            } else if (buttons == (WatchConstants.BUTTON_BACK | WatchConstants.BUTTON_HOLD)) {
 //                FunctionHandler.closeDialog();
-            } else if (buttons == BUTTON_SELECT) {
+            } else if (buttons == WatchConstants.BUTTON_SELECT) {
                 Log.d(TAG, "Select button on level: " + level);
                 if (level == 0) {
                     account = item;
@@ -131,7 +125,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                 } else if (level == 2) {
                     toggleTaskCompletion(item);
                 }
-            } else if (buttons == (BUTTON_SELECT | BUTTON_HOLD)) {
+            } else if (buttons == (WatchConstants.BUTTON_SELECT | WatchConstants.BUTTON_HOLD)) {
                 // TODO: add some functionality
             }
         }
