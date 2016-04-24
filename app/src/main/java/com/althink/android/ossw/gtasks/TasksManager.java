@@ -21,10 +21,14 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.client.util.Maps;
+import com.google.api.client.util.Sets;
 import com.google.api.services.tasks.Tasks;
 import com.google.api.services.tasks.TasksScopes;
 import com.google.api.services.tasks.model.Task;
@@ -34,7 +38,11 @@ import com.google.api.services.tasks.model.TaskLists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -43,11 +51,13 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     private final static String TAG = TasksManager.class.getSimpleName();
     private static TasksManager instance;
     private static int level = 0;
-    private static String account = "";
+    private static int account = 0;
     private static String taskListId = "";
+    private static String TASK_COMPLETED = "completed";
+    private static String TASK_NEEDS_ACTION = "needsAction";
     GoogleAccountCredential mCredential;
 
-    static final long LIST_MAX_RESULTS = 20;
+    static final long LIST_MAX_RESULTS = 30;
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
@@ -63,6 +73,9 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
 
     List<Account> accountList;
     List<String> lastIds = new ArrayList<>();
+    // Tasks cache
+    Map<String, List<TaskList>> taskLists = Maps.newHashMap();
+    Map<String, List<Task>> tasks = Maps.newHashMap();
 
     private TasksManager() {
         Context context = OsswApp.getContext().getApplicationContext();
@@ -106,8 +119,9 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             } else if (buttons == (BUTTON_BACK | BUTTON_HOLD)) {
 //                FunctionHandler.closeDialog();
             } else if (buttons == BUTTON_SELECT) {
+                Log.d(TAG, "Select button on level: " + level);
                 if (level == 0) {
-                    account = accountList.get(item).name;
+                    account = item;
                     level++;
                     showTaskLists();
                 } else if (level == 1) {
@@ -115,12 +129,31 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                     level++;
                     showTasks();
                 } else if (level == 2) {
-                    // TODO: implement toggling the task completion
+                    toggleTaskCompletion(item);
                 }
             } else if (buttons == (BUTTON_SELECT | BUTTON_HOLD)) {
                 // TODO: add some functionality
             }
         }
+    }
+
+    public void toggleTaskCompletion(final int item) {
+        Log.d(TAG, "Toggle task completed status: item #" + item);
+        mCredential.setSelectedAccountName(accountList.get(account).name);
+        new MakeRequestTask<Boolean>(mCredential) {
+            @Override
+            protected Boolean getDataFromApi(Tasks mService) throws IOException {
+                DateTime dateTime = new DateTime(new Date());
+                Task task = tasks.get(taskListId).get(item);
+                if (task.getStatus().equals(TASK_COMPLETED))
+                    task.setStatus(TASK_NEEDS_ACTION).setCompleted(null);
+                else
+                    task.setStatus(TASK_COMPLETED).setCompleted(dateTime);
+                Log.d(TAG, "Patching task status: " + task);
+                Task newTask = mService.tasks().update(taskListId, task.getId(), task).execute();
+                return true;
+            }
+        }.execute();
     }
 
     public void showAccounts() {
@@ -132,8 +165,39 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
+    private void uploadTaskListsFromCache(String currentAccount) {
+        List<TaskList> result = taskLists.get(currentAccount);
+        lastIds.clear();
+        if (result == null || result.size() == 0)
+            return;
+        List<String> items = new ArrayList<>();
+        for (TaskList list : result) {
+            items.add(list.getTitle());
+            lastIds.add(list.getId());
+        }
+        Log.d(TAG, "Choose a tasks list: " + items.toString());
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, 0, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
+        OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
+    }
+
+    private boolean refreshTaskLists(String key, List<TaskList> result) {
+        List<TaskList> list = taskLists.get(key);
+        if (list != null) {
+            HashSet<TaskList> cachedLists = Sets.newHashSet();
+            cachedLists.addAll(list);
+            HashSet<TaskList> newLists = Sets.newHashSet();
+            newLists.addAll(result);
+            if (newLists.equals(cachedLists))
+                return false;
+        }
+        taskLists.put(key, result);
+        return true;
+    }
+
     public void showTaskLists() {
-        mCredential.setSelectedAccountName(account);
+        final String currentAccount = accountList.get(account).name;
+        uploadTaskListsFromCache(currentAccount);
+        mCredential.setSelectedAccountName(currentAccount);
         new MakeRequestTask<List<TaskList>>(mCredential) {
             @Override
             protected List<TaskList> getDataFromApi(Tasks mService) throws IOException {
@@ -144,54 +208,87 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             }
 
             protected void onPostExecute(List<TaskList> result) {
-                lastIds.clear();
-                if (result == null || result.size() == 0)
-                    return;
-                List<String> items = new ArrayList<>();
-                for (TaskList list : result) {
-                    items.add(list.getTitle());
-                    lastIds.add(list.getId());
-                }
-                Log.d(TAG, "Choose a tasks list: " + items.toString());
-                NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, 0, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
-                OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
+                if (refreshTaskLists(currentAccount, result))
+                    uploadTaskListsFromCache(currentAccount);
+            }
+
+            protected void onCancelled() {
+                super.onCancelled();
+                if (level > 0)
+                    level--;
             }
         }.execute();
     }
 
+    private void uploadTasksFromCache(String taskListKey) {
+        List<Task> result = tasks.get(taskListKey);
+        lastIds.clear();
+        if (result == null || result.size() == 0)
+            return;
+        int itemsSize = result.size();
+        List<String> items = new ArrayList<>();
+        int bitSetLength = itemsSize >> 3;
+        if ((itemsSize & 7) > 0)
+            bitSetLength++;
+        byte[] bitset = new byte[bitSetLength];
+        int bitCount = 0;
+        for (Task task : result) {
+            String title = task.getTitle();
+            if (title.length() > 30)
+                title = title.substring(0, 30);
+            if (task.getParent() != null && !task.getParent().isEmpty())
+                title = "> " + title;
+            lastIds.add(task.getId());
+            if (task.getStatus().equals(TASK_COMPLETED)) {
+                bitset[bitCount >> 3] |= 1 << (bitCount & 7);
+            }
+            bitCount++;
+            items.add(title);
+        }
+        Log.d(TAG, "Choose a task: " + items.toString());
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks", items, 0,
+                WatchConstants.PHONE_FUNCTION_GTASKS, WatchConstants.STYLE_CHECK_BOX | WatchConstants.STYLE_STRIKE, bitset);
+        OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
+
+    }
+
+    private boolean refreshTasks(String key, List<Task> result) {
+        List<Task> list = tasks.get(key);
+        if (list != null) {
+            HashSet<Task> cachedTasks = Sets.newHashSet();
+            cachedTasks.addAll(list);
+            HashSet<Task> newTasks = Sets.newHashSet();
+            newTasks.addAll(result);
+            if (newTasks.equals(cachedTasks))
+                return false;
+        }
+        tasks.put(key, result);
+        return true;
+    }
+
     public void showTasks() {
-        mCredential.setSelectedAccountName(account);
+        String currentAccount = accountList.get(account).name;
+        uploadTasksFromCache(taskListId);
+        mCredential.setSelectedAccountName(currentAccount);
         new MakeRequestTask<List<Task>>(mCredential) {
             @Override
             protected List<Task> getDataFromApi(Tasks mService) throws IOException {
-                com.google.api.services.tasks.model.Tasks result = mService.tasks().list(taskListId).setFields("items(id,title,status)")
-                        .setMaxResults(LIST_MAX_RESULTS)
-                        .execute();
+                com.google.api.services.tasks.model.Tasks result =
+                        mService.tasks().list(taskListId).setFields("items(id,title,status,parent)")
+                                .setMaxResults(LIST_MAX_RESULTS)
+                                .execute();
                 return result.getItems();
             }
 
             protected void onPostExecute(List<Task> result) {
-                lastIds.clear();
-                int itemsSize = result.size();
-                if (result == null || itemsSize == 0)
-                    return;
-                List<String> items = new ArrayList<>();
-                int bitSetLength = itemsSize >> 3;
-                if ((itemsSize & 7) > 0)
-                    bitSetLength++;
-                byte[] bitset = new byte[bitSetLength];
-                int bitCount = 0;
-                for (Task task : result) {
-                    items.add(task.getTitle());
-                    lastIds.add(task.getId());
-                    if (task.getStatus().equals("completed"))
-                        bitset[bitCount>>3] |= 1 << (bitCount & 7);
-                    bitCount++;
-                }
-                Log.d(TAG, "Choose a task: " + items.toString());
-                NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks", items, 0,
-                        WatchConstants.PHONE_FUNCTION_GTASKS, WatchConstants.STYLE_CHECK_BOX | WatchConstants.STYLE_STRIKE, bitset);
-                OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
+                if (refreshTasks(taskListId, result))
+                    uploadTasksFromCache(taskListId);
+            }
+
+            protected void onCancelled() {
+                super.onCancelled();
+                if (level > 0)
+                    level--;
             }
         }.execute();
     }
@@ -304,7 +401,11 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         @Override
         protected void onCancelled() {
             if (mLastError != null) {
-                Log.e(TAG, mLastError.toString());
+                if (mLastError instanceof UserRecoverableAuthIOException) {
+                    OsswApp.getContext().startActivity(
+                            ((UserRecoverableAuthIOException) mLastError).getIntent());
+                } else
+                    Log.e(TAG, mLastError.toString());
             } else {
                 Log.e(TAG, "Request cancelled.");
             }

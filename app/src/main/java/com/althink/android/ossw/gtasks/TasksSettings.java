@@ -148,17 +148,17 @@ public class TasksSettings extends AppCompatActivity
     private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = getPreferences(Context.MODE_PRIVATE)
-                    .getString(PREF_ACCOUNT_NAME, null);
-            if (accountName != null) {
-                mCredential.setSelectedAccountName(accountName);
-                getResultsFromApi();
-            } else {
+//            String accountName = getPreferences(Context.MODE_PRIVATE)
+//                    .getString(PREF_ACCOUNT_NAME, null);
+//            if (accountName != null) {
+//                mCredential.setSelectedAccountName(accountName);
+//                getResultsFromApi();
+//            } else {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);
-            }
+//            }
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
             EasyPermissions.requestPermissions(
