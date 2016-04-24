@@ -191,21 +191,20 @@ public class NotificationListener extends NotificationListenerService {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         Set<String> selections = sharedPref.getStringSet("notification_applications", null);
         if (selections == null) {
-            Log.i(TAG, "Empty notification filter configuration");
+            Log.d(TAG, "Empty notification filter configuration");
             return false;
         }
-        Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
+//        Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
         if (selections.contains(sbn.getPackageName())) {
-            Log.i(TAG, "Notification are enabled for given app");
+//            Log.i(TAG, "Notification are enabled for given app");
             return false;
         }
-        Log.i(TAG, "Notification are disabled for given app");
+        Log.d(TAG, "Notification from '"+sbn.getPackageName()+"' is not in the list, it will be skipped");
         return true;
     }
 
     private Notification parseNotification(StatusBarNotification sbn, String notificationId, Notification existingNotification) {
         if (skipNotification(sbn)) {
-            Log.i(TAG, "Skip notifications");
             return null;
         }
         if (BaseNotificationParser.isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT) &&
