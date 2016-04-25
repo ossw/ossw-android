@@ -27,6 +27,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.client.util.Lists;
 import com.google.api.client.util.Maps;
 import com.google.api.client.util.Sets;
 import com.google.api.services.tasks.Tasks;
@@ -53,21 +54,21 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     private static int level = 0;
     private static int account = 0;
     private static String taskListId = "";
-    private static String TASK_COMPLETED = "completed";
-    private static String TASK_NEEDS_ACTION = "needsAction";
-    GoogleAccountCredential mCredential;
+    private static boolean showCompleted = true;
 
-    static final long LIST_MAX_RESULTS = 30;
+    GoogleAccountCredential mCredential;
+    private static final String[] SCOPES = {TasksScopes.TASKS};
+    private static final String TASK_COMPLETED = "completed";
+    private static final String TASK_NEEDS_ACTION = "needsAction";
+
+    static final long LIST_MAX_RESULTS = 100;
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String[] SCOPES = {TasksScopes.TASKS};
-
+    // Tasks data cache
     List<Account> accountList;
-    List<String> lastIds = new ArrayList<>();
-    // Tasks cache
     Map<String, List<TaskList>> taskLists = Maps.newHashMap();
     Map<String, List<Task>> tasks = Maps.newHashMap();
 
@@ -92,6 +93,8 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         Log.i(TAG, "Handling gtasks event with parameters: " + buttons + ", " + item);
         if (accountList == null || accountList.size() < 1 || !isGooglePlayServicesAvailable() || !isDeviceOnline())
             return;
+        if (level == 0 && accountList.size() == 1)
+            level = 1;
         if (buttons == 0) {
             if (level == 0)
                 showAccounts();
@@ -104,10 +107,14 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                 if (level == 0) {
                     FunctionHandler.closeDialog();
                 } else if (level == 1) {
-                    level--;
-                    showAccounts();
+                    if (accountList.size() == 1)
+                        FunctionHandler.closeDialog();
+                    else {
+                        level = 0;
+                        showAccounts();
+                    }
                 } else if (level == 2) {
-                    level--;
+                    level = 1;
                     showTaskLists();
                 }
             } else if (buttons == (WatchConstants.BUTTON_BACK | WatchConstants.BUTTON_HOLD)) {
@@ -116,35 +123,56 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                 Log.d(TAG, "Select button on level: " + level);
                 if (level == 0) {
                     account = item;
-                    level++;
+                    level = 1;
                     showTaskLists();
                 } else if (level == 1) {
-                    taskListId = lastIds.get(item);
-                    level++;
+                    taskListId = taskLists.get(accountList.get(account).name).get(item).getId();
+                    level = 2;
                     showTasks();
                 } else if (level == 2) {
                     toggleTaskCompletion(item);
                 }
             } else if (buttons == (WatchConstants.BUTTON_SELECT | WatchConstants.BUTTON_HOLD)) {
-                // TODO: add some functionality
+                if (level == 2) {
+                    showCompleted = !showCompleted;
+                    uploadTasksFromCache(taskListId);
+                }
             }
         }
     }
 
-    public void toggleTaskCompletion(final int item) {
+    private Task getTaskFromList(int item) {
+        List<Task> list = tasks.get(taskListId);
+        if (showCompleted) {
+            return list.get(item);
+        } else {
+            int notCompleted = 0;
+            for (Task t : list) {
+                if (!t.getStatus().equals(TASK_COMPLETED) && item == notCompleted++) {
+                    return t;
+                }
+            }
+        }
+        return new Task();
+    }
+
+    public void toggleTaskCompletion(int item) {
         Log.d(TAG, "Toggle task completed status: item #" + item);
+        DateTime dateTime = new DateTime(new Date());
+        final Task task = getTaskFromList(item);
+        if (task.getStatus().equals(TASK_COMPLETED)) {
+            task.setStatus(TASK_NEEDS_ACTION).setCompleted(null);
+        } else {
+            task.setStatus(TASK_COMPLETED).setCompleted(dateTime);
+            if (!showCompleted)
+                uploadTasksFromCache(taskListId);
+        }
         mCredential.setSelectedAccountName(accountList.get(account).name);
         new MakeRequestTask<Boolean>(mCredential) {
             @Override
             protected Boolean getDataFromApi(Tasks mService) throws IOException {
-                DateTime dateTime = new DateTime(new Date());
-                Task task = tasks.get(taskListId).get(item);
-                if (task.getStatus().equals(TASK_COMPLETED))
-                    task.setStatus(TASK_NEEDS_ACTION).setCompleted(null);
-                else
-                    task.setStatus(TASK_COMPLETED).setCompleted(dateTime);
                 Log.d(TAG, "Patching task status: " + task);
-                Task newTask = mService.tasks().update(taskListId, task.getId(), task).execute();
+                mService.tasks().update(taskListId, task.getId(), task).execute();
                 return true;
             }
         }.execute();
@@ -161,13 +189,11 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
 
     private void uploadTaskListsFromCache(String currentAccount) {
         List<TaskList> result = taskLists.get(currentAccount);
-        lastIds.clear();
         if (result == null || result.size() == 0)
             return;
         List<String> items = new ArrayList<>();
         for (TaskList list : result) {
             items.add(list.getTitle());
-            lastIds.add(list.getId());
         }
         Log.d(TAG, "Choose a tasks list: " + items.toString());
         NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, 0, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
@@ -215,12 +241,21 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     }
 
     private void uploadTasksFromCache(String taskListKey) {
-        List<Task> result = tasks.get(taskListKey);
-        lastIds.clear();
-        if (result == null || result.size() == 0)
+        List<Task> ref = tasks.get(taskListKey);
+        if (ref == null || ref.size() == 0)
             return;
+        List<Task> result;
+        if (showCompleted) {
+            result = new ArrayList<>(ref);
+        } else {
+            result = Lists.newArrayList();
+            for (Task t : ref) {
+                if (!t.getStatus().equals(TASK_COMPLETED))
+                    result.add(t);
+            }
+        }
         int itemsSize = result.size();
-        List<String> items = new ArrayList<>();
+        ArrayList<String> items = new ArrayList<>();
         int bitSetLength = itemsSize >> 3;
         if ((itemsSize & 7) > 0)
             bitSetLength++;
@@ -232,8 +267,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                 title = title.substring(0, 30);
             if (task.getParent() != null && !task.getParent().isEmpty())
                 title = "> " + title;
-            lastIds.add(task.getId());
-            if (task.getStatus().equals(TASK_COMPLETED)) {
+            if (showCompleted && task.getStatus().equals(TASK_COMPLETED)) {
                 bitset[bitCount >> 3] |= 1 << (bitCount & 7);
             }
             bitCount++;
@@ -269,6 +303,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             protected List<Task> getDataFromApi(Tasks mService) throws IOException {
                 com.google.api.services.tasks.model.Tasks result =
                         mService.tasks().list(taskListId).setFields("items(id,title,status,parent)")
+                                .setShowCompleted(showCompleted)
                                 .setMaxResults(LIST_MAX_RESULTS)
                                 .execute();
                 return result.getItems();
