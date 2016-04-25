@@ -47,11 +47,13 @@ public class DialogSelectMessageBuilder extends AbstractNotificationMessageBuild
             }
         }
         // title
-        out.write(StringNormalizer.removeAccents(title).getBytes(), 0, title.length());
+        String text = StringNormalizer.removeAccents(title);
+        out.write(text.getBytes(), 0, text.length());
         // end of line
         out.write(0);
         for (String item : items) {
-            out.write(StringNormalizer.removeAccents(item).getBytes(), 0, item.length());
+            text = StringNormalizer.removeAccents(item);
+            out.write(text.getBytes(), 0, text.length());
             // end of line
             out.write(0);
         }
