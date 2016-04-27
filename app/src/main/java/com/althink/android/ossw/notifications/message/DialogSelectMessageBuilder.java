@@ -25,12 +25,12 @@ public class DialogSelectMessageBuilder extends AbstractNotificationMessageBuild
         return bitset;
     }
 
-    public DialogSelectMessageBuilder(String title, List<String> items, int defItem, int token, int style, byte[] init) {
+    public DialogSelectMessageBuilder(String title, List<String> items, int selectedItem, int token, int style, byte[] init) {
         out = new ByteArrayOutputStream();
         int itemsSize = items.size();
         int font = getFont();
-        // default item
-        out.write(defItem);
+        // init selected item
+        out.write(selectedItem);
         // dialog token for multiple dialogs session
         out.write(token);
         // list size

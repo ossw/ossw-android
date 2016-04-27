@@ -4,10 +4,11 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.althink.android.ossw.OsswApp;
@@ -43,12 +44,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
-
-public class TasksManager implements EasyPermissions.PermissionCallbacks {
+public class TasksManager {
     private final static String TAG = TasksManager.class.getSimpleName();
     private static TasksManager instance;
     private static int level = 0;
@@ -62,10 +59,6 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     private static final String TASK_NEEDS_ACTION = "needsAction";
 
     static final long LIST_MAX_RESULTS = 100;
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
     // Tasks data cache
     List<Account> accountList;
@@ -73,8 +66,9 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
     Map<String, List<Task>> tasks = Maps.newHashMap();
 
     private TasksManager() {
-        Context context = OsswApp.getContext().getApplicationContext();
-        if (EasyPermissions.hasPermissions(context, Manifest.permission.GET_ACCOUNTS)) {
+        Context context = OsswApp.getContext();
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS)
+                == PackageManager.PERMISSION_GRANTED) {
             accountList = Arrays.asList(AccountManager.get(context).getAccountsByType("com.google"));
             mCredential = GoogleAccountCredential.usingOAuth2(
                     context, Arrays.asList(SCOPES))
@@ -82,7 +76,6 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         }
     }
 
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     public static TasksManager getInstance() {
         if (instance == null)
             instance = new TasksManager();
@@ -117,8 +110,6 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                     level = 1;
                     showTaskLists();
                 }
-            } else if (buttons == (WatchConstants.BUTTON_BACK | WatchConstants.BUTTON_HOLD)) {
-//                FunctionHandler.closeDialog();
             } else if (buttons == WatchConstants.BUTTON_SELECT) {
                 Log.d(TAG, "Select button on level: " + level);
                 if (level == 0) {
@@ -134,8 +125,30 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                 }
             } else if (buttons == (WatchConstants.BUTTON_SELECT | WatchConstants.BUTTON_HOLD)) {
                 if (level == 2) {
+                    if (showCompleted && countNotCompletedTasks() == 0)
+                        return;
                     showCompleted = !showCompleted;
-                    uploadTasksFromCache(taskListId);
+                    int selItem = 0;
+                    List<Task> list = tasks.get(taskListId);
+                    if (showCompleted) {
+                        for (int i = 0; i < list.size(); i++) {
+                            if (list.get(i).getStatus().equals(TASK_NEEDS_ACTION))
+                                if (item == 0) {
+                                    selItem = i;
+                                    break;
+                                } else
+                                    item--;
+                        }
+                    } else {
+                        int countCompleted = 0;
+                        for (int i = 0; i <= item; i++)
+                            if (list.get(i).getStatus().equals(TASK_COMPLETED))
+                                countCompleted++;
+                        selItem = item - countCompleted;
+                        if (selItem < 0)
+                            selItem = 0;
+                    }
+                    uploadTasksFromCache(taskListId, selItem);
                 }
             }
         }
@@ -156,6 +169,15 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         return new Task();
     }
 
+    private int countNotCompletedTasks() {
+        List<Task> list = tasks.get(taskListId);
+        int notCompleted = 0;
+        for (int i = 0; i < list.size(); i++)
+            if (list.get(i).getStatus().equals(TASK_NEEDS_ACTION))
+                notCompleted++;
+        return notCompleted;
+    }
+
     public void toggleTaskCompletion(int item) {
         Log.d(TAG, "Toggle task completed status: item #" + item);
         DateTime dateTime = new DateTime(new Date());
@@ -164,8 +186,11 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             task.setStatus(TASK_NEEDS_ACTION).setCompleted(null);
         } else {
             task.setStatus(TASK_COMPLETED).setCompleted(dateTime);
-            if (!showCompleted)
-                uploadTasksFromCache(taskListId);
+            if (!showCompleted) {
+                if (countNotCompletedTasks() == 0)
+                    showCompleted = true;
+                uploadTasksFromCache(taskListId, item);
+            }
         }
         mCredential.setSelectedAccountName(accountList.get(account).name);
         new MakeRequestTask<Boolean>(mCredential) {
@@ -183,7 +208,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         for (Account account : accountList)
             items.add(account.name);
         Log.d(TAG, "Choose an account: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Accounts", items, 0, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Accounts", items, account, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
@@ -192,11 +217,14 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         if (result == null || result.size() == 0)
             return;
         List<String> items = new ArrayList<>();
+        int selItem = 0;
         for (TaskList list : result) {
+            if (list.getId().equals(taskListId))
+                selItem = items.size();
             items.add(list.getTitle());
         }
         Log.d(TAG, "Choose a tasks list: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, 0, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, selItem, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
@@ -240,7 +268,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
         }.execute();
     }
 
-    private void uploadTasksFromCache(String taskListKey) {
+    private void uploadTasksFromCache(String taskListKey, int selectedItem) {
         List<Task> ref = tasks.get(taskListKey);
         if (ref == null || ref.size() == 0)
             return;
@@ -255,6 +283,10 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             }
         }
         int itemsSize = result.size();
+        if (itemsSize == 0)
+            return;
+        if (selectedItem >= itemsSize)
+            selectedItem = itemsSize - 1;
         ArrayList<String> items = new ArrayList<>();
         int bitSetLength = itemsSize >> 3;
         if ((itemsSize & 7) > 0)
@@ -274,7 +306,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
             items.add(title);
         }
         Log.d(TAG, "Choose a task: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks", items, 0,
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks", items, selectedItem,
                 WatchConstants.PHONE_FUNCTION_GTASKS, WatchConstants.STYLE_CHECK_BOX | WatchConstants.STYLE_STRIKE, bitset);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
 
@@ -296,7 +328,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
 
     public void showTasks() {
         String currentAccount = accountList.get(account).name;
-        uploadTasksFromCache(taskListId);
+        uploadTasksFromCache(taskListId, 0);
         mCredential.setSelectedAccountName(currentAccount);
         new MakeRequestTask<List<Task>>(mCredential) {
             @Override
@@ -311,7 +343,7 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
 
             protected void onPostExecute(List<Task> result) {
                 if (refreshTasks(taskListId, result))
-                    uploadTasksFromCache(taskListId);
+                    uploadTasksFromCache(taskListId, 0);
             }
 
             protected void onCancelled() {
@@ -320,49 +352,6 @@ public class TasksManager implements EasyPermissions.PermissionCallbacks {
                     level--;
             }
         }.execute();
-    }
-
-    /**
-     * Respond to requests for permissions at runtime for API 23 and above.
-     *
-     * @param requestCode  The request code passed in
-     *                     requestPermissions(android.app.Activity, String, int, String[])
-     * @param permissions  The requested permissions. Never null.
-     * @param grantResults The grant results for the corresponding permissions
-     *                     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        EasyPermissions.onRequestPermissionsResult(
-                requestCode, permissions, grantResults, this);
-    }
-
-    /**
-     * Callback for when a permission is granted using the EasyPermissions
-     * library.
-     *
-     * @param requestCode The request code associated with the requested
-     *                    permission
-     * @param list        The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsGranted(int requestCode, List<String> list) {
-        // Do nothing.
-    }
-
-    /**
-     * Callback for when a permission is denied using the EasyPermissions
-     * library.
-     *
-     * @param requestCode The request code associated with the requested
-     *                    permission
-     * @param list        The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsDenied(int requestCode, List<String> list) {
-        // Do nothing.
     }
 
     /**

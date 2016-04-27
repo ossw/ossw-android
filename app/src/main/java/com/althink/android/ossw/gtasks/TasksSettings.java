@@ -7,11 +7,14 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -41,11 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
-
-public class TasksSettings extends AppCompatActivity
-        implements EasyPermissions.PermissionCallbacks {
+public class TasksSettings extends AppCompatActivity {
     private final static String TAG = TasksSettings.class.getSimpleName();
     GoogleAccountCredential mCredential;
     private TextView mOutputText;
@@ -59,10 +58,11 @@ public class TasksSettings extends AppCompatActivity
 
     private static final String BUTTON_TEXT = "Call Google Tasks API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = { TasksScopes.TASKS };
+    private static final String[] SCOPES = {TasksScopes.TASKS};
 
     /**
      * Create the main activity.
+     *
      * @param savedInstanceState previously saved instance data.
      */
     @Override
@@ -99,7 +99,7 @@ public class TasksSettings extends AppCompatActivity
         mOutputText.setVerticalScrollBarEnabled(true);
         mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mOutputText.setText(
-                "Click the \'" + BUTTON_TEXT +"\' button to test the API.");
+                "Click the \'" + BUTTON_TEXT + "\' button to test the API.");
         activityLayout.addView(mOutputText);
 
         mProgress = new ProgressDialog(this);
@@ -114,7 +114,6 @@ public class TasksSettings extends AppCompatActivity
     }
 
 
-
     /**
      * Attempt to call the API, after verifying that all the preconditions are
      * satisfied. The preconditions are: Google Play Services installed, an
@@ -123,11 +122,11 @@ public class TasksSettings extends AppCompatActivity
      * appropriate.
      */
     private void getResultsFromApi() {
-        if (! isGooglePlayServicesAvailable()) {
+        if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
-        } else if (! isDeviceOnline()) {
+        } else if (!isDeviceOnline()) {
             mOutputText.setText("No network connection available.");
         } else {
             new MakeRequestTask(mCredential).execute();
@@ -144,28 +143,16 @@ public class TasksSettings extends AppCompatActivity
      * function will be rerun automatically whenever the GET_ACCOUNTS permission
      * is granted.
      */
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
-        if (EasyPermissions.hasPermissions(
-                this, Manifest.permission.GET_ACCOUNTS)) {
-//            String accountName = getPreferences(Context.MODE_PRIVATE)
-//                    .getString(PREF_ACCOUNT_NAME, null);
-//            if (accountName != null) {
-//                mCredential.setSelectedAccountName(accountName);
-//                getResultsFromApi();
-//            } else {
-                // Start a dialog from which the user can choose an account
-                startActivityForResult(
-                        mCredential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
-//            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS)
+                == PackageManager.PERMISSION_GRANTED) {
+            startActivityForResult(
+                    mCredential.newChooseAccountIntent(),
+                    REQUEST_ACCOUNT_PICKER);
         } else {
-            // Request the GET_ACCOUNTS permission via a user dialog
-            EasyPermissions.requestPermissions(
-                    this,
-                    "This app needs to access your Google account (via Contacts).",
-                    REQUEST_PERMISSION_GET_ACCOUNTS,
-                    Manifest.permission.GET_ACCOUNTS);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.GET_ACCOUNTS},
+                    REQUEST_PERMISSION_GET_ACCOUNTS);
         }
     }
 
@@ -173,17 +160,18 @@ public class TasksSettings extends AppCompatActivity
      * Called when an activity launched here (specifically, AccountPicker
      * and authorization) exits, giving you the requestCode you started it with,
      * the resultCode it returned, and any additional data from it.
+     *
      * @param requestCode code indicating which activity result is incoming.
-     * @param resultCode code indicating the result of the incoming
-     *     activity result.
-     * @param data Intent (containing result data) returned by incoming
-     *     activity result.
+     * @param resultCode  code indicating the result of the incoming
+     *                    activity result.
+     * @param data        Intent (containing result data) returned by incoming
+     *                    activity result.
      */
     @Override
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch(requestCode) {
+        switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
                     mOutputText.setText(
@@ -219,47 +207,34 @@ public class TasksSettings extends AppCompatActivity
 
     /**
      * Respond to requests for permissions at runtime for API 23 and above.
-     * @param requestCode The request code passed in
-     *     requestPermissions(android.app.Activity, String, int, String[])
-     * @param permissions The requested permissions. Never null.
+     *
+     * @param requestCode  The request code passed in
+     *                     requestPermissions(android.app.Activity, String, int, String[])
+     * @param permissions  The requested permissions. Never null.
      * @param grantResults The grant results for the corresponding permissions
-     *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
+     *                     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        EasyPermissions.onRequestPermissionsResult(
-                requestCode, permissions, grantResults, this);
-    }
-
-    /**
-     * Callback for when a permission is granted using the EasyPermissions
-     * library.
-     * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsGranted(int requestCode, List<String> list) {
-        // Do nothing.
-    }
-
-    /**
-     * Callback for when a permission is denied using the EasyPermissions
-     * library.
-     * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsDenied(int requestCode, List<String> list) {
-        // Do nothing.
+        switch (requestCode) {
+            case REQUEST_PERMISSION_GET_ACCOUNTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startActivityForResult(
+                            mCredential.newChooseAccountIntent(),
+                            REQUEST_ACCOUNT_PICKER);
+                }
+            }
+        }
     }
 
     /**
      * Checks whether the device currently has a network connection.
+     *
      * @return true if the device has a network connection, false otherwise.
      */
     private boolean isDeviceOnline() {
@@ -271,8 +246,9 @@ public class TasksSettings extends AppCompatActivity
 
     /**
      * Check that Google Play services APK is installed and up to date.
+     *
      * @return true if Google Play Services is available and up to
-     *     date on this device; false otherwise.
+     * date on this device; false otherwise.
      */
     private boolean isGooglePlayServicesAvailable() {
         GoogleApiAvailability apiAvailability =
@@ -300,8 +276,9 @@ public class TasksSettings extends AppCompatActivity
     /**
      * Display an error dialog showing that Google Play Services is missing
      * or out of date.
+     *
      * @param connectionStatusCode code describing the presence (or lack of)
-     *     Google Play Services on this device.
+     *                             Google Play Services on this device.
      */
     void showGooglePlayServicesAvailabilityErrorDialog(
             final int connectionStatusCode) {
@@ -332,6 +309,7 @@ public class TasksSettings extends AppCompatActivity
 
         /**
          * Background task to call Google Tasks API.
+         *
          * @param params no parameters needed for this task.
          */
         @Override
@@ -347,8 +325,9 @@ public class TasksSettings extends AppCompatActivity
 
         /**
          * Fetch a list of the first 10 task lists.
+         *
          * @return List of Strings describing task lists, or an empty list if
-         *         there are no task lists found.
+         * there are no task lists found.
          * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {

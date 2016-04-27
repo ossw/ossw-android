@@ -39,8 +39,4 @@ dependencies {
     compile ('com.google.api-client:google-api-client-android:1.20.0') { exclude group: 'org.apache.httpcomponents' }
     compile ('com.google.apis:google-api-services-tasks:v1-rev41-1.20.0') { exclude group: 'org.apache.httpcomponents' }
     compile 'com.google.android.gms:play-services-identity:8.4.0'
-    compile 'pub.devrel:easypermissions:0.1.5'
-//    compile 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
-//    compile 'com.google.http-client:google-http-client-gson:1.19.0' exclude module: 'httpclient'
-//    compile 'com.ibm.icu:icu4j:55.1'
 }
