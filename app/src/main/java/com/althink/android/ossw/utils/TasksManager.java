@@ -1,7 +1,8 @@
-package com.althink.android.ossw.gtasks;
+package com.althink.android.ossw.utils;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -12,11 +13,11 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.althink.android.ossw.OsswApp;
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.NotificationType;
 import com.althink.android.ossw.service.OsswService;
-import com.althink.android.ossw.utils.FunctionHandler;
 import com.althink.android.ossw.watch.WatchConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -89,7 +90,7 @@ public class TasksManager {
     }
 
     public void handle(int buttons, int item) {
-        Log.i(TAG, "Handling gtasks event with parameters: " + buttons + ", " + item);
+        Log.d(TAG, "Handling gtasks event with parameters: " + buttons + ", " + item);
         if (accountList == null || accountList.size() < 1 || !isGooglePlayServicesAvailable() || !isDeviceOnline())
             return;
         if (level == 0 && singleAccount())
@@ -219,7 +220,7 @@ public class TasksManager {
     public void showAccounts() {
         List<String> items = new ArrayList<>(accountList);
         Log.d(TAG, "Choose an account: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Accounts", items, account, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder(OsswApp.getContext().getString(R.string.tasks_accounts_title), items, account, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
@@ -235,7 +236,7 @@ public class TasksManager {
             items.add(list.getTitle());
         }
         Log.d(TAG, "Choose a tasks list: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks lists", items, selItem, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder(OsswApp.getContext().getString(R.string.tasks_lists_title), items, selItem, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
@@ -317,7 +318,7 @@ public class TasksManager {
             items.add(title);
         }
         Log.d(TAG, "Choose a task: " + items.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Tasks", items, selectedItem,
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder(OsswApp.getContext().getString(R.string.tasks_title), items, selectedItem,
                 WatchConstants.PHONE_FUNCTION_GTASKS, WatchConstants.STYLE_CHECK_BOX | WatchConstants.STYLE_STRIKE, bitset);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
 
@@ -431,8 +432,9 @@ public class TasksManager {
         protected void onCancelled() {
             if (mLastError != null) {
                 if (mLastError instanceof UserRecoverableAuthIOException) {
-                    OsswApp.getContext().startActivity(
-                            ((UserRecoverableAuthIOException) mLastError).getIntent());
+                    Intent recover = ((UserRecoverableAuthIOException) mLastError).getIntent();
+                    recover.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    OsswApp.getContext().startActivity(recover);
                 } else
                     Log.e(TAG, mLastError.toString());
             } else {

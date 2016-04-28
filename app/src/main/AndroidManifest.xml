@@ -76,13 +76,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".gtasks.TasksSettings">
-            <intent-filter>
-                <action android:name="com.althink.android.ossw.settings.EDIT_GTASKS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
         <receiver android:name=".service.CallReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
