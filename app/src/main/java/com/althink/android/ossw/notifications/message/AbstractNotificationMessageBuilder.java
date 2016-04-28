@@ -18,22 +18,22 @@ public abstract class AbstractNotificationMessageBuilder implements Notification
         if (service != null) {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(service);
             String font = sharedPref.getString("alert_notifications_font", "optionNormal");
-            return getFont(font);
+            return getFontId(font);
         }
         return WatchConstants.FONT_NAME_OPTION_NORMAL;
     }
 
-    protected int getFont() {
+    protected int getFont(String font_preference_key) {
         OsswService service = OsswService.getInstance();
         if (service != null) {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(service);
-            String font = sharedPref.getString("notifications_font", "normalBold");
-            return getFont(font);
+            String font = sharedPref.getString(font_preference_key, "normalBold");
+            return getFontId(font);
         }
         return WatchConstants.FONT_NAME_NORMAL_BOLD;
     }
 
-    private int getFont(String font) {
+    private int getFontId(String font) {
         switch (font) {
             case "bigRegular":
                 return WatchConstants.FONT_BIG_REGULAR;

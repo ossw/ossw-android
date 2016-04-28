@@ -1,12 +1,9 @@
 package com.althink.android.ossw.notifications.message;
 
-import com.althink.android.ossw.emulator.fonts.FontUtils;
 import com.althink.android.ossw.notifications.model.ListNotification;
 import com.althink.android.ossw.notifications.model.SimpleListItem;
-import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.notifications.model.SubjectMessageItem;
 import com.althink.android.ossw.utils.StringNormalizer;
-import com.althink.android.ossw.watch.WatchConstants;
 
 import java.io.ByteArrayOutputStream;
 
@@ -20,7 +17,7 @@ public class ListNotificationMessageBuilder extends AbstractNotificationMessageB
     public ListNotificationMessageBuilder(ListNotification simpleNotification, int page) {
         out = new ByteArrayOutputStream();
 
-        int font = getFont();
+        int font = getFont("notifications_font");
 
         StringBuilder sb = new StringBuilder();
         sb.append(simpleNotification.getTitle());

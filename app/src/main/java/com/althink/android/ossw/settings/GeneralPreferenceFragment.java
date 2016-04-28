@@ -4,6 +4,9 @@ package com.althink.android.ossw.settings;
  * Created by Pavel on 22/12/2015.
  */
 
+import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.DialogFragment;
@@ -18,6 +21,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v14.preference.MultiSelectListPreference;
 import android.support.v14.preference.PreferenceFragment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
@@ -26,12 +30,14 @@ import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceScreen;
+import android.util.Log;
 import android.view.View;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +47,8 @@ import java.util.List;
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class GeneralPreferenceFragment extends PreferenceFragment {
-    public static final String FRAGMENT_TAG = "GeneralPreferenceFragment";
+    public static final String TAG = GeneralPreferenceFragment.class.getSimpleName();
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 100;
     public static final int SELECT_AUDIO_TRACK = 1;
 
     @Override
@@ -101,9 +108,20 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                     }
                     notificationApps.setEntries(entries.toArray(new CharSequence[entries.size()]));
                     notificationApps.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+                    Log.d(TAG, "Notification apps list refreshed");
                 }
             };
             new Thread(loadInstalledApps).start();
+        }
+        if ("preference_screen".equals(getPreferenceScreen().getKey())) {
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.GET_ACCOUNTS)
+                    == PackageManager.PERMISSION_GRANTED) {
+                refreshGoogleTaskAccounts();
+            } else {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.GET_ACCOUNTS},
+                        REQUEST_PERMISSION_GET_ACCOUNTS);
+            }
         }
 
         if ("alert_screen".equals(getPreferenceScreen().getKey())) {
@@ -137,6 +155,18 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                 }
             });
         }
+    }
+
+    public void refreshGoogleTaskAccounts() {
+        List<Account> accountList = Arrays.asList(AccountManager.get(getActivity()).getAccountsByType("com.google"));
+        MultiSelectListPreference accountPref = (MultiSelectListPreference) findPreference("google_tasks_accounts");
+        List<CharSequence> entries = new ArrayList<>();
+        for (Account acc : accountList) {
+            entries.add(acc.name);
+        }
+        CharSequence[] ent = entries.toArray(new CharSequence[entries.size()]);
+        accountPref.setEntries(ent);
+        accountPref.setEntryValues(ent);
     }
 
     @Override

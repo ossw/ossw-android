@@ -28,7 +28,7 @@ public class DialogSelectMessageBuilder extends AbstractNotificationMessageBuild
     public DialogSelectMessageBuilder(String title, List<String> items, int selectedItem, int token, int style, byte[] init) {
         out = new ByteArrayOutputStream();
         int itemsSize = items.size();
-        int font = getFont();
+        int font = getFont("dialog_font");
         // init selected item
         out.write(selectedItem);
         // dialog token for multiple dialogs session

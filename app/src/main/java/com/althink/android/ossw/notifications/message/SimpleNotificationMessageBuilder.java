@@ -31,7 +31,7 @@ public class SimpleNotificationMessageBuilder extends AbstractNotificationMessag
 
         String text = StringNormalizer.removeAccents(sb.toString());
 
-        int font = getFont();
+        int font = getFont("notifications_font");
 
         int ptr = 0;
         String data = "";

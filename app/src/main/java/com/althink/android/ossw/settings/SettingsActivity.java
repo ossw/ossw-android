@@ -2,8 +2,10 @@ package com.althink.android.ossw.settings;
 
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v14.preference.PreferenceFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -43,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity implements
 
         if (savedInstanceState == null) {
             PreferenceFragment fragment = new GeneralPreferenceFragment();
-            getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, GeneralPreferenceFragment.FRAGMENT_TAG)
+            getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, GeneralPreferenceFragment.TAG)
                     .commit();
         }
     }
@@ -81,4 +83,20 @@ public class SettingsActivity extends AppCompatActivity implements
             getFragmentManager().popBackStack();
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case GeneralPreferenceFragment.REQUEST_PERMISSION_GET_ACCOUNTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                }
+            }
+        }
+    }
+
 }

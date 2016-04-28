@@ -1,13 +1,13 @@
 package com.althink.android.ossw.gtasks;
 
 import android.Manifest;
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -61,15 +61,16 @@ public class TasksManager {
     static final long LIST_MAX_RESULTS = 100;
 
     // Tasks data cache
-    List<Account> accountList;
-    Map<String, List<TaskList>> taskLists = Maps.newHashMap();
-    Map<String, List<Task>> tasks = Maps.newHashMap();
+    static ArrayList<String> accountList;
+    static Map<String, List<TaskList>> taskLists = Maps.newHashMap();
+    static Map<String, List<Task>> tasks = Maps.newHashMap();
 
     private TasksManager() {
         Context context = OsswApp.getContext();
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS)
                 == PackageManager.PERMISSION_GRANTED) {
-            accountList = Arrays.asList(AccountManager.get(context).getAccountsByType("com.google"));
+//            accountList = Arrays.asList(AccountManager.get(context).getAccountsByType("com.google"));
+            refreshAccounts();
             mCredential = GoogleAccountCredential.usingOAuth2(
                     context, Arrays.asList(SCOPES))
                     .setBackOff(new ExponentialBackOff());
@@ -82,11 +83,16 @@ public class TasksManager {
         return instance;
     }
 
+    private boolean singleAccount() {
+        refreshAccounts();
+        return accountList.size() == 1;
+    }
+
     public void handle(int buttons, int item) {
         Log.i(TAG, "Handling gtasks event with parameters: " + buttons + ", " + item);
         if (accountList == null || accountList.size() < 1 || !isGooglePlayServicesAvailable() || !isDeviceOnline())
             return;
-        if (level == 0 && accountList.size() == 1)
+        if (level == 0 && singleAccount())
             level = 1;
         if (buttons == 0) {
             if (level == 0)
@@ -100,7 +106,7 @@ public class TasksManager {
                 if (level == 0) {
                     FunctionHandler.closeDialog();
                 } else if (level == 1) {
-                    if (accountList.size() == 1)
+                    if (singleAccount())
                         FunctionHandler.closeDialog();
                     else {
                         level = 0;
@@ -117,7 +123,7 @@ public class TasksManager {
                     level = 1;
                     showTaskLists();
                 } else if (level == 1) {
-                    taskListId = taskLists.get(accountList.get(account).name).get(item).getId();
+                    taskListId = taskLists.get(accountList.get(account)).get(item).getId();
                     level = 2;
                     showTasks();
                 } else if (level == 2) {
@@ -192,7 +198,7 @@ public class TasksManager {
                 uploadTasksFromCache(taskListId, item);
             }
         }
-        mCredential.setSelectedAccountName(accountList.get(account).name);
+        mCredential.setSelectedAccountName(accountList.get(account));
         new MakeRequestTask<Boolean>(mCredential) {
             @Override
             protected Boolean getDataFromApi(Tasks mService) throws IOException {
@@ -203,10 +209,15 @@ public class TasksManager {
         }.execute();
     }
 
+    public void refreshAccounts() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswApp.getContext());
+        accountList = new ArrayList<>(sharedPref.getStringSet("google_tasks_accounts", new HashSet()));
+        if (account >= accountList.size())
+            account = 0;
+    }
+
     public void showAccounts() {
-        List<String> items = new ArrayList<>();
-        for (Account account : accountList)
-            items.add(account.name);
+        List<String> items = new ArrayList<>(accountList);
         Log.d(TAG, "Choose an account: " + items.toString());
         NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Accounts", items, account, WatchConstants.PHONE_FUNCTION_GTASKS, 0);
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
@@ -243,7 +254,7 @@ public class TasksManager {
     }
 
     public void showTaskLists() {
-        final String currentAccount = accountList.get(account).name;
+        final String currentAccount = accountList.get(account);
         uploadTaskListsFromCache(currentAccount);
         mCredential.setSelectedAccountName(currentAccount);
         new MakeRequestTask<List<TaskList>>(mCredential) {
@@ -327,7 +338,7 @@ public class TasksManager {
     }
 
     public void showTasks() {
-        String currentAccount = accountList.get(account).name;
+        String currentAccount = accountList.get(account);
         uploadTasksFromCache(taskListId, 0);
         mCredential.setSelectedAccountName(currentAccount);
         new MakeRequestTask<List<Task>>(mCredential) {

@@ -147,9 +147,24 @@
             <intent android:action="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
         </Preference>
 
-        <Preference android:title="@string/pref_google_tasks">
-            <intent android:action="com.althink.android.ossw.settings.EDIT_GTASKS" />
-        </Preference>
+        <!--<Preference android:title="@string/pref_google_tasks">-->
+            <!--<intent android:action="com.althink.android.ossw.settings.EDIT_GTASKS" />-->
+        <!--</Preference>-->
+
+        <MultiSelectListPreference
+            android:defaultValue="@array/empty_array"
+            android:title="@string/pref_google_tasks"
+            android:dialogTitle="@string/pref_google_tasks_accounts"
+            android:entries="@array/empty_array"
+            android:entryValues="@array/empty_array"
+            android:key="google_tasks_accounts" />
+        <ListPreference
+            android:defaultValue="normalBold"
+            android:dialogTitle="@string/select_font"
+            android:entries="@array/notifications_font_keys"
+            android:entryValues="@array/notification_font_values"
+            android:key="dialog_font"
+            android:title="@string/pref_dialog_font" />
 
         <PreferenceScreen
             android:key="phone_discovery_screen"
