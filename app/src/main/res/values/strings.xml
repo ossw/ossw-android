@@ -114,4 +114,10 @@
     <string name="time_interval_picker_ok">OK</string>
     <string name="time_interval_picker_cancel">Cancel</string>
     <string name="unknown_contact">Unknown</string>
+
+    <string name="sms_title">Choose SMS</string>
+    <string name="contact_title">Choose contact</string>
+    <string name="tasks_title">Tasks</string>
+    <string name="tasks_lists_title">Task lists</string>
+    <string name="tasks_accounts_title">Accounts</string>
 </resources>
