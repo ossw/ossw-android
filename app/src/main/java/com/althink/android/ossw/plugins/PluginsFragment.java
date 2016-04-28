@@ -49,7 +49,7 @@ public class PluginsFragment extends ListFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         listAdaptor = new PluginListAdapter();
-        refreshPluginList();
+//        refreshPluginList();
         //Log.i(TAG, "On create");
     }
 
