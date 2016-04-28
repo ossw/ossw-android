@@ -18,9 +18,8 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.althink.android.ossw.OsswApp;
+import com.althink.android.ossw.R;
 import com.althink.android.ossw.db.OsswDatabaseHelper;
-import com.althink.android.ossw.gtasks.TasksManager;
-import com.althink.android.ossw.notifications.DialogSelectHandler;
 import com.althink.android.ossw.notifications.message.DialogSelectMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.model.NotificationType;
@@ -58,18 +57,18 @@ public class FunctionHandler {
                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswService.getApplicationContext());
                 Vibrator v = (Vibrator) osswService.getSystemService(Context.VIBRATOR_SERVICE);
                 if (phoneDiscoveryStarted) {
-                    Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", stopping");
+                    Log.d(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", stopping");
                     phoneDiscoveryStarted = false;
                     if (mediaPlayer.isPlaying())
                         mediaPlayer.stop();
                     v.cancel();
                 } else {
-                    Log.i(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", starting");
+                    Log.d(TAG, "Phone discovery: " + phoneDiscoveryStarted + ", starting");
                     phoneDiscoveryStarted = true;
                     String uriValue = sharedPref.getString(PREFERENCE_PHONE_DISCOVERY_AUDIO, null);
                     if (uriValue != null && !uriValue.isEmpty()) {
                         Uri uri = Uri.parse(uriValue);
-                        Log.i(TAG, "Phone discovery, audio track: " + uri);
+                        Log.d(TAG, "Phone discovery, audio track: " + uri);
                         mediaPlayer.reset();
                         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         try {
@@ -167,7 +166,7 @@ public class FunctionHandler {
     }
 
     public static void closeDialog() {
-        Log.i(TAG, "Closing dialog");
+        Log.d(TAG, "Closing dialog");
         OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_CLOSE, new byte[0], 0, 0, null);
     }
 
@@ -182,7 +181,7 @@ public class FunctionHandler {
         if (sendSmsMessages == null || sendSmsMessages.size() == 0)
             return;
         Log.d(TAG, "Choose between several predefined SMS: " + sendSmsMessages.toString());
-        NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose SMS", sendSmsMessages, 0, token, 0);
+        NotificationMessageBuilder builder = new DialogSelectMessageBuilder(OsswApp.getContext().getString(R.string.sms_title), sendSmsMessages, 0, token, 0);
         osswService.uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
     }
 
@@ -212,7 +211,7 @@ public class FunctionHandler {
                 items.add(getContactDisplayNameByNumber(context, number) + " " + number);
             }
             Log.d(TAG, "Choose between numbers in call log: " + items.toString());
-            NotificationMessageBuilder builder = new DialogSelectMessageBuilder("Choose contact", items, 0, token, 0);
+            NotificationMessageBuilder builder = new DialogSelectMessageBuilder(OsswApp.getContext().getString(R.string.contact_title), items, 0, token, 0);
             OsswService.getInstance().uploadNotification(0, NotificationType.DIALOG_SELECT, builder.build(), 0, 0, null);
         }
     }
