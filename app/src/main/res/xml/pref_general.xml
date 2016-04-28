@@ -2,14 +2,6 @@
     android:key="preference_screen"
     android:title="@string/pref_title">
 
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="synchronize_time"
-        android:switchTextOff="@string/off"
-        android:switchTextOn="@string/on"
-        android:title="@string/pref_synchronize_time_title"
-        android:widgetLayout="@layout/preference_widget_switch_compat" />
-
     <PreferenceCategory android:title="@string/pref_notification_category">
         <PreferenceScreen
             android:key="notification_screen"
@@ -158,14 +150,6 @@
             android:entries="@array/empty_array"
             android:entryValues="@array/empty_array"
             android:key="google_tasks_accounts" />
-        <ListPreference
-            android:defaultValue="normalBold"
-            android:dialogTitle="@string/select_font"
-            android:entries="@array/notifications_font_keys"
-            android:entryValues="@array/notification_font_values"
-            android:key="dialog_font"
-            android:title="@string/pref_dialog_font" />
-
         <PreferenceScreen
             android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
@@ -183,6 +167,22 @@
                 android:widgetLayout="@layout/pref_image_play" />
 
         </PreferenceScreen>
+
+        <ListPreference
+            android:defaultValue="normalBold"
+            android:dialogTitle="@string/select_font"
+            android:entries="@array/notifications_font_keys"
+            android:entryValues="@array/notification_font_values"
+            android:key="dialog_font"
+            android:title="@string/pref_dialog_font" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="synchronize_time"
+        android:switchTextOff="@string/off"
+        android:switchTextOn="@string/on"
+        android:title="@string/pref_synchronize_time_title"
+        android:widgetLayout="@layout/preference_widget_switch_compat" />
 
     </PreferenceCategory>
 
