@@ -33,7 +33,7 @@ public class PluginManager {
         LinkedList<PluginDefinition> plugins = new LinkedList<>();
         try {
             PackageManager packageManager = context.getPackageManager();
-            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PROVIDERS);
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PROVIDERS | PackageManager.GET_META_DATA);
             if (packageInfo.providers == null)
                 return plugins;
             for (ProviderInfo provider : packageInfo.providers) {
@@ -47,26 +47,22 @@ public class PluginManager {
     }
 
     public List<PluginDefinition> findPlugins() {
-//        long start = System.currentTimeMillis();
         List<PluginDefinition> plugins = new LinkedList<>();
         PackageManager packageManager = context.getPackageManager();
-
-//        List<ProviderInfo> providers = packageManager.queryContentProviders(null, 0, PackageManager.GET_META_DATA);
-//        for (ProviderInfo provider : providers) {
-//            addToListIfPlugin(packageManager, plugins, provider);
-//        }
         try {
-            // Following implementation tries to minimize the IPC data
+            // This implementation tries to minimize the IPC data by analysing package by package
             // Workaround the crash when there are too much content providers
             List<PackageInfo> packages = packageManager.getInstalledPackages(0);
-            for (PackageInfo p : packages)
-                plugins.addAll(findPlugins(p.packageName));
-
+            for (PackageInfo p : packages) {
+                PackageInfo packageInfo = packageManager.getPackageInfo(p.packageName, PackageManager.GET_PROVIDERS | PackageManager.GET_META_DATA);
+                if (packageInfo.providers != null)
+                    for (ProviderInfo provider : packageInfo.providers)
+                        addToListIfPlugin(packageManager, plugins, provider);
+            }
             Collections.sort(plugins);
         } catch (Exception e) {
             Log.e(TAG, e.getLocalizedMessage(), e);
         }
-//        Log.d(TAG, "OSSW plugin scanning time: " + (System.currentTimeMillis() - start));
         return plugins;
     }
 
