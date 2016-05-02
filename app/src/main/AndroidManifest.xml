@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.althink.android.ossw" >
+    package="com.althink.android.ossw">
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -8,36 +8,29 @@
 
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"/>
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" /> -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!--<uses-permission android:name="com.google.android.gm.permission.READ_CONTENT_PROVIDER" />-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-    <!--
-       <uses-permission
-           android:name="com.google.android.providers.gmail.permission.READ_GMAIL" />
-       <uses-permission android:name="com.google.android.gm.permission.READ_GMAIL" />
-       <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".OsswApp"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:process="com.althink.android.ossw"
-        android:theme="@style/AppTheme" >
-
+        android:theme="@style/AppTheme">
         <service
             android:name=".service.OsswService"
             android:enabled="true" />
@@ -45,33 +38,31 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/title_main"
-            android:launchMode="singleTask" >
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/pref_title">
-        </activity>
+            android:label="@string/pref_title" />
 
         <service
             android:name=".notifications.NotificationListener"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
 
-        <activity android:name=".watchsets.WatchSetPreviewActivity">
-        </activity>
-
+        <activity android:name=".watchsets.WatchSetPreviewActivity" />
         <activity android:name=".settings.PredefinedMessagesActivity">
             <intent-filter>
                 <action android:name="com.althink.android.ossw.settings.EDIT_PREDEFINED_MESSAGES" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -88,6 +79,15 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <receiver
+            android:name=".service.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
