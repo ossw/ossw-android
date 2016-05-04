@@ -361,16 +361,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
+        super.onPause();
 //        Log.i(TAG, "PAUSE");
     }
 
     @Override
     protected void onDestroy() {
+        unbindService(mServiceConnection);
         super.onDestroy();
 //        Log.i(TAG, "DESTROY");
-        unbindService(mServiceConnection);
 //        unbindService(pluginServiceConnection);
     }
 

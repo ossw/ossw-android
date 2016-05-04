@@ -152,11 +152,11 @@ public class DeviceScanFragment extends ListFragment {
     @Override
     public void onPause() {
         Log.i(TAG, "onPause called");
+        scanLeDevice(false);
         if (getActivity() != null) {
             getActivity().unregisterReceiver(mGattUpdateReceiver);
             Log.i(TAG, "unregister receiver");
         }
-        scanLeDevice(false);
         super.onPause();
     }
 
