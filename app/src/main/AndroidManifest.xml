@@ -88,6 +88,16 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".utils.SleepReceiver">
+            <intent-filter>
+                <action android:name="com.urbandroid.sleep.watch.CHECK_CONNECTED"/>
+                <action android:name="com.urbandroid.sleep.watch.START_TRACKING"/>
+                <action android:name="com.urbandroid.sleep.watch.STOP_TRACKING"/>
+                <action android:name="com.urbandroid.sleep.watch.SET_SUSPENDED"/>
+                <action android:name="com.urbandroid.sleep.watch.SET_BATCH_SIZE"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

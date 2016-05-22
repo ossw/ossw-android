@@ -146,7 +146,7 @@ public class OsswService extends Service {
             byte[] value = characteristic.getValue();
             //Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
-                //Log.i(TAG, "Handle command: " + Arrays.toString(value));
+//                Log.d(TAG, "Handle command: " + Arrays.toString(value));
                 switch (value[0]) {
                     case WatchConstants.OSSW_RX_COMMAND_SET_WATCH_SET_ID:
                         int watchSetId = value[1] << 24 | value[2] << 16 | value[3] << 8 | value[4] & 0xFF;

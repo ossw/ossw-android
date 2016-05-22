@@ -68,18 +68,21 @@ public class NotificationListener extends NotificationListenerService {
         notifications = new HashMap<>();
 
         instance = this;
+        Log.d(TAG, "onCreate");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         instance = null;
+        Log.d(TAG, "onDestroy");
     }
 
     @Override
     public IBinder onBind(Intent mIntent) {
         IBinder mIBinder = super.onBind(mIntent);
         isNotificationAccessEnabled = true;
+        Log.d(TAG, "onBind");
         return mIBinder;
     }
 
@@ -87,6 +90,7 @@ public class NotificationListener extends NotificationListenerService {
     public boolean onUnbind(Intent mIntent) {
         boolean mOnUnbind = super.onUnbind(mIntent);
         isNotificationAccessEnabled = false;
+        Log.d(TAG, "onUnbind");
         return mOnUnbind;
     }
 

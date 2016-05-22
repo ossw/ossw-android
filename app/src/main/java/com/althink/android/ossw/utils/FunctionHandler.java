@@ -49,7 +49,7 @@ public class FunctionHandler {
     private static List<String> sendSmsMessages;
 
     public static void handleFunction(int functionId, byte[] data) {
-        Log.d(TAG, "Function handler, id: " + functionId + ", data" + data);
+//        Log.d(TAG, "Function handler, id: " + functionId + ", data" + data);
         switch (functionId) {
             case WatchConstants.PHONE_FUNCTION_PHONE_DISCOVERY: {
                 MediaPlayer mediaPlayer = OsswService.getMediaPlayer();
@@ -156,8 +156,15 @@ public class FunctionHandler {
                 TasksManager.getInstance().handle(buttons, item);
                 break;
             }
+            case WatchConstants.PHONE_FUNCTION_ACCELEROMETER: {
+                Accelerometer.getInstance().handle(data);
+                break;
+            }
+            case WatchConstants.PHONE_FUNCTION_SLEEP_AS_ANDROID: {
+                SleepAsAndroid.getInstance().handle(data);
+                break;
+            }
         }
-
     }
 
     private static String extractNumber(String contact) {

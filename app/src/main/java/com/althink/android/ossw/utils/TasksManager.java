@@ -212,7 +212,7 @@ public class TasksManager {
 
     public void refreshAccounts() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(OsswApp.getContext());
-        accountList = new ArrayList<>(sharedPref.getStringSet("google_tasks_accounts", new HashSet()));
+        accountList = new ArrayList<>(sharedPref.getStringSet("google_tasks_accounts", new HashSet<String>()));
         if (account >= accountList.size())
             account = 0;
     }
