@@ -46,7 +46,7 @@ public class Accelerometer {
             Log.d(TAG, file.getAbsolutePath());
             bw = new BufferedWriter(new FileWriter(file, true));
             if (writeHeader)
-                bw.write("accX\taccY\taccZ\n");
+                bw.write("accX,accY,accZ\n");
             DecimalFormat df = new DecimalFormat("0.000");
             for (int i = 0; i < len; i++) {
 //            int x = (data[bytes*i] << 8 | data[bytes*i+1]&0xff) >> 4;
@@ -60,7 +60,7 @@ public class Accelerometer {
                 double zf = getAcceleration(data[bytes * i + 2]);
 //            Log.d(TAG, "New data x: "+data[bytes*i]+", y: "+data[bytes*i+1]+", z: "+data[bytes*i+2]);
                 Log.d(TAG, "New accelerometer value #" + i + ": " + xf + ", " + yf + ", " + zf);
-                bw.write(df.format(xf)+'\t'+df.format(yf)+'\t'+df.format(zf)+'\n');
+                bw.write(df.format(xf)+','+df.format(yf)+','+df.format(zf)+'\n');
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
