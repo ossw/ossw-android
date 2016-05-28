@@ -348,6 +348,9 @@ public class OsswService extends Service {
             case DIALOG_SELECT:
             case DIALOG_OPTIONS:
             case DIALOG_CLOSE:
+            case SLEEP_START:
+            case SLEEP_STOP:
+            case SLEEP_BATCH_SIZE:
                 data = arrayConcatenate(new byte[]{
                                 (byte) type.getValue()},
                         data);

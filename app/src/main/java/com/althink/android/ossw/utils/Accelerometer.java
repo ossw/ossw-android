@@ -1,6 +1,5 @@
 package com.althink.android.ossw.utils;
 
-import android.os.Environment;
 import android.util.Log;
 
 import com.althink.android.ossw.OsswApp;
@@ -10,7 +9,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 /**
  * Created by pavel on 19/05/2016.
@@ -34,7 +32,7 @@ public class Accelerometer {
     public void handle(byte[] data) {
         int bytes = 3;
         int len = data.length / bytes;
-            BufferedWriter bw = null;
+        BufferedWriter bw = null;
         try {
             File path = OsswApp.getContext().getExternalFilesDir(null);
             File file = new File(path, FILE);
@@ -55,19 +53,22 @@ public class Accelerometer {
 //            double xf = 9.81*x/1024;
 //            double yf = 9.81*y/1024;
 //            double zf = 9.81*z/1024;
-                double xf = getAcceleration(data[bytes * i]);
-                double yf = getAcceleration(data[bytes * i + 1]);
-                double zf = getAcceleration(data[bytes * i + 2]);
+                byte x = data[bytes * i];
+                byte y = data[bytes * i + 1];
+                byte z = data[bytes * i + 2];
+                double xf = getAcceleration(x);
+                double yf = getAcceleration(y);
+                double zf = getAcceleration(z);
 //            Log.d(TAG, "New data x: "+data[bytes*i]+", y: "+data[bytes*i+1]+", z: "+data[bytes*i+2]);
                 Log.d(TAG, "New accelerometer value #" + i + ": " + xf + ", " + yf + ", " + zf);
-                bw.write(df.format(xf)+','+df.format(yf)+','+df.format(zf)+'\n');
+                bw.write(String.valueOf(x) + ',' + String.valueOf(y) + ',' + String.valueOf(z) + '\n');
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } finally {
             if (bw != null) try {
                 bw.close();
-            } catch(IOException ioex) {
+            } catch (IOException ioex) {
                 ioex.printStackTrace();
             }
         }
