@@ -9,7 +9,7 @@ android {
         minSdkVersion 18
         targetSdkVersion 23
         versionCode 16
-        versionName "0.5-160502-snapshot"
+        versionName "20160601-vaspa"
     }
     buildTypes {
         release {
