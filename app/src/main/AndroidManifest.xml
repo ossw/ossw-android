@@ -57,6 +57,17 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <service
+            android:name=".utils.OsswSensorService"
+            android:process=":sensor"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.fitness.service.FitnessSensorService" />
+                <!-- include at least one mimeType filter for the supported data types -->
+                <data android:mimeType="vnd.google.fitness.data_type/com.google.step_count.delta" />
+            </intent-filter>
+        </service>
 
         <activity android:name=".watchsets.WatchSetPreviewActivity" />
         <activity android:name=".settings.PredefinedMessagesActivity">
@@ -88,14 +99,13 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".utils.SleepReceiver">
+        <receiver android:name=".utils.SleepReceiver">
             <intent-filter>
-                <action android:name="com.urbandroid.sleep.watch.CHECK_CONNECTED"/>
-                <action android:name="com.urbandroid.sleep.watch.START_TRACKING"/>
-                <action android:name="com.urbandroid.sleep.watch.STOP_TRACKING"/>
-                <action android:name="com.urbandroid.sleep.watch.SET_SUSPENDED"/>
-                <action android:name="com.urbandroid.sleep.watch.SET_BATCH_SIZE"/>
+                <action android:name="com.urbandroid.sleep.watch.CHECK_CONNECTED" />
+                <action android:name="com.urbandroid.sleep.watch.START_TRACKING" />
+                <action android:name="com.urbandroid.sleep.watch.STOP_TRACKING" />
+                <action android:name="com.urbandroid.sleep.watch.SET_SUSPENDED" />
+                <action android:name="com.urbandroid.sleep.watch.SET_BATCH_SIZE" />
             </intent-filter>
         </receiver>
     </application>

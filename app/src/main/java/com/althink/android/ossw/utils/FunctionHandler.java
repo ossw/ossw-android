@@ -47,6 +47,7 @@ public class FunctionHandler {
     private static int sendSmsPage = 0;
     private static String sendSmsNumber;
     private static List<String> sendSmsMessages;
+    private static OsswSensorService sensorService;
 
     public static void handleFunction(int functionId, byte[] data) {
 //        Log.d(TAG, "Function handler, id: " + functionId + ", data" + data);
@@ -164,6 +165,11 @@ public class FunctionHandler {
                 SleepAsAndroid.getInstance().handle(data);
                 break;
             }
+            case WatchConstants.PHONE_FUNCTION_PED_DELTA: {
+                if (sensorService != null)
+                    sensorService.addPedometerDelta(data);
+                break;
+            }
         }
     }
 
@@ -244,5 +250,13 @@ public class FunctionHandler {
         }
 
         return name;
+    }
+
+    public static void registerSensorService(OsswSensorService ss) {
+        sensorService = ss;
+    }
+
+    public static void unregisterSensorService() {
+        sensorService = null;
     }
 }

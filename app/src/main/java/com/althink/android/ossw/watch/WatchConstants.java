@@ -226,6 +226,7 @@ public class WatchConstants {
     public static final int PHONE_FUNCTION_REJECT_SMS = 0x44;
     public static final int PHONE_FUNCTION_ACCELEROMETER = 0x45;
     public static final int PHONE_FUNCTION_SLEEP_AS_ANDROID = 0x46;
+    public static final int PHONE_FUNCTION_PED_DELTA = 0x47;
 
     public static final int STYLE_RADIO_BUTTON = 0x01;
     public static final int STYLE_CHECK_BOX = 0x02;
