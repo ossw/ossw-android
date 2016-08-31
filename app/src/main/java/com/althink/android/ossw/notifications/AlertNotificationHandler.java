@@ -11,13 +11,9 @@ import com.althink.android.ossw.notifications.model.Notification;
 import com.althink.android.ossw.notifications.model.SimpleNotification;
 import com.althink.android.ossw.service.OsswService;
 
-import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/**
- * Created by krzysiek on 25/07/15.
- */
 public class AlertNotificationHandler {
 
     private String TAG = this.getClass().getSimpleName();
@@ -33,7 +29,7 @@ public class AlertNotificationHandler {
             return;
         }
 
-        boolean update = lastNotification != null && lastNotification.getExternalId() == notification.getExternalId();
+        boolean update = lastNotification != null && lastNotification.getExternalId().equals(notification.getExternalId());
 
         if (lastNotification != null && !update) {
             Log.i(TAG, "SKIP, other alert notification in progress");
@@ -46,18 +42,8 @@ public class AlertNotificationHandler {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(osswBleService);
             boolean vibrate = sharedPref.getBoolean(SettingsActivity.ALERT_VIBRATION_PREFIX , true);
             int vibrationPattern = 0;
-            int vibrationLength = 0;
             if (vibrate) {
-                Calendar c = Calendar.getInstance();
-                int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
-                String active = sharedPref.getString(SettingsActivity.ALERT_VIBRATION_PREFIX + "_time", "0:0-23:59");
-                int dash = active.indexOf('-');
-                int from_time = NotificationListener.getMinutes(active.substring(0, dash));
-                int till_time = NotificationListener.getMinutes(active.substring(dash + 1));
-                if ((from_time <= minutes && minutes <=till_time) ||
-                        (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
-                    vibrationPattern = VibrationPatternBuilder.getAlertVibrationPattern(osswBleService.getApplicationContext());
-                }
+                vibrationPattern = VibrationPatternBuilder.getAlertVibrationPattern(osswBleService.getApplicationContext());
             }
             NotificationMessageBuilder builder = new AlertNotificationMessageBuilder(notification.getCategory(), ((SimpleNotification) notification).getTitle(), ((SimpleNotification) notification).getText(), notification.getOperations());
             osswBleService.uploadNotification(notification.getExternalId(), notification.getType(), builder.build(), vibrationPattern, 7000, new AlertNotificationFunctionHandler(notification, osswBleService));

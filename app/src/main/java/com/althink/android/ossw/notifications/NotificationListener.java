@@ -5,17 +5,12 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
-import android.widget.RemoteViews;
 
-import com.althink.android.ossw.settings.SettingsActivity;
 import com.althink.android.ossw.notifications.message.ListNotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationMessageBuilder;
 import com.althink.android.ossw.notifications.message.NotificationSummaryMessageBuilder;
@@ -29,10 +24,9 @@ import com.althink.android.ossw.notifications.parser.NotificationIdBuilder;
 import com.althink.android.ossw.notifications.parser.api19.NotificationParserApi19;
 import com.althink.android.ossw.notifications.parser.api21.NotificationParserApi21;
 import com.althink.android.ossw.service.OsswService;
+import com.althink.android.ossw.settings.SettingsActivity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -41,9 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by krzysiek on 05/06/15.
- */
 public class NotificationListener extends NotificationListenerService {
 
     private String TAG = this.getClass().getSimpleName();
@@ -52,11 +43,8 @@ public class NotificationListener extends NotificationListenerService {
 
     private int nextNotificationId = 1;
 
-    private static boolean isNotificationAccessEnabled = false;
-
     private static NotificationListener instance;
 
-    Handler handler = new Handler(Looper.getMainLooper());
     Map<String, Notification> notifications = new HashMap<>();
 
     @Override
@@ -81,7 +69,6 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public IBinder onBind(Intent mIntent) {
         IBinder mIBinder = super.onBind(mIntent);
-        isNotificationAccessEnabled = true;
         Log.d(TAG, "onBind");
         return mIBinder;
     }
@@ -89,7 +76,6 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public boolean onUnbind(Intent mIntent) {
         boolean mOnUnbind = super.onUnbind(mIntent);
-        isNotificationAccessEnabled = false;
         Log.d(TAG, "onUnbind");
         return mOnUnbind;
     }
@@ -161,18 +147,8 @@ public class NotificationListener extends NotificationListenerService {
         int vibrationPattern = 0;
         int vibrationLength = 0;
         if (vibrate) {
-            Calendar c = Calendar.getInstance();
-            int minutes = 60 * c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE);
-            String active = sharedPref.getString(SettingsActivity.NOTIFICATION_VIBRATION_PREFIX + "_time", "0:0-24:0");
-            int dash = active.indexOf('-');
-            int from_time = getMinutes(active.substring(0, dash));
-            int till_time = getMinutes(active.substring(dash + 1));
-            Log.i(TAG, "Test if " + minutes + " is in " + from_time + ", " + till_time);
-            if ((from_time <= minutes && minutes <= till_time) ||
-                    (from_time >= till_time) && (from_time <= minutes || minutes <= till_time)) {
-                vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
-                vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(this);
-            }
+            vibrationPattern = VibrationPatternBuilder.getNotificationVibrationPattern(this);
+            vibrationLength = VibrationPatternBuilder.getNotificationVibrationLength(this);
         }
         updateNotificationList(true, vibrationPattern, vibrationLength, false);
     }
@@ -203,7 +179,7 @@ public class NotificationListener extends NotificationListenerService {
 //            Log.i(TAG, "Notification are enabled for given app");
             return false;
         }
-        Log.d(TAG, "Notification from '"+sbn.getPackageName()+"' is not in the list, it will be skipped");
+        Log.d(TAG, "Notification from '" + sbn.getPackageName() + "' is not in the list, it will be skipped");
         return true;
     }
 
@@ -309,7 +285,7 @@ public class NotificationListener extends NotificationListenerService {
     private List<Notification> getAllInfoNotifications() {
 
 
-        ArrayList<Notification> list = new ArrayList<Notification>();
+        ArrayList<Notification> list = new ArrayList<>();
         for (Notification notification : this.notifications.values()) {
             if (notification.getType() == NotificationType.INFO) {
                 list.add(notification);
@@ -321,40 +297,40 @@ public class NotificationListener extends NotificationListenerService {
 
     private void printNotifications() {
 //        Log.i(TAG, "Notifications list:");
-        ArrayList<Notification> list = new ArrayList<Notification>(notifications.values());
+        ArrayList<Notification> list = new ArrayList<>(notifications.values());
         Collections.sort(list);
         for (Notification notification : list) {
             Log.i(TAG, notification.toString());
         }
     }
 
-    private String extraToString(Object o) {
-        if (o == null) {
-            return null;
-        } else if (o instanceof Bundle) {
-            Set<String> keySet = ((Bundle) o).keySet();
-            StringBuilder sb = new StringBuilder();
-            for (String key : keySet) {
-                sb.append(key).append(": ").append(((Bundle) o).get(key)).append(", ");
-            }
-            return sb.toString();
-        } else if (o instanceof Object[]) {
-            return Arrays.toString((Object[]) o);
-        } else if (o instanceof int[]) {
-            return Arrays.toString((int[]) o);
-        } else if (o instanceof long[]) {
-            return Arrays.toString((long[]) o);
-        } else if (o instanceof float[]) {
-            return Arrays.toString((float[]) o);
-        } else if (o instanceof double[]) {
-            return Arrays.toString((double[]) o);
-        } else if (o instanceof char[]) {
-            return Arrays.toString((char[]) o);
-        } else if (o instanceof byte[]) {
-            return Arrays.toString((byte[]) o);
-        }
-        return o.toString();
-    }
+//    private String extraToString(Object o) {
+//        if (o == null) {
+//            return null;
+//        } else if (o instanceof Bundle) {
+//            Set<String> keySet = ((Bundle) o).keySet();
+//            StringBuilder sb = new StringBuilder();
+//            for (String key : keySet) {
+//                sb.append(key).append(": ").append(((Bundle) o).get(key)).append(", ");
+//            }
+//            return sb.toString();
+//        } else if (o instanceof Object[]) {
+//            return Arrays.toString((Object[]) o);
+//        } else if (o instanceof int[]) {
+//            return Arrays.toString((int[]) o);
+//        } else if (o instanceof long[]) {
+//            return Arrays.toString((long[]) o);
+//        } else if (o instanceof float[]) {
+//            return Arrays.toString((float[]) o);
+//        } else if (o instanceof double[]) {
+//            return Arrays.toString((double[]) o);
+//        } else if (o instanceof char[]) {
+//            return Arrays.toString((char[]) o);
+//        } else if (o instanceof byte[]) {
+//            return Arrays.toString((byte[]) o);
+//        }
+//        return o.toString();
+//    }
 
     private int getNextNotificationId() {
         int notificationId = nextNotificationId;
@@ -365,10 +341,6 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         return notificationId;
-    }
-
-    public static boolean isNotificationAccessEnabled() {
-        return isNotificationAccessEnabled;
     }
 
     public static NotificationListener getInstance() {
@@ -414,7 +386,7 @@ public class NotificationListener extends NotificationListenerService {
                 cancelPostLollipopNotification(sbn);
             }
         } catch (Exception e) {
-            //do nothing
+            Log.d(TAG, e.getMessage());
         }
     }
 
@@ -482,23 +454,17 @@ public class NotificationListener extends NotificationListenerService {
             return;
         }
 
-        StatusBarNotification sbn = (StatusBarNotification) notification.getNotificationObject();
-
         PendingIntent intent = ((StatusBarNotification) notification.getNotificationObject()).getNotification().contentIntent;
 
         if (intent != null) {
             try {
                 intent.send();
             } catch (Exception e) {
+                Log.d(TAG, e.getMessage());
             }
         }
 
         sendNextNotification(notificationId);
-    }
-
-    static int getMinutes(String s) {
-        int colon = s.indexOf(':');
-        return 60 * Integer.parseInt(s.substring(0, colon)) + Integer.parseInt(s.substring(colon + 1));
     }
 
     public void openNotificationsScreen() {
