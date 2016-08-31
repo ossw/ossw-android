@@ -7,7 +7,7 @@
             android:key="notification_screen"
             android:summary="@string/pref_notifications_desc"
             android:title="@string/pref_notifications_title">
-            <SwitchPreference
+            <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:key="notifications"
                 android:switchTextOff="@string/off"
@@ -30,17 +30,13 @@
                 android:title="@string/pref_notifications_font" />
 
             <PreferenceCategory android:title="@string/vibration_category">
-                <SwitchPreference
+                <SwitchPreferenceCompat
                     android:defaultValue="true"
                     android:key="notif_vibrate"
                     android:switchTextOff="@string/off"
                     android:switchTextOn="@string/on"
                     android:title="@string/vibration_category"
                     android:widgetLayout="@layout/preference_widget_switch_compat" />
-                <com.althink.android.ossw.settings.TimeIntervalPreference
-                    android:defaultValue="0:00-23:59"
-                    android:key="notif_vibrate_time"
-                    android:title="@string/vibration_active_time" />
                 <EditTextPreference
                     android:defaultValue="@string/default_notification_vibration_repeat_no"
                     android:inputType="numberDecimal"
@@ -68,7 +64,7 @@
             android:key="alert_screen"
             android:summary="@string/pref_alert_notifications_desc"
             android:title="@string/pref_alert_notifications_title">
-            <SwitchPreference
+            <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:key="alert_notifications"
                 android:switchTextOff="@string/off"
@@ -83,17 +79,13 @@
                 android:key="alert_notifications_font"
                 android:title="@string/pref_alert_notification_font" />
             <PreferenceCategory android:title="@string/vibration_category">
-                <SwitchPreference
+                <SwitchPreferenceCompat
                     android:defaultValue="true"
                     android:key="alert_notif_vibrate"
                     android:switchTextOff="@string/off"
                     android:switchTextOn="@string/on"
                     android:title="@string/vibration_category"
                     android:widgetLayout="@layout/preference_widget_switch_compat" />
-                <com.althink.android.ossw.settings.TimeIntervalPreference
-                    android:defaultValue="0:0-23:59"
-                    android:key="alert_notif_vibrate_time"
-                    android:title="@string/vibration_active_time" />
                 <EditTextPreference
                     android:defaultValue="@string/default_alert_vibration_duration"
                     android:inputType="numberDecimal"
@@ -119,7 +111,7 @@
 
     <PreferenceCategory android:title="@string/pref_phone_notification_category">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="disconnect_alert"
             android:switchTextOff="@string/off"
@@ -127,7 +119,7 @@
             android:title="@string/pref_disconnect_notif_title"
             android:widgetLayout="@layout/preference_widget_switch_compat" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pref_reject_call_message"
             android:switchTextOff="@string/off"
@@ -153,7 +145,7 @@
         <PreferenceScreen
             android:key="phone_discovery_screen"
             android:title="@string/pref_phone_discovery_title">
-            <SwitchPreference
+            <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:key="phone_discovery_vibrate"
                 android:switchTextOff="@string/off"
@@ -176,7 +168,7 @@
             android:key="dialog_font"
             android:title="@string/pref_dialog_font" />
 
-    <SwitchPreference
+    <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="synchronize_time"
         android:switchTextOff="@string/off"

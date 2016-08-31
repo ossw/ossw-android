@@ -33,7 +33,16 @@
 
         <item name="android:windowBackground">@color/myWindowBackground</item>
 
-        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="preferenceTheme">@style/OSSWPreferenceTheme</item>
+    </style>
+
+    <style name="OSSWPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material">
+        <item name="android:preferenceCategoryStyle">@style/OSSWPreferenceCategoryStyle</item>
+    </style>
+
+    <style name="OSSWPreferenceCategoryStyle" parent="@style/Preference.Category.Material">
+        <item name="android:layout_marginBottom">0dip</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
     <!-- ActionBar styles -->

@@ -57,17 +57,17 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <service
+       <!-- <service
             android:name=".utils.OsswSensorService"
             android:process=":sensor"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.fitness.service.FitnessSensorService" />
-                <!-- include at least one mimeType filter for the supported data types -->
+                &lt;!&ndash; include at least one mimeType filter for the supported data types &ndash;&gt;
                 <data android:mimeType="vnd.google.fitness.data_type/com.google.step_count.delta" />
             </intent-filter>
-        </service>
+        </service>-->
 
         <activity android:name=".watchsets.WatchSetPreviewActivity" />
         <activity android:name=".settings.PredefinedMessagesActivity">
