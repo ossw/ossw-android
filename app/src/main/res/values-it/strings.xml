@@ -1,6 +1,5 @@
 <resources>
     <string name="ble_not_supported">BLE non supportato</string>
-    <string name="label_data">Dato:</string>
     <string name="label_device_address">Indirizzo dispositivo:</string>
     <string name="label_state">Stato:</string>
     <string name="no_data">Nessun dato</string>
@@ -19,11 +18,9 @@
     <string name="menu_disconnect">Disconnettere</string>
     <string name="menu_scan">Scansione</string>
     <string name="menu_stop">Stop</string>
-    <string name="title_main">OSSW</string>
 
     <string name="action_find_watch">Connessione all\'orologio</string>
 
-    <string name="action_run_ipantman">Esegui ipSensorMan</string>
     <string name="action_settings">Impostazioni</string>
 
     <string name="drawer_open">Menu aperto</string>
@@ -80,7 +77,6 @@
     <string name="action_disconnect">Disconnetti</string>
 
     <string name="vibration_category">Vibrazione</string>
-    <string name="vibration_active_time">Tempo di attivazione vibrazione</string>
     <string name="vibration_repeat">Ripeti vibrazione</string>
     <string name="vibration_duration">Durata in millisecondi</string>
     <string name="vibration_pattern">Pattern di vibrazione</string>
@@ -88,7 +84,6 @@
     <string name="pref_notification_filter">Applicazioni che generano notifiche</string>
 
     <string name="pref_reject_call_message">Rifiuta chiamata con SMS</string>
-    <string name="pref_reject_default_message">In riunione, richiamo dopo</string>
     <string name="pref_phone_discovery_title">Ricerca telefono</string>
     <string name="pref_phone_discovery_audio_title">Traccia audio</string>
     <string name="pref_phone_discovery_file_uri">Nessuna selezione</string>
@@ -105,4 +100,5 @@
 
     <string name="time_interval_picker_ok">OK</string>
     <string name="time_interval_picker_cancel">Annulla</string>
+    <string name="predefined_message1">In riunione, richiamo dopo</string>
 </resources>

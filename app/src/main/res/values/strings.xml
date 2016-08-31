@@ -1,6 +1,5 @@
 <resources>
     <string name="ble_not_supported">BLE is not supported</string>
-    <string name="label_data">Data:</string>
     <string name="label_device_address">Device address:</string>
     <string name="label_state">State:</string>
     <string name="no_data">No data</string>
@@ -19,15 +18,13 @@
     <string name="menu_disconnect">Disconnect</string>
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
-    <string name="title_main">OSSW</string>
+    <string name="title_main" translatable="false">OSSW</string>
 
     <string name="action_find_watch">Connect to watch</string>
-
-    <string name="action_run_ipantman">Run ipSensorMan</string>
     <string name="action_settings">Settings</string>
 
-    <string name="drawer_open">Menu opened</string>
-    <string name="drawer_close">Menu closed</string>
+    <string name="drawer_open">Open menu</string>
+    <string name="drawer_close">Сlose menu</string>
     <string name="drawer_home_screen">Home screen</string>
 
     <string name="drawer_watch_faces">Watch faces</string>
@@ -86,7 +83,6 @@
     <string name="action_disconnect">Disconnect</string>
 
     <string name="vibration_category">Vibration</string>
-    <string name="vibration_active_time">Vibration active time</string>
     <string name="vibration_repeat">Repeat vibration</string>
     <string name="vibration_duration">Duration in milliseconds</string>
     <string name="vibration_pattern">Vibration pattern</string>
@@ -113,10 +109,10 @@
 
     <string name="time_interval_picker_ok">OK</string>
     <string name="time_interval_picker_cancel">Cancel</string>
-    <string name="unknown_contact">Unknown</string>
+    <string name="unknown_contact">Unknown number</string>
 
     <string name="sms_title">Choose SMS</string>
-    <string name="contact_title">Choose contact</string>
+    <string name="contact_title">Choose number</string>
     <string name="tasks_title">Tasks</string>
     <string name="tasks_lists_title">Task lists</string>
     <string name="tasks_accounts_title">Accounts</string>

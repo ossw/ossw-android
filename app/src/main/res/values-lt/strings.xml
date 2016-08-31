@@ -1,6 +1,5 @@
 ﻿<resources>
     <string name="ble_not_supported">BLE nepalaikomas</string>
-    <string name="label_data">Duomenys:</string>
     <string name="label_device_address">Įrenginio adresas:</string>
     <string name="label_state">Būsena:</string>
     <string name="no_data">Nėra duomenų</string>
@@ -19,11 +18,9 @@
     <string name="menu_disconnect">Atsijungti</string>
     <string name="menu_scan">Ieškoti</string>
     <string name="menu_stop">Stop</string>
-    <string name="title_main">OSSW</string>
 
     <string name="action_find_watch">Prijungti laikrodį</string>
 
-    <string name="action_run_ipantman">Paleisti ipSensorMan</string>
     <string name="action_settings">Nustatymai</string>
 
     <string name="drawer_open">Meniu atidarytas</string>
@@ -80,7 +77,6 @@
     <string name="action_disconnect">Atjungti</string>
 
     <string name="vibration_category">Vibravimas</string>
-    <string name="vibration_active_time">Vibravimo veikimo laikas</string>
     <string name="vibration_repeat">Vibravimo kartojimas</string>
     <string name="vibration_duration">Trukmė milisekundėmis</string>
     <string name="vibration_pattern">Vibravimo būdas</string>
@@ -88,7 +84,6 @@
     <string name="pref_notification_filter">Programos teikiančios pranešimus</string>
 
     <string name="pref_reject_call_message">Atmesti skambutį su SMS žinute</string>
-    <string name="pref_reject_default_message">Esu susitikime, perskambinsiu vėliau.</string>
     <string name="pref_phone_discovery_title">Telefono aptikimas</string>
     <string name="pref_phone_discovery_audio_title">Garso takelis</string>
     <string name="pref_phone_discovery_file_uri">Nieko nepasirinkta</string>
@@ -105,4 +100,5 @@
 
     <string name="time_interval_picker_ok">Gerai</string>
     <string name="time_interval_picker_cancel">Atšaukti</string>
+    <string name="predefined_message1">Esu susitikime, perskambinsiu vėliau.</string>
 </resources>

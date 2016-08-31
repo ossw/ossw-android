@@ -15,8 +15,8 @@
  limitations under the License.
 -->
 <resources>
-    <string name="app_name">OSSW</string>
-    <string name="intro_message">
+    <string name="app_name" translatable="false">OSSW</string>
+    <string name="intro_message" translatable="false">
         <![CDATA[
         
             
@@ -25,9 +25,9 @@
         
         ]]>
     </string>
-    <string name="default_notification_vibration_pattern">110010</string>
-    <string name="default_notification_vibration_duration">500</string>
-    <string name="default_notification_vibration_repeat_no">2</string>
-    <string name="default_alert_vibration_pattern">1010000000</string>
-    <string name="default_alert_vibration_duration">1000</string>
+    <string name="default_notification_vibration_pattern" translatable="false">110010</string>
+    <string name="default_notification_vibration_duration" translatable="false">500</string>
+    <string name="default_notification_vibration_repeat_no" translatable="false">2</string>
+    <string name="default_alert_vibration_pattern" translatable="false">1010000000</string>
+    <string name="default_alert_vibration_duration" translatable="false">1000</string>
 </resources>

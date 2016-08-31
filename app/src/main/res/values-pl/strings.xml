@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OSSW</string>
     <string name="action_close">Zamknij</string>
     <string name="action_disconnect">Rozłączony</string>
     <string name="action_find_watch">Połącz z zegarkiem</string>
-    <string name="action_run_ipantman">Uruchom ipSensorMan</string>
     <string name="action_settings">Ustawienia</string>
     <string name="auto_reconnect">Ponowne połączenie</string>
     <string name="ble_not_supported">Bluetooth Low Energy jest nieobsługiwany</string>
@@ -24,7 +22,6 @@
     <string name="drawer_watches">Zegarki</string>
     <string name="error_bluetooth_not_supported">Bluetooth nie obsługiwany</string>
     <string name="incall_title">Połączenie przychodzące</string>
-    <string name="label_data">Dane:</string>
     <string name="label_device_address">Adres urządzenia:</string>
     <string name="label_state">Stan:</string>
     <string name="menu_cancel">Anuluj</string>
@@ -57,7 +54,7 @@
     <string name="pref_notification_filter">Aplikacje przesyłające powiadomienia</string>
     <string name="pref_notifications_access_desc">Zarządzaj dostępem do powiadomień</string>
     <string name="pref_notifications_access_title">Dostęp do powiadomień</string>
-    <string name="pref_notifications_desc">SMS,e-mail, nieodebrane połączenie</string>
+    <string name="pref_notifications_desc">SMS, e-mail, nieodebrane połączenie</string>
     <string name="pref_notifications_font">Czcionka powiadomienia</string>
     <string name="pref_notifications_font_desc">Wybierz czcionkę powiadomienia</string>
     <string name="pref_notifications_title">Powiadomienie</string>
@@ -66,7 +63,6 @@
     <string name="pref_phone_discovery_title">Znajdź telefon</string>
     <string name="pref_phone_notification_category">Funkcje telefonu</string>
     <string name="pref_reject_call_message">Odrzuć połączenie z SMSem</string>
-    <string name="pref_reject_default_message">Jestem na spotkaniu, zadzwoń później</string>
     <string name="pref_synchronize_time_desc">Wyślij obecny czas do zegarka, jeśli jest podłączony</string>
     <string name="pref_synchronize_time_title">Synchronizacja czasu</string>
     <string name="pref_title">Ustawienia</string>
@@ -82,10 +78,10 @@
     <string name="toast_watch_is_connected">Zegarek jest podłączony</string>
     <string name="unknown_device">Nieznane urządzenie</string>
     <string name="unknown_service">NIeznana usługa</string>
-    <string name="vibration_active_time">Czas aktywnej wibracji</string>
     <string name="vibration_category">Wibracja</string>
     <string name="vibration_duration">Czas trwania w milisekundach</string>
     <string name="vibration_pattern">Szablon wibracji</string>
     <string name="vibration_repeat">Powtarzaj wibracje</string>
     <string name="unknown_characteristic">Nieznana charakterystyka</string>
+    <string name="predefined_message1">Jestem na spotkaniu, zadzwoń później</string>
 </resources>
