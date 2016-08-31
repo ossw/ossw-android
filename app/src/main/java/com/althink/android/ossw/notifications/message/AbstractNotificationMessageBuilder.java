@@ -54,6 +54,8 @@ public abstract class AbstractNotificationMessageBuilder implements Notification
     }
 
     protected String calculatePageContent(String text, int font, int ptr) {
-        return FontUtils.calcTextToDraw(text, ptr, 3, 3, WatchConstants.SCREEN_WIDTH - 6, WatchConstants.SCREEN_HEIGHT - 6, font, WatchConstants.HORIZONTAL_ALIGN_LEFT | WatchConstants.TEXT_FLAGS_MULTILINE);
+        return FontUtils.calcTextToDraw(text, ptr, WatchConstants.NOTIFICATIONS_MARGIN_HORIZ, WatchConstants.NOTIFICATIONS_MARGIN_TOP,
+                WatchConstants.SCREEN_WIDTH - 2*WatchConstants.NOTIFICATIONS_MARGIN_HORIZ, WatchConstants.SCREEN_HEIGHT - WatchConstants.NOTIFICATIONS_MARGIN_TOP,
+                font, WatchConstants.HORIZONTAL_ALIGN_LEFT | WatchConstants.TEXT_FLAGS_MULTILINE);
     }
 }
