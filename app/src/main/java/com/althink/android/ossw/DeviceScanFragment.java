@@ -96,6 +96,7 @@ public class DeviceScanFragment extends ListFragment {
         // Checks if Bluetooth is supported on the device.
         if (mBluetoothAdapter == null) {
             Toast.makeText(faActivity, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
+            return null;
         }
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
