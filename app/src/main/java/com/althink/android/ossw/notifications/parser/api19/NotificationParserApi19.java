@@ -52,10 +52,6 @@ public class NotificationParserApi19 extends BaseNotificationParser {
         NotificationType type = getNotificationType(sbn, existingNotification);
         Date date = new Date(sbn.getNotification().when);
 
-        if (NotificationType.INFO == type && isFlagSet(sbn.getNotification(), android.app.Notification.FLAG_ONGOING_EVENT)) {
-            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION from " + sbn.getPackageName());
-            return null;
-        }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
             Log.i(TAG, "SKIP FAKE ALERT");
             return null;

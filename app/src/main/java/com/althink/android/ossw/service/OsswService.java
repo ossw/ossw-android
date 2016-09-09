@@ -144,7 +144,7 @@ public class OsswService extends Service {
         @Override
         public void handleCharacteristicChange(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             byte[] value = characteristic.getValue();
-            //Log.i(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
+            Log.d(TAG, "onCharacteristicChanged: " + characteristic.getUuid() + ", " + Arrays.toString(value));
             if (value.length > 0) {
 //                Log.d(TAG, "Handle command: " + Arrays.toString(value));
                 switch (value[0]) {

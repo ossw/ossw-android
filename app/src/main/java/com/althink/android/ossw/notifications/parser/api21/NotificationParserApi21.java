@@ -59,9 +59,6 @@ public class NotificationParserApi21 extends BaseNotificationParser {
         if (isSpam) {
             Log.i(TAG, "SKIP SPAM NOTIFICATION");
             return null;
-        } else if (sbn.getNotification().category == null && NotificationType.INFO == type && sbn.getNotification().deleteIntent == null) {
-            Log.i(TAG, "SKIP NON REMOVABLE NOTIFICATION");
-            return null;
         }
         if (NotificationType.ALERT == type && !isValidAlert(sbn)) {
             Log.i(TAG, "SKIP FAKE ALERT");

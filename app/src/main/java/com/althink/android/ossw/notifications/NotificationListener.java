@@ -160,7 +160,7 @@ public class NotificationListener extends NotificationListenerService {
     private boolean skipNotification(StatusBarNotification sbn) {
         String pName = sbn.getPackageName();
         // always allow self-created notifications
-        if (getPackageName().equals(pName))
+        if (getPackageName().equals(pName) && (sbn.getId() == OsswService.TEST_NOTIFICATION_ID || sbn.getId() == OsswService.TEST_ALERT_ID))
             return false;
 
         if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
@@ -172,7 +172,7 @@ public class NotificationListener extends NotificationListenerService {
         Set<String> selections = sharedPref.getStringSet("notification_applications", null);
         if (selections == null) {
             Log.d(TAG, "Empty notification filter configuration");
-            return false;
+            return true;
         }
 //        Log.i(TAG, "Notifications filter: " + sbn.getPackageName() + " in " + selections.toString());
         if (selections.contains(sbn.getPackageName())) {
