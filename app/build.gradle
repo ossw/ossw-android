@@ -9,7 +9,7 @@ android {
         minSdkVersion 18
         targetSdkVersion 24
         versionCode 17
-        versionName "20160901-vaspa"
+        versionName "20160913-vaspa"
     }
     buildTypes {
         release {
@@ -27,7 +27,7 @@ android {
 }
 
 ext {
-    supportLibVersion = '24.2.0'
+    supportLibVersion = '24.2.1'
 }
 
 dependencies {
