@@ -23,6 +23,7 @@ import com.althink.android.ossw.notifications.parser.BaseNotificationParser;
 import com.althink.android.ossw.notifications.parser.NotificationIdBuilder;
 import com.althink.android.ossw.notifications.parser.api19.NotificationParserApi19;
 import com.althink.android.ossw.notifications.parser.api21.NotificationParserApi21;
+import com.althink.android.ossw.service.CallReceiver;
 import com.althink.android.ossw.service.OsswService;
 import com.althink.android.ossw.settings.SettingsActivity;
 
@@ -119,8 +120,7 @@ public class NotificationListener extends NotificationListenerService {
                 notification.setExternalId(getNextNotificationId());
             }
 
-            Log.i(TAG, "Successfully parsed message:");
-            Log.i(TAG, notification.toString());
+            Log.d(TAG, "Successfully parsed message: "+notification.toString());
 
             notifications.put(notification.getId(), notification);
 
@@ -159,8 +159,10 @@ public class NotificationListener extends NotificationListenerService {
 
     private boolean skipNotification(StatusBarNotification sbn) {
         String pName = sbn.getPackageName();
-        // always allow self-created notifications
-        if (getPackageName().equals(pName) && (sbn.getId() == OsswService.TEST_NOTIFICATION_ID || sbn.getId() == OsswService.TEST_ALERT_ID))
+        // allow some self-created notifications
+        int nId = sbn.getId();
+        if (getPackageName().equals(pName) && (nId == OsswService.TEST_NOTIFICATION_ID
+                || nId == OsswService.TEST_ALERT_ID || nId == CallReceiver.CALL_NOTIFICATION_ID))
             return false;
 
         if ("com.android.dialer".equals(pName) || "com.android.phone".equals(pName)
