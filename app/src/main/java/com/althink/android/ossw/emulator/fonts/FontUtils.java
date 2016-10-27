@@ -99,7 +99,7 @@ public class FontUtils {
             int maxY = y + height;
             boolean lastLine;
             do {
-                lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
+                lastLine = !multiline || (y + 2 * fontInfo.getHeight() > maxY);
 
                 int textWidth = FontUtils.calcTextWidth(text, ptr, fontInfo, splitWord || !multiline, width);
 
@@ -134,7 +134,7 @@ public class FontUtils {
                 }
 
                 x = startX;
-                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
+                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 4 : 0);
             } while (!lastLine);
             return text.substring(initPtr, ptr);
         }
@@ -179,7 +179,7 @@ public class FontUtils {
         int maxY = y + height;
         boolean lastLine;
         do {
-            lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
+            lastLine = !multiline || (y + 2 * fontInfo.getHeight() > maxY);
             int textWidth = FontUtils.calcTextWidth(text, ptr, fontInfo, splitWord || !multiline, width);
 
             if ((fontAlignment & WatchConstants.HORIZONTAL_ALIGN_CENTER) != 0) {
@@ -215,7 +215,7 @@ public class FontUtils {
             x = startX;
             y += fontInfo.getHeight();
             if (!lastLine) {
-                y += (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
+                y += (c == 11 ? fontInfo.getHeight() / 4 : 0);
             }
         } while (!lastLine);
 

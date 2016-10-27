@@ -164,7 +164,7 @@ public class LowLevelRenderer {
 
             boolean lastLine;
             do {
-                lastLine = !multiline || (y + 2 * fontInfo.getHeight() + fontInfo.getCharSpace() > maxY);
+                lastLine = !multiline || (y + 2 * fontInfo.getHeight() > maxY);
 
                 int textWidth = FontUtils.calcTextWidth(text, ptr, fontInfo, splitWord || !multiline, width);
 
@@ -199,7 +199,7 @@ public class LowLevelRenderer {
                 }
 
                 x = startX;
-                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 2 : fontInfo.getCharSpace());
+                y += fontInfo.getHeight() + (c == 11 ? fontInfo.getHeight() / 4 : 0);
             } while (!lastLine);
         }
     }
