@@ -27,7 +27,7 @@ android {
 }
 
 ext {
-    supportLibVersion = '25.0.0'
+    supportLibVersion = '25.0.1'
 }
 
 dependencies {
@@ -45,6 +45,6 @@ dependencies {
     }
     compile 'com.google.code.gson:gson:2.4'
     compile 'com.moparisthebest:junidecode:0.1.1'
-    compile 'com.google.android.gms:play-services-auth:9.8.0'
-    compile 'com.google.android.gms:play-services-fitness:9.8.0'
+    compile 'com.google.android.gms:play-services-auth:10.0.1'
+    compile 'com.google.android.gms:play-services-fitness:10.0.1'
 }
