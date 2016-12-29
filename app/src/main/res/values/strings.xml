@@ -87,6 +87,7 @@
     <string name="vibration_duration">Duration in milliseconds</string>
     <string name="vibration_pattern">Vibration pattern</string>
     <string name="test_notification">Test notification</string>
+    <string name="custom_notification_title">Custom notification message</string>
     <string name="pref_notification_filter">Applications providing notifications</string>
 
     <string name="pref_reject_call_message">Reject call with SMS</string>

@@ -19,7 +19,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.support.v14.preference.MultiSelectListPreference;
 import android.support.v14.preference.PreferenceFragment;
 import android.support.v4.app.ActivityCompat;
@@ -36,11 +35,7 @@ import android.view.View;
 
 import com.althink.android.ossw.R;
 import com.althink.android.ossw.service.OsswService;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.fitness.Fitness;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,7 +79,8 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                     NotificationManagerCompat notifyManager = NotificationManagerCompat.from(getActivity());
                     notifyManager.cancel(OsswService.TEST_NOTIFICATION_ID);
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
-                    builder.setContentTitle("Test notification")
+                    String customText = ((EditTextPreference)findPreference("custom_notification_text")).getText();
+                    builder.setContentTitle(customText)
                             .setContentText("")
                             .setCategory(Notification.CATEGORY_MESSAGE)
                             .setDeleteIntent(PendingIntent.getBroadcast(getActivity(), 0, new Intent(OsswService.CLOSE_FAKE_NOTIFICATION_INTENT_ACTION), 0))
@@ -122,7 +118,15 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
         if ("preference_screen".equals(getPreferenceScreen().getKey())) {
             if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.GET_ACCOUNTS)
                     == PackageManager.PERMISSION_GRANTED) {
-                refreshGoogleTaskAccounts();
+                List<Account> accountList = Arrays.asList(AccountManager.get(getActivity()).getAccountsByType("com.google"));
+                MultiSelectListPreference accountPref = (MultiSelectListPreference) findPreference("google_tasks_accounts");
+                List<CharSequence> entries = new ArrayList<>();
+                for (Account acc : accountList) {
+                    entries.add(acc.name);
+                }
+                CharSequence[] ent = entries.toArray(new CharSequence[entries.size()]);
+                accountPref.setEntries(ent);
+                accountPref.setEntryValues(ent);
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.GET_ACCOUNTS},
@@ -161,18 +165,6 @@ public class GeneralPreferenceFragment extends PreferenceFragment {
                 }
             });
         }
-    }
-
-    public void refreshGoogleTaskAccounts() {
-        List<Account> accountList = Arrays.asList(AccountManager.get(getActivity()).getAccountsByType("com.google"));
-        MultiSelectListPreference accountPref = (MultiSelectListPreference) findPreference("google_tasks_accounts");
-        List<CharSequence> entries = new ArrayList<>();
-        for (Account acc : accountList) {
-            entries.add(acc.name);
-        }
-        CharSequence[] ent = entries.toArray(new CharSequence[entries.size()]);
-        accountPref.setEntries(ent);
-        accountPref.setEntryValues(ent);
     }
 
     @Override

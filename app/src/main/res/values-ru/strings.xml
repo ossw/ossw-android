@@ -100,4 +100,5 @@
     <string name="vibration_duration">Продолжительность в мс</string>
     <string name="vibration_pattern">Схема вибрации</string>
     <string name="vibration_repeat">Повтор вибрации</string>
+    <string name="custom_notification_title">Текст уведомления</string>
 </resources>

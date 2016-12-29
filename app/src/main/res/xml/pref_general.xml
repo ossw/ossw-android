@@ -28,6 +28,10 @@
                 android:entryValues="@array/notification_font_values"
                 android:key="notifications_font"
                 android:title="@string/pref_notifications_font" />
+            <EditTextPreference
+                android:defaultValue="@string/test_notification"
+                android:key="custom_notification_text"
+                android:title="@string/custom_notification_title" />
 
             <PreferenceCategory android:title="@string/vibration_category">
                 <SwitchPreferenceCompat
