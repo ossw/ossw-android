@@ -8,8 +8,8 @@ android {
         applicationId "com.althink.android.ossw"
         minSdkVersion 18
         targetSdkVersion 25
-        versionCode 18
-        versionName "20161027-vaspa"
+        versionCode 19
+        versionName "20161230-vaspa"
     }
     buildTypes {
         release {
